@@ -4,4 +4,11 @@
  */
 export { Button }           from './Button'
 export { Input }            from './Input'
-export { Skeleton, StatCardSkeleton, AppointmentItemSkeleton } from './Skeleton'
+export {
+  Skeleton,
+  AvatarSkeleton,
+  StatCardSkeleton,
+  NextAppointmentSkeleton,
+  AgendaItemSkeleton,
+  AppointmentItemSkeleton,
+} from './Skeleton'
