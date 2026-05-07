@@ -1,5 +1,5 @@
-import { createClient }     from '@/lib/supabase/server'
-import { redirect }          from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 import { Play, Clock, CheckCircle2, XCircle, AlertCircle, CalendarX } from 'lucide-react'
 import { parseTimeRange, formatTime, getDurationMinutes } from '@/lib/utils/time'
 import type { Appointment, AppointmentStatus } from '@/types/database'
@@ -7,48 +7,48 @@ import type { Appointment, AppointmentStatus } from '@/types/database'
 // ── Status config ─────────────────────────────────────────────────────────────
 
 interface StatusConfig {
-  label:  string
+  label: string
   textClass: string
-  bgClass:   string
-  Icon:   React.ElementType
+  bgClass: string
+  Icon: React.ElementType
 }
 
 const STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> = {
   pending: {
-    label:     'Pendiente',
+    label: 'Pendiente',
     textClass: 'text-xinuco-muted',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      Clock,
+    bgClass: 'bg-xinuco-surface',
+    Icon: Clock,
   },
   confirmed: {
-    label:     'Confirmada',
+    label: 'Confirmada',
     textClass: 'text-xinuco-primary',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      CheckCircle2,
+    bgClass: 'bg-xinuco-surface',
+    Icon: CheckCircle2,
   },
   in_progress: {
-    label:     'En curso',
+    label: 'En curso',
     textClass: 'text-xinuco-primary',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      Play,
+    bgClass: 'bg-xinuco-surface',
+    Icon: Play,
   },
   completed: {
-    label:     'Completada',
+    label: 'Completada',
     textClass: 'text-xinuco-muted',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      CheckCircle2,
+    bgClass: 'bg-xinuco-surface',
+    Icon: CheckCircle2,
   },
   cancelled: {
-    label:     'Cancelada',
+    label: 'Cancelada',
     textClass: 'text-xinuco-muted',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      XCircle,
+    bgClass: 'bg-xinuco-surface',
+    Icon: XCircle,
   },
   no_show: {
-    label:     'No asistió',
+    label: 'No asistió',
     textClass: 'text-xinuco-muted',
-    bgClass:   'bg-xinuco-surface',
-    Icon:      AlertCircle,
+    bgClass: 'bg-xinuco-surface',
+    Icon: AlertCircle,
   },
 }
 
@@ -56,8 +56,8 @@ const STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> = {
 
 /** Tarjeta grande "Próxima Cita" */
 function NextAppointmentCard({ appt }: { appt: Appointment }) {
-  const parsed   = parseTimeRange(appt.time_range)
-  const timeStr  = parsed ? formatTime(parsed.start) : '—'
+  const parsed = parseTimeRange(appt.time_range)
+  const timeStr = parsed ? formatTime(parsed.start) : '—'
   const duration = getDurationMinutes(appt.time_range)
 
   return (
@@ -123,7 +123,7 @@ function NextAppointmentCard({ appt }: { appt: Appointment }) {
 
 /** Badge de estado de una cita en la agenda */
 function StatusBadge({ status }: { status: AppointmentStatus }) {
-  const cfg  = STATUS_CONFIG[status]
+  const cfg = STATUS_CONFIG[status]
   const Icon = cfg.Icon
 
   return (
@@ -139,10 +139,10 @@ function StatusBadge({ status }: { status: AppointmentStatus }) {
 
 /** Fila individual de la agenda del día */
 function AgendaItem({ appt }: { appt: Appointment }) {
-  const parsed  = parseTimeRange(appt.time_range)
+  const parsed = parseTimeRange(appt.time_range)
   const timeStr = parsed ? formatTime(parsed.start) : '—'
-  const cfg     = STATUS_CONFIG[appt.status]
-  const Icon    = cfg.Icon
+  const cfg = STATUS_CONFIG[appt.status]
+  const Icon = cfg.Icon
 
   const isActive = appt.status === 'confirmed' || appt.status === 'in_progress'
 
@@ -162,7 +162,7 @@ function AgendaItem({ appt }: { appt: Appointment }) {
           className="w-2.5 h-2.5 rounded-full border-2 shrink-0"
           style={{
             borderColor: isActive ? 'var(--primary-color)' : 'var(--border-color)',
-            background:  isActive ? 'var(--primary-color)' : 'transparent',
+            background: isActive ? 'var(--primary-color)' : 'transparent',
           }}
         />
         <div
@@ -331,7 +331,7 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
                 className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full"
                 style={{
                   background: 'color-mix(in srgb, var(--primary-color) 15%, transparent)',
-                  color:      'var(--primary-color)',
+                  color: 'var(--primary-color)',
                 }}
               >
                 {agenda.length}
