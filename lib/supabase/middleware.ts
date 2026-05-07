@@ -1,13 +1,19 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { Database } from '@/types/database.types'
 
+/**
+ * updateSession — Middleware de Supabase con aislamiento Multi-tenant Zero-DB.
+ *
+ * Estrategia:
+ *  - El JWT descifrado localmente (sin consulta a BD) contiene `user_metadata.slug`
+ *    inyectado durante el registro / primer login.
+ *  - Se compara el slug de la URL con el slug del JWT para aislar tenants.
+ *  - Cero consultas a la base de datos en el hot-path del Edge.
+ */
 export async function updateSession(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -15,50 +21,86 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
+        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
+          // Primero sincronizamos las cookies en el request (necesario para el
+          // contexto de Server Components downstream)
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          )
+          // Recreamos supabaseResponse para que lleve las cookies actualizadas
+          supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           )
         },
       },
-    }
+    },
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-
+  // ── 1. Descifrar JWT localmente (sin round-trip a BD) ────────────────────────
+  // IMPORTANT: No escribir lógica entre createServerClient y getUser().
+  // Un error aquí puede causar cierres de sesión aleatorios.
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
+  const url = request.nextUrl.clone()
+  const pathname = url.pathname
+
+  // ── 2. Ignorar rutas estáticas, de API y raíz ────────────────────────────────
+  const pathSegments = pathname.split('/').filter(Boolean)
+
   if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    pathSegments.length === 0 ||
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next')
   ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
+    return supabaseResponse
+  }
+
+  // ── 3. Extraer slug e inner-route de la URL ──────────────────────────────────
+  // Estructura esperada: /[slug]/[innerRoute]/...
+  const slug = pathSegments[0]
+  const innerRoute = pathSegments[1] ?? ''
+
+  const isProtectedRoute =
+    innerRoute === 'dashboard' ||
+    innerRoute === 'settings' ||
+    innerRoute === 'admin'
+
+  const isLoginRoute = innerRoute === 'login'
+
+  // ── 4. Redirecciones base de sesión ──────────────────────────────────────────
+  if (isProtectedRoute && !user) {
+    url.pathname = `/${slug}/login`
     return NextResponse.redirect(url)
   }
 
-  // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-  // creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
+  if (isLoginRoute && user) {
+    url.pathname = `/${slug}/dashboard`
+    return NextResponse.redirect(url)
+  }
 
+  // ── 5. AISLAMIENTO MULTI-TENANT — ZERO-DB QUERY ──────────────────────────────
+  // El slug está inyectado en raw_user_meta_data durante el signUp/login.
+  // Se lee directamente del JWT descifrado; no hay consulta a BD.
+  if (user && isProtectedRoute) {
+    const userSlug = user.user_metadata?.slug as string | undefined
+
+    if (userSlug !== slug) {
+      // Intento de acceso cross-tenant: bloqueamos y redirigimos al tenant correcto.
+      console.warn(
+        `[EDGE SECURITY] Acceso cross-tenant bloqueado. ` +
+          `user_id=${user.id} intentó acceder a /${slug} ` +
+          `pero pertenece a /${userSlug ?? 'desconocido'}`,
+      )
+      url.pathname = `/${userSlug ?? slug}/login`
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // ── 6. Devolver la respuesta con cookies de sesión sincronizadas ─────────────
+  // IMPORTANT: Se debe retornar `supabaseResponse` tal como está para mantener
+  // las cookies de sesión sincronizadas entre browser y servidor.
   return supabaseResponse
 }

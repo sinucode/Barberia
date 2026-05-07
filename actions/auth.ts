@@ -1,13 +1,60 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { redirect }     from 'next/navigation'
+import { createClient }            from '@/lib/supabase/server'
+import { redirect }                from 'next/navigation'
+import type { Profile, Business }  from '@/types/database'
+
+/**
+ * signUp — Server Action para registro de nuevos usuarios.
+ *
+ * Inyecta en raw_user_meta_data:
+ *  - full_name:   nombre visible del usuario.
+ *  - business_id: UUID del negocio al que pertenece.
+ *  - slug:        slug del negocio (clave para el aislamiento Zero-DB en el Edge).
+ *
+ * El campo `slug` es crítico: el middleware lo lee directamente del JWT
+ * descifrado para aislar tenants sin consultar la base de datos.
+ */
+export async function signUp(formData: FormData) {
+  const email       = formData.get('email')       as string
+  const password    = formData.get('password')    as string
+  const fullName    = formData.get('full_name')   as string
+  const businessId  = formData.get('business_id') as string
+  const slug        = formData.get('slug')        as string
+
+  if (!email || !password || !fullName || !businessId || !slug) {
+    return { error: 'Todos los campos son obligatorios.' }
+  }
+
+  const supabase = await createClient()
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name:   fullName,   // Nombre mostrado en la UI
+        business_id: businessId, // UUID del tenant en la tabla businesses
+        slug,                    // ← CLAVE ZERO-DB: inyectado en raw_user_meta_data
+                                 //   El middleware lo extrae del JWT sin tocar BD
+      },
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  // Redirige al login del tenant recién registrado
+  redirect(`/${slug}/login`)
+}
 
 /**
  * login — Server Action para inicio de sesión.
  *
- * Tras autenticarse, recupera el negocio del perfil y redirige al
- * dashboard del tenant: /{slug}/dashboard
+ * Tras autenticarse exitosamente, sincroniza el slug en raw_user_meta_data
+ * (por si el usuario fue creado antes de implementar el campo slug).
+ * Luego redirige al dashboard del tenant: /{slug}/dashboard.
  */
 export async function login(formData: FormData) {
   const email    = formData.get('email')    as string
@@ -23,26 +70,49 @@ export async function login(formData: FormData) {
     return { error: error.message }
   }
 
-  // Obtener el slug del negocio del perfil del usuario
-  const { data: profile } = await supabase
+  // ── Slug ya en el JWT ────────────────────────────────────────────────────────
+  // Si el JWT ya contiene el slug (usuarios registrados con la nueva acción),
+  // lo usamos directamente para evitar la consulta a BD.
+  const existingSlug = data.user.user_metadata?.slug as string | undefined
+
+  if (existingSlug) {
+    redirect(`/${existingSlug}/dashboard`)
+  }
+
+  // ── Retrocompatibilidad: usuarios sin slug en el JWT ─────────────────────────
+  // Para cuentas antiguas: consultamos la BD UNA VEZ y luego inyectamos el slug
+  // en raw_user_meta_data para que los siguientes logins sean Zero-DB.
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('business_id')
     .eq('id', data.user.id)
     .single()
 
+  const profile = profileData as Pick<Profile, 'business_id'> | null
+
   if (!profile?.business_id) {
     return { error: 'No tienes un negocio asignado. Contacta al administrador.' }
   }
 
-  const { data: business } = await supabase
+  const { data: businessData } = await supabase
     .from('businesses')
     .select('slug')
     .eq('id', profile.business_id)
     .single()
 
+  const business = businessData as Pick<Business, 'slug'> | null
+
   if (!business?.slug) {
     return { error: 'No se encontró el negocio. Contacta al administrador.' }
   }
+
+  // Inyectar slug en el JWT para que los logins futuros sean Zero-DB
+  await supabase.auth.updateUser({
+    data: {
+      business_id: profile.business_id,
+      slug:        business.slug, // ← persiste en raw_user_meta_data del JWT
+    },
+  })
 
   redirect(`/${business.slug}/dashboard`)
 }
