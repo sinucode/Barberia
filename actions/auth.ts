@@ -125,3 +125,39 @@ export async function logout() {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+/**
+ * signInWithGoogle — Inicia el flujo de OAuth con Google.
+ * 
+ * Se pasa el slug de la barbería actual para que la ruta de callback
+ * sepa a dónde redirigir en caso de error o si es un usuario nuevo.
+ */
+export async function signInWithGoogle(slug: string) {
+  const supabase = await createClient()
+
+  // Determinamos la URL base según el entorno (producción vs local)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+
+  // El redirectTo apunta al callback y pasamos el slug como parámetro
+  const redirectUrl = `${siteUrl}/auth/callback?slug=${slug}`
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  // Redirigimos al usuario a la pantalla de consentimiento de Google
+  if (data.url) {
+    redirect(data.url)
+  }
+}
