@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   Design Tokens — fallbacks (sobreescritos por el tenant)
+   ============================================================ */
+:root {
+  --primary-color:   #C5A059;
+  --primary-dark:    #A8843A;
+  --secondary-color: #1A1A1A;
+  --bg-color:        #080808;
+  --text-color:      #F4F4F4;
+  --border-color:    #2A2A2A;
+  --muted-color:     #6B6B6B;
+  --font-family:     'Inter', system-ui, sans-serif;
+
+  /* Spacing & radii */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  20px;
+  --radius-xl:  28px;
+
+  /* Sombras */
+  --shadow-glow: 0 0 20px rgba(197, 160, 89, 0.25);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Scrollbar personalizado
+   ============================================================ */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--secondary-color); }
+::-webkit-scrollbar-thumb { background: var(--primary-color); border-radius: 99px; }
+
+/* ============================================================
+   Utilidades
+   ============================================================ */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* Glassmorphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Glow effect dinámico con el color del tenant */
+  .glow-primary {
+    box-shadow: 0 0 24px color-mix(in srgb, var(--primary-color) 35%, transparent);
+  }
+
+  /* Shimmer skeleton */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--secondary-color) 25%,
+      rgba(255,255,255,0.08) 50%,
+      var(--secondary-color) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* Safe area para móvil (bottom nav) */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
+  .mb-safe { margin-bottom: env(safe-area-inset-bottom, 16px); }
+}
+
+/* ============================================================
+   Componentes globales
+   ============================================================ */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
+           font-semibold text-sm transition-all duration-200
+           bg-xinuco-primary text-xinuco-bg
+           hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3
+           font-medium text-sm transition-all duration-200
+           bg-transparent text-xinuco-text border border-xinuco-border
+           hover:border-xinuco-primary hover:text-xinuco-primary
+           active:scale-[0.98];
+  }
+
+  .card {
+    @apply rounded-2xl p-5 transition-all duration-200;
+    background: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+  }
+
+  .input-base {
+    @apply w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200
+           bg-xinuco-surface text-xinuco-text placeholder:text-xinuco-muted
+           border border-xinuco-border
+           focus:border-xinuco-primary focus:ring-2;
+    --tw-ring-color: color-mix(in srgb, var(--primary-color) 25%, transparent);
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium;
+  }
+}
