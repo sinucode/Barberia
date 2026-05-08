@@ -65,6 +65,8 @@ export async function updateSession(request: NextRequest) {
   const slug = pathSegments[0]
   const innerRoute = pathSegments[1] ?? ''
 
+  const isGlobalAdminRoute = slug === 'admin' && innerRoute === ''
+
   const isProtectedRoute =
     innerRoute === 'dashboard' ||
     innerRoute === 'settings' ||
@@ -73,6 +75,19 @@ export async function updateSession(request: NextRequest) {
   const isLoginRoute = innerRoute === 'login'
 
   // ── 4. Redirecciones base de sesión ──────────────────────────────────────────
+  if (isGlobalAdminRoute) {
+    if (!user) {
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+    if (user.app_metadata?.role !== 'super_admin') {
+      const userSlug = user.app_metadata?.slug
+      url.pathname = userSlug ? `/${userSlug}/dashboard` : '/'
+      return NextResponse.redirect(url)
+    }
+    // Si es super_admin, permitimos el paso a /admin
+    return supabaseResponse
+  }
   if (isProtectedRoute && !user) {
     url.pathname = `/${slug}/login`
     return NextResponse.redirect(url)

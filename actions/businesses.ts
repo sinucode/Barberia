@@ -46,6 +46,12 @@ export async function createBusiness(businessData: BusinessInsert) {
  */
 export async function toggleBusinessFeature(businessId: string, featureKey: string, value: boolean) {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.app_metadata?.role !== 'super_admin') {
+    return { error: 'Autorización denegada. Se requiere rol de super_admin.' }
+  }
+
   // La seguridad del rol ya está validada DENTRO del RPC de Postgres.
   const { error } = await supabase.rpc('toggle_feature_flag', {
     p_business_id: businessId,

@@ -31,7 +31,7 @@ export interface Business {
 }
 
 // ---------- Tabla: profiles ----------
-export type UserRole = 'admin' | 'barber' | 'manicurist'
+export type UserRole = 'super_admin' | 'admin' | 'barber' | 'manicurist'
 
 export interface Profile {
   id:          string     // UUID — mismo que auth.users.id
@@ -84,7 +84,7 @@ export interface Service {
 }
 
 // ---------- Tabla: staff ----------
-export type StaffRole = 'admin' | 'barber' | 'manicurist'
+export type StaffRole = 'super_admin' | 'admin' | 'barber' | 'manicurist'
 
 export interface Staff {
   id:          string

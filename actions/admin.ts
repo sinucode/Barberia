@@ -17,9 +17,10 @@ export interface ActionResult {
 export async function createTenant(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
 
-  // TODO: verificar rol super-admin cuando implementemos RBAC
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { success: false, error: 'No autenticado.' }
+  if (!user || user.app_metadata?.role !== 'super_admin') {
+    return { success: false, error: 'Autorización denegada. Se requiere rol de super_admin.' }
+  }
 
   const name          = (formData.get('name')          as string).trim()
   const slug          = (formData.get('slug')          as string).trim().toLowerCase()
@@ -69,6 +70,11 @@ export async function toggleTenantStatus(
   currentStatus: boolean,
 ): Promise<ActionResult> {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.app_metadata?.role !== 'super_admin') {
+    return { success: false, error: 'Autorización denegada. Se requiere rol de super_admin.' }
+  }
 
   const { error } = await supabase
     .from('businesses')
