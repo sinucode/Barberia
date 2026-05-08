@@ -12,14 +12,22 @@ export interface BusinessBranding {
   font_family:     string   // Ej: "Inter" | "Bebas Neue"
 }
 
+// ---------- Feature Flags ----------
+export interface BusinessFeatures {
+  loyalty: boolean;
+  inventory: boolean;
+  advanced_reports: boolean;
+}
+
 // ---------- Tabla: businesses ----------
 export interface Business {
-  id:         string             // UUID
-  name:       string
-  slug:       string             // Identificador único de URL
-  is_active:  boolean
-  branding:   BusinessBranding
-  created_at: string
+  id:               string             // UUID
+  name:             string
+  slug:             string             // Identificador único de URL
+  is_active:        boolean
+  branding:         BusinessBranding
+  features_enabled: BusinessFeatures
+  created_at:       string
 }
 
 // ---------- Tabla: profiles ----------

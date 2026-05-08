@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       }
 
       // 2. Si NO lo tiene (es su primer login social o cuenta antigua),
-      // realizamos consulta rápida a 'profiles' con join a 'businesses'
+      // realizamos consulta estricta a 'profiles' con join a 'businesses'
       const { data: profileRaw } = await supabase
         .from('profiles')
         .select(`
@@ -57,11 +57,19 @@ export async function GET(request: Request) {
           return NextResponse.redirect(`${origin}/${fetchedSlug}/dashboard`)
         }
       }
+
+      // 4. Bloqueo de Seguridad: El perfil NO existe (es un desconocido).
+      // Destruimos la sesión inmediatamente para evitar cualquier acceso o token huérfano.
+      await supabase.auth.signOut()
+
+      if (requestSlug) {
+        return NextResponse.redirect(`${origin}/${requestSlug}/login?error=unauthorized`)
+      }
+      return NextResponse.redirect(`${origin}/?error=unauthorized`)
     }
   }
 
-  // 4. Seguridad y manejo de errores:
-  // Si no hay sesión, el perfil no existe, o falló la autorización
+  // 5. Seguridad: Fallo en el código OAuth o sin código
   if (requestSlug) {
     return NextResponse.redirect(`${origin}/${requestSlug}/login?error=auth_failed`)
   }

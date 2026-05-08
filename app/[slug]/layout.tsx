@@ -87,7 +87,7 @@ export default async function TenantLayout({
       )}
 
       {/* Las CSS vars se ponen en el body para que apliquen al subtree del tenant */}
-      <body style={cssVars} className="min-h-screen antialiased">
+      <body style={cssVars} className="min-h-screen antialiased" suppressHydrationWarning>
         {children}
       </body>
     </>

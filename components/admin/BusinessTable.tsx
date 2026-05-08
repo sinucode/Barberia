@@ -2,6 +2,7 @@ import { createClient }   from '@/lib/supabase/server'
 import { redirect }        from 'next/navigation'
 import { ExternalLink, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
 import { toggleTenantStatus }  from '@/actions/admin'
+import { FeatureToggles }      from './FeatureToggles'
 import type { Business }       from '@/types/database'
 
 // ── Toggle de estado (inline Server Action) ───────────────────────────────────
@@ -79,6 +80,9 @@ export async function BusinessTable() {
             <th className="px-5 py-3.5 text-left text-xs font-semibold text-xinuco-muted uppercase tracking-wider">
               Estado
             </th>
+            <th className="px-5 py-3.5 text-left text-xs font-semibold text-xinuco-muted uppercase tracking-wider">
+              Módulos
+            </th>
             <th className="px-5 py-3.5 text-right text-xs font-semibold text-xinuco-muted uppercase tracking-wider">
               Acciones
             </th>
@@ -142,6 +146,11 @@ export async function BusinessTable() {
                 <ToggleStatusButton id={biz.id} isActive={biz.is_active} />
               </td>
 
+              {/* Módulos */}
+              <td className="px-5 py-4">
+                <FeatureToggles businessId={biz.id} initialFeatures={biz.features_enabled || { loyalty: false, inventory: false, advanced_reports: false }} />
+              </td>
+
               {/* Acciones */}
               <td className="px-5 py-4 text-right">
                 <button
@@ -160,7 +169,7 @@ export async function BusinessTable() {
         </tbody>
         <tfoot>
           <tr className="border-t border-xinuco-border bg-xinuco-surface/40">
-            <td colSpan={5} className="px-5 py-3 text-xs text-xinuco-muted">
+            <td colSpan={6} className="px-5 py-3 text-xs text-xinuco-muted">
               {businesses.length} negocio{businesses.length !== 1 ? 's' : ''} registrado{businesses.length !== 1 ? 's' : ''}
             </td>
           </tr>
