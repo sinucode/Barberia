@@ -3,8 +3,8 @@
 import { useReducer, useTransition, useState } from 'react'
 import { Check, ChevronRight, AlertCircle, Loader2, Calendar } from 'lucide-react'
 import type { Service, Staff } from '@/types/database'
-// Aquí importaríamos el Server Action cuando exista
-// import { createAppointment } from '@/actions/appointments'
+// Importar las Server Actions
+import { createAppointment, getAvailableSlots } from '@/actions/appointments'
 
 // ── Tipos y Estado del Wizard ──────────────────────────────────────────────
 export type BookingStep = 1 | 2 | 3 | 4
@@ -15,13 +15,18 @@ interface BookingState {
   staffId: string | null // 'any' significa cualquiera
   date: string | null
   time: string | null
+  slots: string[]
+  isLoadingSlots: boolean
   userData: { name: string; phone: string } | null
 }
 
 type BookingAction =
   | { type: 'SET_SERVICE'; payload: string }
   | { type: 'SET_STAFF'; payload: string }
-  | { type: 'SET_TIME'; payload: { date: string; time: string } }
+  | { type: 'SET_DATE'; payload: string }
+  | { type: 'SET_SLOTS'; payload: string[] }
+  | { type: 'SET_LOADING_SLOTS'; payload: boolean }
+  | { type: 'SET_TIME'; payload: string }
   | { type: 'SET_USER'; payload: { name: string; phone: string } }
   | { type: 'GOTO_STEP'; payload: BookingStep }
   | { type: 'RESET_FROM_COLLISION' }
@@ -32,24 +37,32 @@ const initialState: BookingState = {
   staffId: null,
   date: null,
   time: null,
+  slots: [],
+  isLoadingSlots: false,
   userData: null,
 }
 
 function wizardReducer(state: BookingState, action: BookingAction): BookingState {
   switch (action.type) {
     case 'SET_SERVICE':
-      return { ...state, serviceId: action.payload, currentStep: 2 }
+      return { ...state, serviceId: action.payload, currentStep: 2, time: null, date: null, slots: [] }
     case 'SET_STAFF':
-      return { ...state, staffId: action.payload, currentStep: 3 }
+      return { ...state, staffId: action.payload, currentStep: 3, time: null, date: null, slots: [] }
+    case 'SET_DATE':
+      return { ...state, date: action.payload, time: null }
+    case 'SET_SLOTS':
+      return { ...state, slots: action.payload, isLoadingSlots: false }
+    case 'SET_LOADING_SLOTS':
+      return { ...state, isLoadingSlots: action.payload }
     case 'SET_TIME':
-      return { ...state, date: action.payload.date, time: action.payload.time, currentStep: 4 }
+      return { ...state, time: action.payload, currentStep: 4 }
     case 'SET_USER':
       return { ...state, userData: action.payload }
     case 'GOTO_STEP':
       return { ...state, currentStep: action.payload }
     case 'RESET_FROM_COLLISION':
-      // Mantiene los datos pero regresa al paso de fecha/hora para elegir otra
-      return { ...state, date: null, time: null, currentStep: 3 }
+      // Mantiene los datos pero regresa al paso de fecha/hora para reintentar
+      return { ...state, time: null, currentStep: 3, slots: [] }
     default:
       return state
   }
@@ -68,6 +81,21 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
+  // Cargar slots al elegir fecha
+  const handleDateSelect = async (selectedDate: string) => {
+    dispatch({ type: 'SET_DATE', payload: selectedDate })
+    if (!state.serviceId) return
+
+    dispatch({ type: 'SET_LOADING_SLOTS', payload: true })
+    try {
+      const res = await getAvailableSlots(businessId, state.serviceId, selectedDate, state.staffId)
+      dispatch({ type: 'SET_SLOTS', payload: res.slots || [] })
+    } catch (e) {
+      console.error(e)
+      dispatch({ type: 'SET_SLOTS', payload: [] })
+    }
+  }
+
   // Handlers
   const handleConfirm = () => {
     if (!state.serviceId || !state.date || !state.time || !state.userData) return
@@ -77,24 +105,33 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
     // UI Optimista con prevención de colisiones
     startTransition(async () => {
       try {
-        // Simulamos la llamada al Server Action
-        // const res = await createAppointment({ ... })
-        // if (res.error) throw new Error(res.error)
+        const payload = {
+          businessId,
+          staffId: state.staffId,
+          serviceId: state.serviceId as string,
+          date: state.date as string,
+          time: state.time as string,
+          clientData: state.userData as { name: string; phone: string }
+        }
+
+        const res = await createAppointment(payload)
         
-        // Simular colisión para demostración si se llama "error" en nombre
-        if (state.userData?.name.toLowerCase() === 'error') {
-          throw new Error('collision')
+        if (res.error) {
+          if (res.error === 'collision') {
+            setError('¡Uy! Alguien se te adelantó. Este horario acaba de ser ocupado.')
+            dispatch({ type: 'RESET_FROM_COLLISION' })
+            // Recargar slots automáticamente
+            if (state.date) handleDateSelect(state.date)
+          } else {
+            setError(res.message || 'Ocurrió un error al agendar tu cita.')
+          }
+          return
         }
 
         alert('¡Cita Confirmada con éxito!')
         
       } catch (err: any) {
-        if (err.message === 'collision') {
-          setError('Este horario acaba de ser ocupado. Por favor, elige otro.')
-          dispatch({ type: 'RESET_FROM_COLLISION' })
-        } else {
-          setError('Ocurrió un error al agendar tu cita.')
-        }
+        setError('Error inesperado de red. Intenta de nuevo.')
       }
     })
   }
@@ -205,16 +242,62 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         )}
 
         {state.currentStep === 3 && (
-          <div className="p-4 bg-xinuco-surface border border-xinuco-border rounded-xl animate-fade-in flex flex-col items-center gap-4">
-            <Calendar className="text-xinuco-muted" size={32} />
-            <p className="text-sm text-xinuco-text text-center">Aquí va el selector horizontal de fechas y horas.</p>
-            {/* Simulación rápida */}
-            <button
-              onClick={() => dispatch({ type: 'SET_TIME', payload: { date: 'Hoy', time: '15:00' } })}
-              className="px-6 py-2 rounded-full bg-[var(--primary-color)] text-white text-sm font-semibold"
-            >
-              Elegir Hoy a las 15:00
-            </button>
+          <div className="p-4 bg-xinuco-surface border border-xinuco-border rounded-xl animate-fade-in flex flex-col gap-4">
+            
+            {/* Simulador de Días (simplificado para el Wizard) */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {/* Para demo generamos hoy y los próximos 5 días */}
+              {[...Array(6)].map((_, i) => {
+                const d = new Date()
+                d.setDate(d.getDate() + i)
+                const dateStr = d.toISOString().split('T')[0]
+                const dayName = d.toLocaleDateString('es-CO', { weekday: 'short' })
+                const dayNum = d.getDate()
+                
+                return (
+                  <button
+                    key={dateStr}
+                    onClick={() => handleDateSelect(dateStr)}
+                    className={`flex flex-col items-center justify-center min-w-[60px] p-2 rounded-xl border transition-all shrink-0
+                      ${state.date === dateStr 
+                        ? 'bg-[var(--primary-color)] border-[var(--primary-color)] text-white' 
+                        : 'bg-transparent border-xinuco-border text-xinuco-muted hover:border-[var(--primary-color)]'}`}
+                  >
+                    <span className="text-[10px] uppercase font-bold">{dayName}</span>
+                    <span className="text-lg font-bold">{dayNum}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Horas disponibles (Slots) */}
+            <div className="mt-2 min-h-[100px]">
+              {!state.date ? (
+                <div className="flex flex-col items-center justify-center h-full text-xinuco-muted py-6 gap-2 opacity-50">
+                  <Calendar size={24} />
+                  <p className="text-xs">Selecciona un día para ver los horarios</p>
+                </div>
+              ) : state.isLoadingSlots ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 size={24} className="animate-spin text-[var(--primary-color)]" />
+                </div>
+              ) : state.slots.length === 0 ? (
+                <p className="text-sm text-center text-xinuco-muted py-8">No hay citas disponibles para este día.</p>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {state.slots.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => dispatch({ type: 'SET_TIME', payload: s })}
+                      className="px-2 py-2 rounded-lg border border-[var(--primary-color)] text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-colors text-sm font-semibold"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
         )}
       </div>
