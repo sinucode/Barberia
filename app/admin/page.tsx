@@ -1,69 +1,47 @@
-import { Suspense }            from 'react'
-import type { Metadata }        from 'next'
-import { BusinessTable }        from '@/components/admin/BusinessTable'
-import { BusinessTableSkeleton } from '@/components/admin/BusinessTableSkeleton'
-import { TenantActions }        from '@/components/admin/TenantActions'
-import { Store }                from 'lucide-react'
+import { Suspense } from 'react'
+import type { Metadata } from 'next'
+import { getBusinesses } from '@/actions/businesses'
+import { AdminDashboardClient } from '@/components/admin/AdminDashboardClient'
+import { Loader2 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Negocios — Xinuco Admin',
-  description: 'Gestión global de los tenants de Xinuco SaaS',
+  title: 'Centro de Control — Xinuco Admin',
+  description: 'Panel de Super Administrador de Xinuco SaaS',
 }
 
-/**
- * AdminPage — CRUD principal de negocios (tenants).
- *
- * Arquitectura:
- *  - Server Component (sin 'use client')
- *  - <TenantActions>  → isla de cliente con el botón + modal
- *  - <Suspense>       → muestra BusinessTableSkeleton mientras carga
- *  - <BusinessTable>  → async Server Component con datos reales
- */
-export default function AdminPage() {
+export default async function AdminPage() {
+  // Fetch inicial en el servidor para delegar los datos al cliente
+  const businesses = await getBusinesses()
+
   return (
-    <div className="flex flex-col gap-6 max-w-6xl">
+    <div className="flex flex-col gap-8 max-w-6xl mx-auto py-8 px-4 md:px-8">
+      
+      {/* Layout Global: Header Premium Minimalist */}
+      <header className="flex flex-col gap-2 pb-6 border-b border-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
+        <h1 
+          className="text-4xl font-serif tracking-tight text-xinuco-text" 
+          style={{ fontFamily: 'Georgia, serif' }}
+        >
+          Centro de Control Xinuco
+        </h1>
+        <p className="text-sm text-xinuco-muted">
+          Gestión maestra de inquilinos y administración de módulos (Feature Flags).
+        </p>
+      </header>
 
-      {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'color-mix(in srgb, var(--primary-color) 15%, transparent)' }}
-          >
-            <Store size={20} style={{ color: 'var(--primary-color)' }} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-xinuco-text">Negocios (Tenants)</h1>
-            <p className="text-xs text-xinuco-muted mt-0.5">
-              Todos los negocios registrados en la plataforma
-            </p>
-          </div>
-        </div>
-
-        {/* Botón + modal — isla de cliente */}
-        <TenantActions />
-      </div>
-
-      {/* Stats rápidas (placeholder para futuro) */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Total de negocios',   value: '—' },
-          { label: 'Activos este mes',    value: '—' },
-          { label: 'MRR (Ingresos recurrentes)', value: '—' },
-        ].map(({ label, value }) => (
-          <div key={label} className="card py-4">
-            <p className="text-2xl font-bold text-xinuco-text">{value}</p>
-            <p className="text-xs text-xinuco-muted mt-1">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Tabla principal con Suspense */}
-      <section aria-label="Lista de negocios">
-        <Suspense fallback={<BusinessTableSkeleton />}>
-          <BusinessTable />
+      {/* Contenido Principal con Suspense e Inyección de Datos */}
+      <main>
+        <Suspense 
+          fallback={
+            <div className="flex flex-col items-center justify-center py-32 text-xinuco-muted gap-4">
+              <Loader2 className="animate-spin" size={32} style={{ color: 'var(--primary-color)' }} />
+              <span className="text-sm font-medium">Cargando inquilinos...</span>
+            </div>
+          }
+        >
+          <AdminDashboardClient initialBusinesses={businesses} />
         </Suspense>
-      </section>
+      </main>
 
     </div>
   )
