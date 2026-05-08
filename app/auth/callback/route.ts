@@ -13,57 +13,65 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      // 1. Leemos el slug inyectado en el JWT (Zero-DB)
+      // 1. Leemos el slug inyectado en el JWT (Zero-DB, sin round-trip a BD)
       const userSlug = data.user.app_metadata?.slug as string | undefined
 
       if (userSlug) {
-        // El usuario ya tiene un tenant asignado en el JWT, redirigimos a su dashboard
+        // El usuario ya tiene un tenant asignado en app_metadata, redirigimos a su dashboard
         return NextResponse.redirect(`${origin}/${userSlug}/dashboard`)
       }
 
-      // 2. Si NO lo tiene (es su primer login social o cuenta antigua),
-      // realizamos consulta estricta a 'profiles' con join a 'businesses'
-      const { data: profileRaw } = await supabase
-        .from('profiles')
-        .select(`
-          business_id,
-          businesses!inner (
-            slug
-          )
-        `)
-        .eq('id', data.user.id)
-        .single()
+      // 2. Si NO lo tiene (primer login social o cuenta legada),
+      // realizamos consulta a 'profiles' con join a 'businesses'.
+      // SENTINEL PATCH 3: Envolvemos TODA la lógica de BD en try/catch para
+      // evitar sesiones huérfanas ante cualquier fallo de base de datos.
+      try {
+        const { data: profileRaw } = await supabase
+          .from('profiles')
+          .select(`
+            business_id,
+            businesses!inner (
+              slug
+            )
+          `)
+          .eq('id', data.user.id)
+          .single()
 
-      const profileData = profileRaw as { business_id: string, businesses: { slug: string } | { slug: string }[] } | null;
+        const profileData = profileRaw as { business_id: string, businesses: { slug: string } | { slug: string }[] } | null
 
-      if (profileData?.business_id && profileData.businesses) {
-        // Extraemos el slug del inner join, que puede venir como objeto o array dependiendo del tipado
-        const businessInfo = Array.isArray(profileData.businesses) 
-          ? profileData.businesses[0] 
-          : profileData.businesses;
-          
-        const fetchedSlug = businessInfo?.slug;
+        if (profileData?.business_id && profileData.businesses) {
+          const businessInfo = Array.isArray(profileData.businesses)
+            ? profileData.businesses[0]
+            : profileData.businesses
 
-        if (fetchedSlug) {
-          // 3. Ejecutamos el RPC seguro para grabar la identidad del inquilino en el app_metadata
-          await supabase.rpc('secure_set_user_context', {
-            business_slug: fetchedSlug
-          })
-          await supabase.auth.refreshSession()
+          const fetchedSlug = businessInfo?.slug
 
-          // Redirección final al dashboard
-          return NextResponse.redirect(`${origin}/${fetchedSlug}/dashboard`)
+          if (fetchedSlug) {
+            // 3. RPC seguro — escribe en app_metadata mediante el trigger de Postgres (The Vault)
+            await supabase.rpc('secure_set_user_context', {
+              business_slug: fetchedSlug
+            })
+            // Refrescar sesión para que el JWT local incluya los nuevos app_metadata
+            await supabase.auth.refreshSession()
+
+            return NextResponse.redirect(`${origin}/${fetchedSlug}/dashboard`)
+          }
         }
-      }
 
-      // 4. Bloqueo de Seguridad: El perfil NO existe (es un desconocido).
-      // Destruimos la sesión inmediatamente para evitar cualquier acceso o token huérfano.
-      await supabase.auth.signOut()
+        // 4. Bloqueo: perfil no encontrado → destruimos la sesión (usuario desconocido)
+        await supabase.auth.signOut()
+        if (requestSlug) {
+          return NextResponse.redirect(`${origin}/${requestSlug}/login?error=unauthorized`)
+        }
+        return NextResponse.redirect(`${origin}/?error=unauthorized`)
 
-      if (requestSlug) {
-        return NextResponse.redirect(`${origin}/${requestSlug}/login?error=unauthorized`)
+      } catch (err) {
+        // 5. SENTINEL PATCH 3 — Fallo de BD no manejado:
+        //    Destruimos la sesión para impedir tokens huérfanos y redirigimos a error.
+        console.error('[AUTH CALLBACK] Unhandled DB error — signing out to prevent orphan session:', err)
+        await supabase.auth.signOut()
+        return NextResponse.redirect(`${origin}/?error=server_error`)
       }
-      return NextResponse.redirect(`${origin}/?error=unauthorized`)
     }
   }
 

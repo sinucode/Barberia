@@ -4,9 +4,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 /**
  * updateSession — Middleware de Supabase con aislamiento Multi-tenant Zero-DB.
  *
- * Estrategia:
- *  - El JWT descifrado localmente (sin consulta a BD) contiene `user_metadata.slug`
- *    inyectado durante el registro / primer login.
+ * Estrategia (SENTINEL PATCH 1 — IDOR fix):
+ *  - El JWT descifrado localmente (sin consulta a BD) contiene `app_metadata.slug`
+ *    inyectado por el RPC `secure_set_user_context` gestionado por The Vault.
+ *  - `app_metadata` es de SOLO ESCRITURA para el servidor (no modificable por el cliente).
+ *    Usar `user_metadata` en su lugar sería vulnerable a IDOR.
  *  - Se compara el slug de la URL con el slug del JWT para aislar tenants.
  *  - Cero consultas a la base de datos en el hot-path del Edge.
  */
