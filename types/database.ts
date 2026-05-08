@@ -54,7 +54,7 @@ export type AppointmentStatus =
 export interface Appointment {
   id:            string
   business_id:   string   // UUID → businesses.id
-  barber_id:     string   // UUID → profiles.id
+  barber_id:     string | null // UUID → profiles.id (nullable if staff is 'any' or not specified)
   customer_name: string
   customer_phone: string | null
   service_name:  string | null

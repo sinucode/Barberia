@@ -108,6 +108,27 @@ export async function createAppointment(formData: {
   const supabase = await createClient()
   const { businessId, staffId, serviceId, date, time, clientData } = formData
 
+  // --- TAREA 1: VALIDACIÓN DE SEGURIDAD (Anti-IDOR) ---
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'unauthorized', message: 'No tienes permisos para agendar en este negocio.' }
+  }
+
+  const isSuperAdmin = user.app_metadata?.role === 'super_admin'
+
+  if (!isSuperAdmin) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('business_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.business_id !== businessId) {
+      return { error: 'unauthorized', message: 'No tienes permisos para agendar en este negocio.' }
+    }
+  }
+
   // 1. Obtener servicio (duración y nombre)
   const { data: service } = await supabase
     .from('services')
@@ -127,11 +148,14 @@ export async function createAppointment(formData: {
   const range = `[${formatDB(start)},${formatDB(end)})`
 
   // 4. Intento de inserción mapeando a los tipos correctos de database.ts
+  // --- TAREA 2: Lógica de Empleado "Cualquiera" ---
+  const finalBarberId = (!staffId || staffId === 'any') ? null : staffId
+
   const { error } = await supabase
     .from('appointments')
     .insert({
       business_id: businessId,
-      barber_id: staffId === 'any' ? businessId : (staffId || businessId), // fallback si 'any'
+      barber_id: finalBarberId,
       service_name: service.name,
       customer_name: clientData.name,
       customer_phone: clientData.phone,
