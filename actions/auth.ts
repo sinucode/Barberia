@@ -74,7 +74,7 @@ export async function login(formData: FormData) {
   // ── Slug ya en el JWT ────────────────────────────────────────────────────────
   // Si el JWT ya contiene el slug (usuarios registrados con la nueva acción),
   // lo usamos directamente para evitar la consulta a BD.
-  const existingSlug = data.user.user_metadata?.slug as string | undefined
+  const existingSlug = data.user.app_metadata?.slug as string | undefined
 
   if (existingSlug) {
     redirect(`/${existingSlug}/dashboard`)
@@ -107,13 +107,13 @@ export async function login(formData: FormData) {
     return { error: 'No se encontró el negocio. Contacta al administrador.' }
   }
 
-  // Inyectar slug en el JWT para que los logins futuros sean Zero-DB
-  await supabase.auth.updateUser({
-    data: {
-      business_id: profile.business_id,
-      slug:        business.slug, // ← persiste en raw_user_meta_data del JWT
-    },
+  // Inyectar slug en el app_metadata mediante RPC seguro para Zero-DB
+  await supabase.rpc('secure_set_user_context', {
+    business_slug: business.slug
   })
+  
+  // Refrescar sesión para actualizar el JWT local con los nuevos app_metadata
+  await supabase.auth.refreshSession()
 
   redirect(`/${business.slug}/dashboard`)
 }

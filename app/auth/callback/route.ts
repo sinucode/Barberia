@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       // 1. Leemos el slug inyectado en el JWT (Zero-DB)
-      const userSlug = data.user.user_metadata?.slug as string | undefined
+      const userSlug = data.user.app_metadata?.slug as string | undefined
 
       if (userSlug) {
         // El usuario ya tiene un tenant asignado en el JWT, redirigimos a su dashboard
@@ -45,13 +45,11 @@ export async function GET(request: Request) {
         const fetchedSlug = businessInfo?.slug;
 
         if (fetchedSlug) {
-          // 3. Ejecutamos updateUser para grabar la identidad del inquilino en el JWT permanentemente
-          await supabase.auth.updateUser({
-            data: {
-              business_id: profileData.business_id,
-              slug: fetchedSlug
-            }
+          // 3. Ejecutamos el RPC seguro para grabar la identidad del inquilino en el app_metadata
+          await supabase.rpc('secure_set_user_context', {
+            business_slug: fetchedSlug
           })
+          await supabase.auth.refreshSession()
 
           // Redirección final al dashboard
           return NextResponse.redirect(`${origin}/${fetchedSlug}/dashboard`)

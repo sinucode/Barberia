@@ -82,10 +82,10 @@ export async function updateSession(request: NextRequest) {
   }
 
   // ── 5. AISLAMIENTO MULTI-TENANT — ZERO-DB QUERY ──────────────────────────────
-  // El slug está inyectado en raw_user_meta_data durante el signUp/login.
+  // El slug está inyectado en app_metadata mediante RPC.
   // Se lee directamente del JWT descifrado; no hay consulta a BD.
   if (user && isProtectedRoute) {
-    const userSlug = user.user_metadata?.slug as string | undefined
+    const userSlug = user.app_metadata?.slug as string | undefined
 
     if (userSlug !== slug) {
       // Intento de acceso cross-tenant: bloqueamos y redirigimos al tenant correcto.
