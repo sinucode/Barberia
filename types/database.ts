@@ -31,7 +31,7 @@ export interface Business {
 }
 
 // ---------- Tabla: profiles ----------
-export type UserRole = 'admin' | 'barber'
+export type UserRole = 'admin' | 'barber' | 'manicurist'
 
 export interface Profile {
   id:          string     // UUID — mismo que auth.users.id
@@ -72,12 +72,36 @@ export interface Appointment {
 
 // ---------- Tabla: services ----------
 export interface Service {
+  id:                 string
+  business_id:        string
+  name:               string
+  description:        string | null
+  duration_minutes:   number
+  price:              number
+  is_active:          boolean
+  created_at:         string
+  updated_at:         string
+}
+
+// ---------- Tabla: staff ----------
+export type StaffRole = 'admin' | 'barber' | 'manicurist'
+
+export interface Staff {
   id:          string
   business_id: string
+  user_id:     string | null  // nullable — staff sin cuenta auth todavía
   name:        string
-  duration_min: number   // duración en minutos
-  price:       number
+  role:        StaffRole
   is_active:   boolean
+  created_at:  string
+  updated_at:  string
+}
+
+// ---------- Tabla: staff_services (pivot) ----------
+export interface StaffService {
+  staff_id:    string   // → staff.id
+  service_id:  string   // → services.id
+  business_id: string   // → businesses.id (redundante para RLS)
 }
 
 // ---------- Helpers tipados ----------
@@ -112,8 +136,18 @@ export interface Database {
       }
       services: {
         Row:    Service
-        Insert: Omit<Service, 'id'>
-        Update: Partial<Omit<Service, 'id'>>
+        Insert: Omit<Service, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Service, 'id' | 'created_at' | 'updated_at'>>
+      }
+      staff: {
+        Row:    Staff
+        Insert: Omit<Staff, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Staff, 'id' | 'created_at' | 'updated_at'>>
+      }
+      staff_services: {
+        Row:    StaffService
+        Insert: StaffService
+        Update: Partial<StaffService>
       }
     }
   }
