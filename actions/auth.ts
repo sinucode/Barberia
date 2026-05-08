@@ -2,6 +2,7 @@
 
 import { createClient }            from '@/lib/supabase/server'
 import { redirect }                from 'next/navigation'
+import { headers }                 from 'next/headers'
 import type { Profile, Business }  from '@/types/database'
 
 /**
@@ -134,16 +135,15 @@ export async function logout() {
  */
 export async function signInWithGoogle(slug: string) {
   const supabase = await createClient()
+  const headersList = await headers()
 
-  // Determinamos la URL base según el entorno (producción vs local)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-    ? process.env.NEXT_PUBLIC_SITE_URL
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000'
+  // Determinamos la URL base dinámicamente y de forma segura
+  const protocol = headersList.get('x-forwarded-proto') || 'http'
+  const host     = headersList.get('host')
+  const origin   = host ? `${protocol}://${host}` : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   // El redirectTo apunta al callback y pasamos el slug como parámetro
-  const redirectUrl = `${siteUrl}/auth/callback?slug=${slug}`
+  const redirectUrl = `${origin}/auth/callback?slug=${slug}`
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',

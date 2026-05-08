@@ -9,7 +9,7 @@ function LoginErrorAlert() {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
-  if (error !== 'unauthorized') return null
+  if (error !== 'unauthorized' && error !== 'auth_failed') return null
 
   return (
     <div className="mb-4 p-3 rounded-sm border border-[#ef4444]/20 bg-[#ef4444]/10 text-[#ef4444] text-sm text-center font-medium">
