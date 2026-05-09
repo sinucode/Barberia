@@ -51,15 +51,21 @@ export async function signUp(formData: FormData) {
 }
 
 /**
- * login — Server Action para inicio de sesión.
+ * loginWithPassword — Server Action para inicio de sesión clásico.
  *
- * Tras autenticarse exitosamente, sincroniza el slug en raw_user_meta_data
- * (por si el usuario fue creado antes de implementar el campo slug).
- * Luego redirige al dashboard del tenant: /{slug}/dashboard.
+ * Tras autenticarse exitosamente, verifica el rol. Si es super_admin,
+ * redirige al panel global. Si es tenant regular, inyecta el slug
+ * mediante RPC para aislar el contexto Zero-DB.
  */
-export async function login(formData: FormData) {
+export async function loginWithPassword(formData: FormData) {
   const email    = formData.get('email')    as string
   const password = formData.get('password') as string
+  const slug     = formData.get('slug')     as string
+
+  if (!email || !password || !slug) {
+    return { error: 'Por favor ingresa tu correo y contraseña.' }
+  }
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -68,54 +74,32 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    return { error: error.message }
+    return { error: 'Credenciales incorrectas o usuario no encontrado.' }
   }
 
-  // ── Slug ya en el JWT ────────────────────────────────────────────────────────
-  // Si el JWT ya contiene el slug (usuarios registrados con la nueva acción),
-  // lo usamos directamente para evitar la consulta a BD.
-  const existingSlug = data.user.app_metadata?.slug as string | undefined
+  // ── Enrutamiento Inteligente ──────────────────────────────────────────────────
+  const role = data.user?.app_metadata?.role
 
-  if (existingSlug) {
-    redirect(`/${existingSlug}/dashboard`)
+  // 1. Si es Llave Maestra (Super Admin), va directo al panel global
+  if (role === 'super_admin') {
+    redirect('/admin')
   }
 
-  // ── Retrocompatibilidad: usuarios sin slug en el JWT ─────────────────────────
-  // Para cuentas antiguas: consultamos la BD UNA VEZ y luego inyectamos el slug
-  // en raw_user_meta_data para que los siguientes logins sean Zero-DB.
-  const { data: profileData } = await supabase
-    .from('profiles')
-    .select('business_id')
-    .eq('id', data.user.id)
-    .single()
-
-  const profile = profileData as Pick<Profile, 'business_id'> | null
-
-  if (!profile?.business_id) {
-    return { error: 'No tienes un negocio asignado. Contacta al administrador.' }
-  }
-
-  const { data: businessData } = await supabase
-    .from('businesses')
-    .select('slug')
-    .eq('id', profile.business_id)
-    .single()
-
-  const business = businessData as Pick<Business, 'slug'> | null
-
-  if (!business?.slug) {
-    return { error: 'No se encontró el negocio. Contacta al administrador.' }
-  }
-
-  // Inyectar slug en el app_metadata mediante RPC seguro para Zero-DB
-  await supabase.rpc('secure_set_user_context', {
-    business_slug: business.slug
+  // 2. Si es un usuario regular, inyectamos su contexto de negocio (Zero-DB lookup)
+  const { error: rpcError } = await supabase.rpc('secure_set_user_context', {
+    business_slug: slug
   })
+
+  if (rpcError) {
+    // Si no tiene permisos sobre ese negocio, destruimos sesión
+    await supabase.auth.signOut()
+    return { error: 'No estás autorizado para acceder a esta barbería.' }
+  }
   
   // Refrescar sesión para actualizar el JWT local con los nuevos app_metadata
   await supabase.auth.refreshSession()
 
-  redirect(`/${business.slug}/dashboard`)
+  redirect(`/${slug}/dashboard`)
 }
 
 /**

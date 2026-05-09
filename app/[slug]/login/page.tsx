@@ -3,7 +3,7 @@
 import { useState, useEffect, useTransition, use, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Scissors, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
-import { login, logout as signOut, signInWithGoogle } from '@/actions/auth'
+import { loginWithPassword, logout as signOut, signInWithGoogle } from '@/actions/auth'
 
 function LoginErrorAlert() {
   const searchParams = useSearchParams()
@@ -69,7 +69,7 @@ export default function LoginPage({ params }: LoginPageProps) {
   async function handleSubmit(formData: FormData) {
     setError(null)
     startTransition(async () => {
-      const result = await login(formData)
+      const result = await loginWithPassword(formData)
       if (result?.error) setError(result.error)
     })
   }
@@ -190,6 +190,7 @@ export default function LoginPage({ params }: LoginPageProps) {
               </Suspense>
 
               <form action={handleSubmit} className="flex flex-col gap-4">
+                <input type="hidden" name="slug" value={slug} />
               {/* Email */}
               <div className="flex flex-col gap-1.5">
                 <label
