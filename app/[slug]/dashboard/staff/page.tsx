@@ -1,98 +1,62 @@
-import { Suspense }            from 'react'
-import { redirect }             from 'next/navigation'
-import type { Metadata }        from 'next'
-import { createClient }         from '@/lib/supabase/server'
-import { getStaff }             from '@/actions/staff'
-import type { Staff }           from '@/types/database'
-
-import { StaffGrid }            from '@/components/staff/StaffGrid'
-import { AddStaffButton }       from '@/components/staff/StaffModal'
-import { Skeleton }             from '@/components/ui/Skeleton'
-import { BottomNav }            from '@/components/layout/BottomNav'
-import { Header }               from '@/components/layout/Header'
-import type { Business }        from '@/types/database'
+import { Suspense } from 'react'
+import type { Metadata } from 'next'
+import { getStaff } from '@/actions/staff'
+import { StaffGrid } from '@/components/dashboard/staff/StaffGrid'
+import { Loader2, Users } from 'lucide-react'
+import { getBusinessBySlug } from '@/actions/businesses'
+import { notFound } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: 'Equipo — Xinuco',
-  description: 'Gestiona el personal de tu negocio.',
+  title: 'El Ejército — Xinuco',
+  description: 'Gestión del staff',
 }
 
-interface StaffPageProps {
-  params: Promise<{ slug: string }>
-}
-
-function StaffGridSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      {[...Array(3)].map((_, i) => (
-        <Skeleton key={i} className="h-32 w-full" rounded="lg" />
-      ))}
-    </div>
-  )
-}
-
-async function StaffLoader() {
-  let staff: Staff[] = []
-
-  try {
-    const raw = await getStaff()
-    staff = (raw ?? []) as Staff[]
-  } catch (err) {
-    console.error('[StaffPage] Error loading staff:', err)
-  }
-
-  return <StaffGrid initialStaff={staff} />
-}
-
-export default async function StaffPage({ params }: StaffPageProps) {
+export default async function StaffPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase  = await createClient()
+  
+  // 1. Obtener negocio
+  const business = await getBusinessBySlug(slug)
+  if (!business) notFound()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/${slug}/login`)
-
-  const [{ data: profileRaw }, { data: business }] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
-    supabase.from('businesses').select('name, branding').eq('slug', slug).single<Pick<Business, 'name' | 'branding'>>(),
-  ])
-  const profileCasted = profileRaw as { full_name: string } | null
+  // 2. Obtener el staff
+  const staff = await getStaff(business.id)
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-color)' }}>
-      {business && (
-        <Header
-          business={business}
-          userName={profileCasted?.full_name ?? undefined}
-        />
-      )}
-
-      <main className="px-4 py-6 pb-28 max-w-5xl mx-auto">
-        <div
-          aria-hidden
-          className="fixed inset-0 -z-10 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 40% at 50% -10%, color-mix(in srgb, var(--primary-color) 8%, transparent), transparent)',
-          }}
-        />
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-xl font-bold text-xinuco-text">Equipo de Trabajo</h1>
-            <p className="text-xs text-xinuco-muted mt-0.5">
-              Administra a tus barberos y manicuristas.
-            </p>
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-24">
+      {/* Header Premium Minimalist */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-xinuco-border" style={{ borderColor: 'var(--surface-color, #333)' }}>
+        <div className="flex items-center gap-4">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'color-mix(in srgb, var(--primary-color) 15%, transparent)' }}
+          >
+            <Users size={24} style={{ color: 'var(--primary-color)' }} />
           </div>
-
-          <AddStaffButton />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-xinuco-text">Tu Ejército (Staff)</h1>
+            <p className="text-sm text-xinuco-muted mt-1">Gestiona los miembros de tu equipo y sus roles.</p>
+          </div>
         </div>
 
-        <Suspense fallback={<StaffGridSkeleton />}>
-          <StaffLoader />
-        </Suspense>
-      </main>
+        {/* Podríamos agregar aquí un StaffModal en el futuro */}
+        <button className="btn-primary" disabled title="Pronto disponible">
+          + Nuevo Empleado
+        </button>
+      </div>
 
-      <BottomNav slug={slug} />
+      {/* Grid de Empleados */}
+      <section aria-label="Lista de staff">
+        <Suspense 
+          fallback={
+            <div className="flex items-center justify-center py-20 text-xinuco-muted">
+              <Loader2 className="animate-spin" size={24} />
+              <span className="ml-3">Reuniendo al ejército...</span>
+            </div>
+          }
+        >
+          <StaffGrid initialStaff={staff} />
+        </Suspense>
+      </section>
     </div>
   )
 }

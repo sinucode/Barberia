@@ -74,6 +74,7 @@ export async function loginWithPassword(formData: FormData) {
   })
 
   if (error) {
+    console.error('[AUTH ERROR] signInWithPassword:', error.message)
     return { error: 'Credenciales incorrectas o usuario no encontrado.' }
   }
 
@@ -91,6 +92,7 @@ export async function loginWithPassword(formData: FormData) {
   })
 
   if (rpcError) {
+    console.error('[AUTH ERROR] secure_set_user_context:', rpcError)
     // Si no tiene permisos sobre ese negocio, destruimos sesión
     await supabase.auth.signOut()
     return { error: 'No estás autorizado para acceder a esta barbería.' }

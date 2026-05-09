@@ -94,7 +94,11 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isLoginRoute && user) {
-    url.pathname = `/${slug}/dashboard`
+    if (user.app_metadata?.role === 'super_admin') {
+      url.pathname = '/admin'
+    } else {
+      url.pathname = `/${slug}/dashboard`
+    }
     return NextResponse.redirect(url)
   }
 
@@ -102,6 +106,12 @@ export async function updateSession(request: NextRequest) {
   // El slug está inyectado en app_metadata mediante RPC.
   // Se lee directamente del JWT descifrado; no hay consulta a BD.
   if (user && isProtectedRoute) {
+    // Si es super_admin, no tiene tenant. Lo mandamos a su panel global.
+    if (user.app_metadata?.role === 'super_admin') {
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
+
     const userSlug = user.app_metadata?.slug as string | undefined
 
     if (userSlug !== slug) {

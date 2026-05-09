@@ -1,110 +1,62 @@
-import { Suspense }            from 'react'
-import { redirect }             from 'next/navigation'
-import type { Metadata }        from 'next'
-import { createClient }         from '@/lib/supabase/server'
-import { getServices }          from '@/actions/services'
-import type { Service }         from '@/types/database'
-
-import { ServiceTable }         from '@/components/services/ServiceTable'
-import { AddServiceButton }     from '@/components/services/ServiceModal'
-import { Skeleton }             from '@/components/ui/Skeleton'
-import { BottomNav }            from '@/components/layout/BottomNav'
-import { Header }               from '@/components/layout/Header'
-import type { Business }        from '@/types/database'
+import { Suspense } from 'react'
+import type { Metadata } from 'next'
+import { getServices } from '@/actions/services'
+import { ServiceTable } from '@/components/dashboard/services/ServiceTable'
+import { ServiceModal } from '@/components/dashboard/services/ServiceModal'
+import { Loader2, Scissors } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { getBusinessBySlug } from '@/actions/businesses'
+import { notFound } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: 'Servicios — Xinuco',
-  description: 'Gestiona el catálogo de servicios de tu negocio.',
+  description: 'Gestión de servicios y precios',
 }
 
-interface ServicesPageProps {
-  params: Promise<{ slug: string }>
-}
-
-// ── Skeleton de carga de la tabla ────────────────────────────────────────────────
-function ServiceTableSkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className="h-14 w-full" rounded="md" />
-      ))}
-    </div>
-  )
-}
-
-// ── Loader de servicios (async Server Component) ─────────────────────────────────
-async function ServicesLoader({ slug }: { slug: string }) {
-  let services: Service[] = []
-
-  try {
-    const raw = await getServices()
-    // Supabase RLS ya filtra por business_id — cast seguro
-    services = (raw ?? []) as Service[]
-  } catch (err) {
-    console.error('[ServicesPage] Error loading services:', err)
-  }
-
-  return <ServiceTable initialServices={services} />
-}
-
-// ── Page ─────────────────────────────────────────────────────────────────────────
-export default async function ServicesPage({ params }: ServicesPageProps) {
+export default async function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase  = await createClient()
+  
+  // 1. Obtener negocio por slug
+  const business = await getBusinessBySlug(slug)
+  if (!business) notFound()
 
-  // Guard de sesión
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/${slug}/login`)
-
-  // Fetch mínimo para el Header (paralelo con la carga de servicios)
-  const [{ data: profileRaw }, { data: business }] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
-    supabase.from('businesses').select('name, branding').eq('slug', slug).single<Pick<Business, 'name' | 'branding'>>(),
-  ])
-
-  const profile = profileRaw as { full_name: string } | null
+  // 2. Obtener servicios del negocio
+  const services = await getServices(business.id)
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-color)' }}>
-      {/* Header reutilizable del tenant */}
-      {business && (
-        <Header
-          business={business}
-          userName={profile?.full_name ?? undefined}
-        />
-      )}
-
-      <main className="px-4 py-6 pb-28 max-w-3xl mx-auto">
-        {/* Hero sutil de sección */}
-        <div
-          aria-hidden
-          className="fixed inset-0 -z-10 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 40% at 50% -10%, color-mix(in srgb, var(--primary-color) 10%, transparent), transparent)',
-          }}
-        />
-
-        {/* Cabecera de la página */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-xl font-bold text-xinuco-text">Catálogo de Servicios</h1>
-            <p className="text-xs text-xinuco-muted mt-0.5">
-              Gestiona los servicios que ofrece tu negocio.
-            </p>
+    <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-24">
+      {/* Header Premium Minimalist */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-xinuco-border" style={{ borderColor: 'var(--surface-color, #333)' }}>
+        <div className="flex items-center gap-4">
+          <div 
+            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'color-mix(in srgb, var(--primary-color) 15%, transparent)' }}
+          >
+            <Scissors size={24} style={{ color: 'var(--primary-color)' }} />
           </div>
-
-          {/* Botón que abre el modal de creación */}
-          <AddServiceButton />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-xinuco-text">Menú de Servicios</h1>
+            <p className="text-sm text-xinuco-muted mt-1">Configura cortes, precios y duraciones.</p>
+          </div>
         </div>
 
-        {/* Tabla con streaming via Suspense */}
-        <Suspense fallback={<ServiceTableSkeleton />}>
-          <ServicesLoader slug={slug} />
-        </Suspense>
-      </main>
+        {/* Modal para crear servicio */}
+        <ServiceModal businessId={business.id} />
+      </div>
 
-      <BottomNav slug={slug} />
+      {/* Tabla de Servicios */}
+      <section aria-label="Lista de servicios" className="card p-0 overflow-hidden">
+        <Suspense 
+          fallback={
+            <div className="flex items-center justify-center py-20 text-xinuco-muted">
+              <Loader2 className="animate-spin" size={24} />
+              <span className="ml-3">Cargando servicios...</span>
+            </div>
+          }
+        >
+          <ServiceTable initialServices={services} />
+        </Suspense>
+      </section>
     </div>
   )
 }

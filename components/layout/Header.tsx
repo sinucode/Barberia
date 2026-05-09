@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Scissors } from 'lucide-react'
 import type { Business } from '@/types/database'
 import { AvatarSkeleton } from '@/components/ui/Skeleton'
+import { UserDropdown } from '@/components/layout/UserDropdown'
 
 interface HeaderProps {
   business:  Pick<Business, 'name' | 'branding'>
@@ -81,20 +82,7 @@ export function Header({ business, userName, isLoading = false }: HeaderProps) {
         {isLoading ? (
           <AvatarSkeleton />
         ) : (
-          <button
-            id="btn-user-avatar"
-            aria-label={userName ? `Perfil de ${userName}` : 'Perfil'}
-            title={userName ?? 'Perfil'}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-                       transition-all duration-200 hover:opacity-80 hover:scale-105 active:scale-95 cursor-pointer"
-            style={{
-              background: 'color-mix(in srgb, var(--primary-color) 20%, transparent)',
-              color:       'var(--primary-color)',
-              border:      '1.5px solid color-mix(in srgb, var(--primary-color) 50%, transparent)',
-            }}
-          >
-            {initials}
-          </button>
+          <UserDropdown initials={initials} userName={userName} />
         )}
       </div>
     </header>

@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { getBusinesses } from '@/actions/businesses'
 import { AdminDashboardClient } from '@/components/admin/AdminDashboardClient'
+import { UserDropdown } from '@/components/layout/UserDropdown'
 import { Loader2 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -18,12 +19,16 @@ export default async function AdminPage() {
       
       {/* Layout Global: Header Premium Minimalist */}
       <header className="flex flex-col gap-2 pb-6 border-b border-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
-        <h1 
-          className="text-4xl font-serif tracking-tight text-xinuco-text" 
-          style={{ fontFamily: 'Georgia, serif' }}
-        >
-          Centro de Control Xinuco
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 
+            className="text-4xl font-serif tracking-tight text-xinuco-text" 
+            style={{ fontFamily: 'Georgia, serif' }}
+          >
+            Centro de Control Xinuco
+          </h1>
+          
+          <UserDropdown initials="SA" userName="Super Admin" />
+        </div>
         <p className="text-sm text-xinuco-muted">
           Gestión maestra de inquilinos y administración de módulos (Feature Flags).
         </p>

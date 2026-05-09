@@ -19,6 +19,23 @@ export interface BusinessFeatures {
   advanced_reports: boolean;
 }
 
+// ---------- Operating Hours ----------
+export interface DayHours {
+  is_open: boolean
+  open_time: string
+  close_time: string
+}
+
+export interface OperatingHours {
+  monday: DayHours
+  tuesday: DayHours
+  wednesday: DayHours
+  thursday: DayHours
+  friday: DayHours
+  saturday: DayHours
+  sunday: DayHours
+}
+
 // ---------- Tabla: businesses ----------
 export interface Business {
   id:               string             // UUID
@@ -27,6 +44,8 @@ export interface Business {
   is_active:        boolean
   branding:         BusinessBranding
   features_enabled: BusinessFeatures
+  operating_hours?: OperatingHours     // JSONB
+  workstations_count?: number          // INT
   created_at:       string
 }
 
