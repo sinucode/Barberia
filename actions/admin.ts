@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { BusinessInsert } from '@/types/database'
 
@@ -51,11 +51,10 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
     },
   }
 
-  // ── ESCRITURA CON CLIENTE ADMIN (Bypass RLS, Capa 2) ─────────────────────
-  // La seguridad ya fue validada en Capa 1. Se usa el cliente admin para
-  // garantizar que el INSERT siempre se complete sin ser bloqueado por RLS.
-  const adminSupabase = await createAdminClient()
-  const { error } = await adminSupabase.from('businesses').insert([newBusiness])
+  // ── ESCRITURA CON CLIENTE AUTENTICADO (RLS via JWT, Capa 2) ───────────────
+  // El cliente normal adjunta el JWT del usuario activo al request.
+  // Postgres valida la política RLS "Super Admin can insert businesses" de forma nativa.
+  const { error } = await supabase.from('businesses').insert([newBusiness])
 
   if (error) {
     if (error.code === '23505') {
@@ -86,8 +85,8 @@ export async function toggleTenantStatus(
     return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para modificar inquilinos.' }
   }
 
-  const adminSupabase = await createAdminClient()
-  const { error } = await adminSupabase
+  // El cliente normal adjunta el JWT → Postgres valida la política RLS de UPDATE.
+  const { error } = await supabase
     .from('businesses')
     .update({ is_active: !currentStatus })
     .eq('id', id)
