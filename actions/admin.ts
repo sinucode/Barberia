@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { BusinessInsert } from '@/types/database'
 
@@ -17,9 +17,15 @@ export interface ActionResult {
 export async function createTenant(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
 
+  // ── BARRERA DE SEGURIDAD RBAC (Zero-DB, Capa 1) ──────────────────────────
+  // Se valida identidad con doble clave: email gerencial O rol de sistema.
+  // Este chequeo ocurre en el servidor de Next.js, ANTES de cualquier query a BD.
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'super_admin') {
-    return { success: false, error: 'Autorización denegada. Se requiere rol de super_admin.' }
+  if (
+    !user ||
+    (user.email !== 'gerencia@xinuco.com' && user.app_metadata?.role !== 'super_admin')
+  ) {
+    return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para crear inquilinos.' }
   }
 
   const name          = (formData.get('name')          as string).trim()
@@ -45,7 +51,11 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
     },
   }
 
-  const { error } = await supabase.from('businesses').insert([newBusiness])
+  // ── ESCRITURA CON CLIENTE ADMIN (Bypass RLS, Capa 2) ─────────────────────
+  // La seguridad ya fue validada en Capa 1. Se usa el cliente admin para
+  // garantizar que el INSERT siempre se complete sin ser bloqueado por RLS.
+  const adminSupabase = await createAdminClient()
+  const { error } = await adminSupabase.from('businesses').insert([newBusiness])
 
   if (error) {
     if (error.code === '23505') {
@@ -67,12 +77,17 @@ export async function toggleTenantStatus(
 ): Promise<ActionResult> {
   const supabase = await createClient()
 
+  // ── BARRERA DE SEGURIDAD RBAC (Zero-DB, doble clave) ─────────────────────
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user || user.app_metadata?.role !== 'super_admin') {
-    return { success: false, error: 'Autorización denegada. Se requiere rol de super_admin.' }
+  if (
+    !user ||
+    (user.email !== 'gerencia@xinuco.com' && user.app_metadata?.role !== 'super_admin')
+  ) {
+    return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para modificar inquilinos.' }
   }
 
-  const { error } = await supabase
+  const adminSupabase = await createAdminClient()
+  const { error } = await adminSupabase
     .from('businesses')
     .update({ is_active: !currentStatus })
     .eq('id', id)
