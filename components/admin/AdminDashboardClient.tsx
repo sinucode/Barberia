@@ -2,60 +2,90 @@
 
 import { useState, useTransition } from 'react'
 import { toggleBusinessFeature } from '@/actions/businesses'
-import { Award, Package, BarChart3 } from 'lucide-react'
+import { Award, Package, BarChart3, Plus } from 'lucide-react'
 import type { Business, BusinessFeatures } from '@/types/database'
+import { NewBusinessModal } from '@/components/admin/NewBusinessModal'
 
 interface AdminDashboardClientProps {
   initialBusinesses: Business[]
 }
 
 export function AdminDashboardClient({ initialBusinesses }: AdminDashboardClientProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   return (
-    <div className="overflow-x-auto w-full">
-      <table className="w-full text-sm text-left border-collapse">
-        <thead>
-          <tr className="border-b border-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
-            <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Nombre</th>
-            <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Slug</th>
-            <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Creación</th>
-            <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Estado</th>
-            <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Módulos</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
-          {initialBusinesses.map((biz) => (
-            <tr key={biz.id} className="bg-transparent hover:bg-white/[0.02] transition-colors">
-              <td className="px-4 py-4 font-medium text-xinuco-text">{biz.name}</td>
-              <td className="px-4 py-4 text-xinuco-muted font-mono text-xs">/{biz.slug}</td>
-              <td className="px-4 py-4 text-xinuco-muted">
-                {new Date(biz.created_at).toLocaleDateString('es-CO')}
-              </td>
-              <td className="px-4 py-4">
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                  biz.is_active 
-                    ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
-                    : 'bg-red-500/10 text-red-500 border border-red-500/20'
-                }`}>
-                  {biz.is_active ? 'Activo' : 'Inactivo'}
-                </span>
-              </td>
-              <td className="px-4 py-4">
-                <ModulesCell 
-                  businessId={biz.id} 
-                  initialFeatures={biz.features_enabled || { loyalty: false, inventory: false, advanced_reports: false }} 
-                />
-              </td>
+    <div className="w-full">
+      {/* Header Responsivo */}
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-xinuco-text">
+          Directorio de Inquilinos
+        </h2>
+        
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-transform hover:scale-[1.02] active:scale-95 shadow-md"
+          style={{ 
+            backgroundColor: 'var(--primary-color)', 
+            color: 'var(--bg-color)' 
+          }}
+        >
+          <Plus className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+          {/* Oculto en móviles, visible desde tamaño 'md' */}
+          <span className="hidden md:inline">Nuevo Negocio</span>
+        </button>
+      </div>
+
+      <div className="overflow-x-auto w-full">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead>
+            <tr className="border-b border-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
+              <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Nombre</th>
+              <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Slug</th>
+              <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Creación</th>
+              <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Estado</th>
+              <th className="px-4 py-4 font-medium text-xinuco-muted tracking-wider uppercase text-xs">Módulos</th>
             </tr>
-          ))}
-          {initialBusinesses.length === 0 && (
-            <tr>
-              <td colSpan={5} className="px-4 py-8 text-center text-xinuco-muted">
-                No hay negocios registrados.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-xinuco-border" style={{ borderColor: 'var(--border-color, #333)' }}>
+            {initialBusinesses.map((biz) => (
+              <tr key={biz.id} className="bg-transparent hover:bg-white/[0.02] transition-colors">
+                <td className="px-4 py-4 font-medium text-xinuco-text">{biz.name}</td>
+                <td className="px-4 py-4 text-xinuco-muted font-mono text-xs">/{biz.slug}</td>
+                <td className="px-4 py-4 text-xinuco-muted">
+                  {new Date(biz.created_at).toLocaleDateString('es-CO')}
+                </td>
+                <td className="px-4 py-4">
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                    biz.is_active 
+                      ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
+                      : 'bg-red-500/10 text-red-500 border border-red-500/20'
+                  }`}>
+                    {biz.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+                </td>
+                <td className="px-4 py-4">
+                  <ModulesCell 
+                    businessId={biz.id} 
+                    initialFeatures={biz.features_enabled || { loyalty: false, inventory: false, advanced_reports: false }} 
+                  />
+                </td>
+              </tr>
+            ))}
+            {initialBusinesses.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-xinuco-muted">
+                  No hay negocios registrados.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <NewBusinessModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   )
 }
