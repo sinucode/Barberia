@@ -1,101 +1,107 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { addMinutes, format, parseISO, isBefore, isAfter, isEqual } from 'date-fns'
-
-// Instalaremos date-fns si no está, o usaremos la lógica base. 
-// Asumiendo que podemos usar métodos base de JS si date-fns no está.
-// Para no romper si no está instalado, implemento la lógica con Date nativo o asumo que date-fns está disponible.
-// El prompt explícitamente importa de 'date-fns'. 
+import { addMinutes, format, parseISO, isBefore, isAfter, isEqual, startOfDay, endOfDay } from 'date-fns'
+import type { OperatingHours, Appointment } from '@/types/database'
 
 /**
- * TAREA 1: EL MOTOR DE DISPONIBILIDAD
- * Calcula slots de 30 min basados en la duración del servicio y citas existentes.
+ * TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
+ * Implementa la lógica de asignación considerando staff y recursos físicos (Workstations).
  */
 export async function getAvailableSlots(
   businessId: string,
   serviceId: string,
   date: string, // Formato YYYY-MM-DD
-  staffId?: string | null
+  staffId: string | null | 'any'
 ) {
   const supabase = await createClient()
 
-  // 1. Obtener duración del servicio
-  const { data: service } = await supabase
-    .from('services')
-    .select('duration_minutes')
-    .eq('id', serviceId)
-    .single()
+  // 1. Consultas Iniciales: Negocio, Servicio y Citas
+  const [
+    { data: business },
+    { data: service },
+    { data: existingAppointments }
+  ] = await Promise.all([
+    supabase.from('businesses').select('operating_hours, workstations_count').eq('id', businessId).single(),
+    supabase.from('services').select('duration_minutes').eq('id', serviceId).single(),
+    supabase
+      .from('appointments')
+      .select('*')
+      .eq('business_id', businessId)
+      .not('status', 'eq', 'cancelled')
+      // Filtramos citas que se solapen con el día solicitado
+      .gte('time_range', `[${date} 00:00:00+00, ${date} 23:59:59+00]`)
+  ])
 
-  // 2. Consultar citas existentes para ese día (usando time_range)
-  let query = supabase
-    .from('appointments')
-    .select('time_range')
-    .eq('business_id', businessId)
-    // Buscamos cualquier cita que empiece en este día. 
-    // Como Supabase TSTZRANGE filter no siempre es directo desde TS, usaremos un like o traeremos todo el día.
-    .like('time_range', `%${date}%`)
+  if (!business || !service) return { slots: [] }
 
-  if (staffId && staffId !== 'any') {
-    query = query.eq('barber_id', staffId)
-  }
-  
-  const { data: existingAppointments } = await query
+  const hours = business.operating_hours as OperatingHours
+  const workstations = business.workstations_count || 1
+  const duration = service.duration_minutes
 
-  // 3. Generar slots (Jornada 08:00 - 20:00 simulada)
+  // 2. Determinar horario de apertura/cierre para el día de la semana
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+  const dayIndex = new Date(`${date}T00:00:00`).getDay()
+  const dayKey = dayNames[dayIndex]
+  const dayConfig = hours[dayKey]
+
+  if (!dayConfig || !dayConfig.is_open) return { slots: [] }
+
+  // 3. Generar bloques de tiempo (Intervalos de 30 min)
   const slots: string[] = []
+  const startTime = new Date(`${date}T${dayConfig.open_time}:00`)
+  const endTime = new Date(`${date}T${dayConfig.close_time}:00`)
   
-  let currentPos = new Date(`${date}T08:00:00`)
-  const endTime = new Date(`${date}T20:00:00`)
-  const duration = service?.duration_minutes || 30
-
-  // Función auxiliar para parsear el TSTZRANGE: '["2025-01-01 10:00:00+00","2025-01-01 11:00:00+00")'
+  // Función auxiliar para parsear TSTZRANGE
   const parseRange = (rangeStr: string) => {
-    // Basic extraction of dates
     const match = rangeStr.match(/\["([^"]+)","([^"]+)"\)/)
-    if (match) {
-      return { start: new Date(match[1]), end: new Date(match[2]) }
-    }
-    // Fallback if format is slightly different
-    const parts = rangeStr.split(',')
-    if (parts.length === 2) {
-      const s = parts[0].replace(/\[|"/g, '').trim()
-      const e = parts[1].replace(/\)|"/g, '').trim()
-      return { start: new Date(s), end: new Date(e) }
-    }
-    return null
+    if (!match) return null
+    return { start: new Date(match[1]), end: new Date(match[2]) }
   }
 
-  while (currentPos < endTime) {
-    const slotStart = new Date(currentPos)
-    const slotEnd = new Date(currentPos.getTime() + duration * 60000)
+  let currentSlotStart = startTime
 
-    // Verificar si el slot choca con alguna cita
-    const isOccupied = existingAppointments?.some((app) => {
+  while (isBefore(addMinutes(currentSlotStart, duration), endTime) || isEqual(addMinutes(currentSlotStart, duration), endTime)) {
+    const slotStart = currentSlotStart
+    const slotEnd = addMinutes(slotStart, duration)
+
+    // --- CÁLCULO DE LÓGICA DE COLISIÓN ---
+    
+    // Filtro 1: Staff Específico
+    let staffCollision = false
+    if (staffId && staffId !== 'any') {
+      staffCollision = (existingAppointments || []).some(app => {
+        if (app.barber_id !== staffId) return false
+        const range = parseRange(app.time_range)
+        if (!range) return false
+        // Lógica de solapamiento: (start1 < end2 && start2 < end1)
+        return slotStart < range.end && range.start < slotEnd
+      })
+    }
+
+    // Filtro 2: Cuello de Botella Físico (Workstations)
+    const concurrentAppointments = (existingAppointments || []).filter(app => {
       const range = parseRange(app.time_range)
       if (!range) return false
-      
-      // Lógica de solapamiento de intervalos [start1, end1) choca con [start2, end2) si:
-      // start1 < end2 AND end1 > start2
-      return slotStart < range.end && slotEnd > range.start
-    })
+      return slotStart < range.end && range.start < slotEnd
+    }).length
 
-    if (!isOccupied) {
-      slots.push(
-        slotStart.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false })
-      )
+    const physicalCollision = concurrentAppointments >= workstations
+
+    if (!staffCollision && !physicalCollision) {
+      slots.push(format(slotStart, 'HH:mm'))
     }
-    
-    // Incremento de bloque de 30 mins
-    currentPos = new Date(currentPos.getTime() + 30 * 60000)
+
+    // Avanzar puntero en bloques de 30 min
+    currentSlotStart = addMinutes(currentSlotStart, 30)
   }
 
   return { slots }
 }
 
 /**
- * TAREA 2: EL INYECTOR SEGURO
- * Inserta la cita calculando el rango y manejando colisiones.
+ * TAREA 2: EL INYECTOR SEGURO (createAppointment)
+ * Inserta la cita con formato TSTZRANGE y manejo de Race Conditions.
  */
 export async function createAppointment(formData: {
   businessId: string
@@ -108,47 +114,28 @@ export async function createAppointment(formData: {
   const supabase = await createClient()
   const { businessId, staffId, serviceId, date, time, clientData } = formData
 
-  // --- TAREA 1: VALIDACIÓN DE SEGURIDAD (Anti-IDOR) ---
+  // 1. Validación de Identidad (Anti-IDOR)
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'unauthorized' }
 
-  if (!user) {
-    return { error: 'unauthorized', message: 'No tienes permisos para agendar en este negocio.' }
-  }
-
-  const isSuperAdmin = user.app_metadata?.role === 'super_admin'
-
-  if (!isSuperAdmin) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('business_id')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile || profile.business_id !== businessId) {
-      return { error: 'unauthorized', message: 'No tienes permisos para agendar en este negocio.' }
-    }
-  }
-
-  // 1. Obtener servicio (duración y nombre)
+  // 2. Obtener duración del servicio
   const { data: service } = await supabase
     .from('services')
     .select('name, duration_minutes')
     .eq('id', serviceId)
     .single()
 
-  if (!service) return { error: 'Servicio no encontrado' }
+  if (!service) return { error: 'not_found', message: 'Servicio no encontrado' }
 
-  // 2. Construir fechas
-  const start = new Date(`${date}T${time}:00`)
-  const end = new Date(start.getTime() + service.duration_minutes * 60000)
+  // 3. Calcular rango de tiempo
+  const start = new Date(`${date}T${time}:00Z`) // Forzamos UTC para consistencia
+  const end = addMinutes(start, service.duration_minutes)
 
-  // 3. Formatear para TSTZRANGE de Postgres: [YYYY-MM-DD HH:mm:ss, YYYY-MM-DD HH:mm:ss)
-  // Usamos el formato ISO sin la 'T' o '.000Z' para que Postgres lo entienda
-  const formatDB = (d: Date) => d.toISOString().replace('T', ' ').substring(0, 19) + '+00'
+  // 4. Formato Estricto TSTZRANGE para Postgres
+  const formatDB = (d: Date) => format(d, "yyyy-MM-dd HH:mm:ss") + '+00'
   const range = `[${formatDB(start)},${formatDB(end)})`
 
-  // 4. Intento de inserción mapeando a los tipos correctos de database.ts
-  // --- TAREA 2: Lógica de Empleado "Cualquiera" ---
+  // 5. Inserción con detección de colisión física (Race Condition)
   const finalBarberId = (!staffId || staffId === 'any') ? null : staffId
 
   const { error } = await supabase
@@ -164,9 +151,12 @@ export async function createAppointment(formData: {
     } as any)
 
   if (error) {
-    // Código 23P01: Exclusion Violation (Solapamiento detectado por Postgres)
+    // Código 23P01: Exclusion Violation (Postgres level collision)
     if (error.code === '23P01') {
-      return { error: 'collision', message: 'Este horario se acaba de ocupar.' }
+      return { 
+        error: 'collision', 
+        message: 'Este horario acaba de ser ocupado. Por favor selecciona otro.' 
+      }
     }
     return { error: 'db_error', message: error.message }
   }

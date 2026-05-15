@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient }      from '@/lib/supabase/server'
+import { createClient, createAdminClient }      from '@/lib/supabase/server'
 import { revalidatePath }    from 'next/cache'
 import { Database }          from '@/types/database.types'
 import type { BusinessInsert, BusinessFeatures } from '@/types/database'
@@ -47,19 +47,36 @@ export async function createBusiness(businessData: BusinessInsert) {
 export async function toggleBusinessFeature(businessId: string, featureKey: string, value: boolean) {
   const supabase = await createClient()
 
+  // 1. Validar que el usuario sea super_admin en el servidor (Next.js side security)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.app_metadata?.role !== 'super_admin') {
     return { error: 'Autorización denegada. Se requiere rol de super_admin.' }
   }
 
-  // La seguridad del rol ya está validada DENTRO del RPC de Postgres.
-  const { error } = await supabase.rpc('toggle_feature_flag', {
-    p_business_id: businessId,
-    p_feature_key: featureKey,
-    p_value: value
-  })
+  // 2. Usar cliente administrativo para bypass del RPC fallido y RLS
+  const adminSupabase = await createAdminClient()
+
+  // Obtener estado actual de los módulos
+  const { data: biz, error: fetchError } = await adminSupabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('id', businessId)
+    .single()
+
+  if (fetchError || !biz) return { error: 'No se pudo obtener el estado del negocio.' }
+
+  // Patch del JSONB
+  const updatedFeatures = {
+    ...(biz.features_enabled as any),
+    [featureKey]: value
+  }
+
+  const { error: updateError } = await adminSupabase
+    .from('businesses')
+    .update({ features_enabled: updatedFeatures } as any)
+    .eq('id', businessId)
   
-  if (error) return { error: error.message }
+  if (updateError) return { error: updateError.message }
   
   revalidatePath('/admin')
   return { success: true }

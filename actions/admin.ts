@@ -31,15 +31,6 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
   if (!name || name.length < 2)  return { success: false, error: 'El nombre debe tener al menos 2 caracteres.' }
   if (!slug || !/^[a-z0-9-]+$/.test(slug)) return { success: false, error: 'El slug solo puede tener letras minúsculas, números y guiones.' }
 
-  // Verificar que el slug no exista ya
-  const { data: existing } = await supabase
-    .from('businesses')
-    .select('id')
-    .eq('slug', slug)
-    .single()
-
-  if (existing) return { success: false, error: `El slug "${slug}" ya está en uso. Elige otro.` }
-
   const newBusiness: BusinessInsert = {
     name,
     slug,
@@ -56,7 +47,12 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
 
   const { error } = await supabase.from('businesses').insert([newBusiness])
 
-  if (error) return { success: false, error: error.message }
+  if (error) {
+    if (error.code === '23505') {
+      return { success: false, error: 'El slug que intentas usar ya está registrado. Por favor, modifícalo.' }
+    }
+    return { success: false, error: error.message }
+  }
 
   revalidatePath('/admin')
   return { success: true }
