@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { toggleBusinessFeature } from '@/actions/businesses'
 import { Award, Package, BarChart3, Plus } from 'lucide-react'
 import type { Business, BusinessFeatures } from '@/types/database'
+
+// IMPORTACIÓN CORREGIDA: Exportación nombrada con llaves exactas
 import { NewBusinessModal } from '@/components/admin/NewBusinessModal'
 
 interface AdminDashboardClientProps {
@@ -117,17 +119,14 @@ function FeatureToggle({
   const [isPending, startTransition] = useTransition()
 
   const handleToggle = () => {
-    // 1. UI Optimista: Se invierte el estado visual inmediatamente para Zero-Lag
     const newValue = !isEnabled
     setIsEnabled(newValue)
 
-    // 2. Transición Asíncrona: Llamamos al backend en el background
     startTransition(async () => {
       const result = await toggleBusinessFeature(businessId, featureKey, newValue)
       
-      // 3. Rollback en caso de fallo
       if (result.error) {
-        setIsEnabled(!newValue) // Revertimos el estado visual local
+        setIsEnabled(!newValue)
         alert(`Error al actualizar el módulo: ${result.error}`)
       }
     })
