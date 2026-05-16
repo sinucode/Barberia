@@ -105,12 +105,28 @@ export async function loginWithPassword(formData: FormData) {
 }
 
 /**
- * logout — Cierra la sesión y redirige al home.
+ * logout — Cierra la sesión y redirige al login correspondiente.
+ * - Super Admin → /admin/login
+ * - Usuario de tenant → /[slug]/login
  */
 export async function logout() {
   const supabase = await createClient()
+
+  // Detectar contexto del usuario ANTES de destruir la sesión
+  const { data: { user } } = await supabase.auth.getUser()
+  const role = user?.app_metadata?.role
+  const slug = user?.app_metadata?.business_slug
+
   await supabase.auth.signOut()
-  redirect('/')
+
+  // Redirigir al login correcto según el contexto
+  if (role === 'super_admin') {
+    redirect('/admin/login')
+  } else if (slug) {
+    redirect(`/${slug}/login`)
+  } else {
+    redirect('/admin/login')
+  }
 }
 
 /**
