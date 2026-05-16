@@ -55,7 +55,8 @@ export async function updateSession(request: NextRequest) {
   if (
     pathSegments.length === 0 ||
     pathname.startsWith('/api') ||
-    pathname.startsWith('/_next')
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/adminbarberia/login')
   ) {
     return supabaseResponse
   }
@@ -77,7 +78,7 @@ export async function updateSession(request: NextRequest) {
   // ── 4. Redirecciones base de sesión ──────────────────────────────────────────
   if (isGlobalAdminRoute) {
     if (!user) {
-      url.pathname = '/'
+      url.pathname = '/adminbarberia/login'
       return NextResponse.redirect(url)
     }
     if (user.app_metadata?.role !== 'super_admin') {

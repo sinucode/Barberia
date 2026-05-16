@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   // Guard de sesión
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+  if (!user) redirect('/adminbarberia/login')
 
   return (
     <div className="flex min-h-screen bg-xinuco-bg">

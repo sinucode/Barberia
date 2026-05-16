@@ -106,7 +106,7 @@ export async function loginWithPassword(formData: FormData) {
 
 /**
  * logout — Cierra la sesión y redirige al login correspondiente.
- * - Super Admin → /admin/login
+ * - Super Admin → /adminbarberia/login
  * - Usuario de tenant → /[slug]/login
  */
 export async function logout() {
@@ -121,11 +121,11 @@ export async function logout() {
 
   // Redirigir al login correcto según el contexto
   if (role === 'super_admin') {
-    redirect('/admin/login')
+    redirect('/adminbarberia/login')
   } else if (slug) {
     redirect(`/${slug}/login`)
   } else {
-    redirect('/admin/login')
+    redirect('/adminbarberia/login')
   }
 }
 
