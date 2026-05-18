@@ -37,7 +37,7 @@ export async function BusinessTable() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+  if (!user) redirect('/adminbarberia/login')
 
   const { data, error } = await supabase
     .from('businesses')

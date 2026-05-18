@@ -81,7 +81,7 @@ export async function toggleBusinessFeature(businessId: string, featureKey: stri
   
   if (updateError) return { error: updateError.message }
   
-  revalidatePath('/admin')
+  revalidatePath('/adminbarberia')
   return { success: true }
 }
 

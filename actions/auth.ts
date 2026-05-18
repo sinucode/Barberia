@@ -83,7 +83,7 @@ export async function loginWithPassword(formData: FormData) {
 
   // 1. Si es Llave Maestra (Super Admin), va directo al panel global
   if (role === 'super_admin') {
-    redirect('/admin')
+    redirect('/adminbarberia')
   }
 
   // 2. Si es un usuario regular, inyectamos su contexto de negocio (Zero-DB lookup)

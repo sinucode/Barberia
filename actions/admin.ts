@@ -63,7 +63,7 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
     return { success: false, error: error.message }
   }
 
-  revalidatePath('/admin')
+  revalidatePath('/adminbarberia')
   return { success: true }
 }
 
@@ -93,6 +93,6 @@ export async function toggleTenantStatus(
 
   if (error) return { success: false, error: error.message }
 
-  revalidatePath('/admin')
+  revalidatePath('/adminbarberia')
   return { success: true }
 }

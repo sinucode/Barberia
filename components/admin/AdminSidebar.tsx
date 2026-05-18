@@ -13,9 +13,9 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'nav-admin-tenants',  href: '/admin',          icon: Store,      label: 'Negocios' },
-  { id: 'nav-admin-billing',  href: '/admin/billing',  icon: CreditCard, label: 'Facturación SaaS', badge: 'Próx.' },
-  { id: 'nav-admin-settings', href: '/admin/settings', icon: Settings,   label: 'Configuración' },
+  { id: 'nav-admin-tenants',  href: '/adminbarberia',          icon: Store,      label: 'Negocios' },
+  { id: 'nav-admin-billing',  href: '/adminbarberia/billing',  icon: CreditCard, label: 'Facturación SaaS', badge: 'Próx.' },
+  { id: 'nav-admin-settings', href: '/adminbarberia/settings', icon: Settings,   label: 'Configuración' },
 ]
 
 export function AdminSidebar() {
@@ -43,7 +43,7 @@ export function AdminSidebar() {
       <nav role="navigation" aria-label="Navegación administrativa" className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-1">
           {NAV_ITEMS.map(({ id, href, icon: Icon, label, badge }) => {
-            const isActive = pathname === href || (href !== '/admin' && pathname.startsWith(href))
+            const isActive = pathname === href || (href !== '/adminbarberia' && pathname.startsWith(href))
 
             return (
               <li key={id}>
