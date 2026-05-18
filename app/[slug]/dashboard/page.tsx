@@ -33,43 +33,17 @@ export default async function DashboardPage({ params }: DashboardPageProps) {
   const { slug } = await params
   const supabase  = await createClient()
 
-  // Guard rápido de sesión — el Header lo necesita para el avatar
+  // Guard rápido de sesión
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // Fetch mínimo para el Header (paralelo, no bloquea DashboardContent)
-  const [{ data: profile }, { data: business }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single(),
-    supabase
-      .from('businesses')
-      .select('name, branding')
-      .eq('slug', slug)
-      .single<Pick<Business, 'name' | 'branding'>>(),
-  ])
-
   return (
-    <div className="min-h-screen bg-xinuco-bg">
-      {/* Header — se pinta de inmediato */}
-      {business && (
-        <Header
-          business={business}
-          userName={profile?.full_name ?? undefined}
-        />
-      )}
-
-      {/* Contenido principal con streaming */}
+    <div className="bg-xinuco-bg">
       <main className="px-4 py-6 pb-24 space-y-6 max-w-2xl mx-auto">
         <Suspense fallback={<DashboardSkeleton />}>
           <DashboardContent slug={slug} />
         </Suspense>
       </main>
-
-      {/* Bottom Nav — siempre visible */}
-      <BottomNav slug={slug} />
     </div>
   )
 }

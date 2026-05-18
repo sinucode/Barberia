@@ -41,6 +41,19 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
     name,
     slug,
     is_active: true,
+    features_enabled: {
+      loyalty: false,
+      inventory: false,
+      advanced_reports: false,
+    },
+    branding: {
+      primary_color:   primaryColor,
+      secondary_color: '#1A1A1A',
+      bg_color:        bgColor,
+      text_color:      '#F4F4F4',
+      logo_url:        null,
+      font_family:     'Inter',
+    },
     brand_config: {
       primaryColor:   primaryColor,
       secondaryColor: '#1A1A1A',
@@ -53,7 +66,7 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
   // ── ESCRITURA CON CLIENTE AUTENTICADO (RLS via JWT, Capa 2) ───────────────
   // El cliente normal adjunta el JWT del usuario activo al request.
   // Postgres valida la política RLS "Super Admin can insert businesses" de forma nativa.
-  const { error } = await supabase.from('businesses').insert([newBusiness])
+  const { error } = await supabase.from('businesses').insert([newBusiness as any])
 
   if (error) {
     if (error.code === '23505') {
