@@ -115,7 +115,7 @@ export async function logout() {
   // Detectar contexto del usuario ANTES de destruir la sesión
   const { data: { user } } = await supabase.auth.getUser()
   const role = user?.app_metadata?.role
-  const slug = user?.app_metadata?.business_slug
+  const slug = user?.app_metadata?.slug || user?.user_metadata?.slug
 
   await supabase.auth.signOut()
 
