@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PublicBookingPageProps): Prom
     .from('businesses')
     .select('name')
     .eq('slug', slug)
-    .single()
+    .single<Business>()
 
   if (!business) return { title: 'Xinuco' }
 

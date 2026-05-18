@@ -9,7 +9,10 @@ module.exports = {
     extend: {
       colors: {
         // ── Token dinámico del tenant (brand_config.primaryColor) ──
-        brand: 'var(--brand-primary, #C5A059)',
+        brand: {
+          DEFAULT: 'var(--brand-primary, #C5A059)',
+          foreground: 'var(--brand-foreground, #080808)',
+        },
 
         // ── Tokens legacy (branding JSONB) ──
         xinuco: {

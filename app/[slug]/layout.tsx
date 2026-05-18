@@ -77,7 +77,7 @@ export async function generateMetadata({
     .from('businesses')
     .select('name, branding')
     .eq('slug', slug)
-    .single()
+    .single<Business>()
 
   if (!business) {
     return { title: 'Xinuco' }
@@ -93,14 +93,12 @@ export async function generateMetadata({
 // TENANT LAYOUT — Server Component (Zero-Flicker Theme Engine)
 // ════════════════════════════════════════════════════════════════════════════════
 
-/**
- * TenantLayout — Layout principal multi-tenant.
- *
- * 1. Fetch del tenant por slug.
- * 2. Lee `brand_config` (JSONB) + `branding` (legacy JSONB).
- * 3. Resuelve la fuente SSR via next/font (Zero-Flicker, sin useEffect).
- * 4. Inyecta CSS vars + className de fuente en el <body>.
- */
+const FONT_DICTIONARY: Record<string, { className: string; variable: string }> = {
+  inter: inter,
+  playfair: playfair,
+  oswald: oswald,
+}
+
 export default async function TenantLayout({
   children,
   params,
@@ -108,53 +106,39 @@ export default async function TenantLayout({
   const { slug } = await params
   const supabase = await createClient()
 
-  // 1. Fetch del tenant
-  const { data: business, error } = await supabase
+  // Consultar la base de datos extrayendo el brand_config (JSONB)
+  const { data: business } = await supabase
     .from('businesses')
-    .select('id, name, slug, is_active, branding, brand_config')
+    .select('id, name, brand_config, is_active')
     .eq('slug', slug)
     .single<Business>()
 
-  // 2. Guard: tenant no existe o inactivo
-  if (error || !business || !business.is_active) {
+  if (!business || !business.is_active) {
     notFound()
   }
 
-  // 3. Extraer configuraciones
-  const { branding } = business
-  const brandConfig: BrandConfig = (business.brand_config as BrandConfig) ?? DEFAULT_BRAND_CONFIG
-
-  // 4. Resolver fuente SSR (Zero-Flicker)
-  //    Prioridad: brand_config.fontFamily > branding.font_family > "inter"
-  const fontKey = brandConfig.fontFamily || branding.font_family || 'inter'
-  const { className: fontClassName, variable: fontVariable } = resolveFontClass(fontKey)
-
-  // 5. Construir CSS variables para inyección en el body
-  const cssVars: React.CSSProperties & Record<string, string> = {
-    // ── brand_config tokens (nuevos) ──
-    '--brand-primary':   brandConfig.primaryColor || '#C5A059',
-
-    // ── branding tokens (legacy, retrocompatibilidad) ──
-    '--primary-color':   branding.primary_color   ?? '#C5A059',
-    '--primary-dark':    shadeColor(branding.primary_color ?? '#C5A059', -20),
-    '--secondary-color': branding.secondary_color ?? '#1A1A1A',
-    '--bg-color':        branding.bg_color        ?? '#080808',
-    '--text-color':      branding.text_color      ?? '#F4F4F4',
-    '--border-color':    `${branding.secondary_color ?? '#1A1A1A'}CC`,
-    '--font-family':     fontKey,
-  }
+  // Extraer variables con fallbacks seguros
+  const brandConfig = (business.brand_config as BrandConfig) || {}
+  const primaryColor = brandConfig.primaryColor || '#C5A059'
+  const fontFamilyRaw = brandConfig.fontFamily || 'inter'
+  
+  // Normalizar llave del diccionario de fuentes
+  const normalizedFontKey = fontFamilyRaw.toLowerCase().replace(/\s+/g, '')
+  const selectedFont = FONT_DICTIONARY[normalizedFontKey] || FONT_DICTIONARY.inter
 
   return (
-    <>
-      {/* Las CSS vars + fuente SSR se inyectan en el body para el subtree del tenant */}
-      <body
-        className={`${fontClassName} ${fontVariable} min-h-screen antialiased`}
-        style={cssVars}
-        suppressHydrationWarning
-      >
-        {children}
-      </body>
-    </>
+    <div 
+      className={`${selectedFont.className} ${selectedFont.variable} min-h-screen antialiased flex flex-col`}
+      style={{ 
+        '--brand-primary': primaryColor,
+        // Compatibilidad con variables previas de tokens heredados
+        '--primary-color': primaryColor, 
+        '--bg-color': '#080808', // Respaldo global
+        '--text-color': '#F4F4F4', // Respaldo global
+      } as React.CSSProperties}
+    >
+      {children}
+    </div>
   )
 }
 
