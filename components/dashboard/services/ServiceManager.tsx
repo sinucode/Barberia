@@ -94,15 +94,17 @@ export function ServiceManager({ initialServices, businessId }: ServiceManagerPr
           </div>
         </div>
 
-        <button
-          id="btn-add-service"
-          onClick={handleCreate}
-          className="btn-primary flex items-center gap-2 shrink-0"
-        >
-          <Plus size={16} strokeWidth={2.5} />
-          <span className="hidden sm:inline">Añadir Servicio</span>
-          <span className="sm:hidden">Añadir</span>
-        </button>
+        {services.length > 0 && (
+          <button
+            id="btn-add-service"
+            onClick={handleCreate}
+            className="btn-primary flex items-center gap-2 shrink-0 animate-fade-in"
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            <span className="hidden sm:inline">Añadir Servicio</span>
+            <span className="sm:hidden">Añadir</span>
+          </button>
+        )}
       </div>
 
       {/* Tabla Premium Minimalist */}
@@ -110,7 +112,7 @@ export function ServiceManager({ initialServices, businessId }: ServiceManagerPr
         {services.length === 0 ? (
           <EmptyState onCreate={handleCreate} />
         ) : (
-          <div className="overflow-x-auto rounded-xl" style={{ border: '1px solid var(--border-color)' }}>
+          <div className="overflow-x-auto rounded-xl animate-fade-in" style={{ border: '1px solid var(--border-color)' }}>
             <table className="w-full text-sm" aria-label="Catálogo de servicios">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--surface-color, rgba(255,255,255,0.03))' }}>
@@ -180,15 +182,24 @@ export function ServiceManager({ initialServices, businessId }: ServiceManagerPr
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div
-      className="rounded-xl border border-dashed text-center py-20 px-6"
+      className="rounded-xl border border-dashed text-center py-24 px-6 flex flex-col items-center justify-center animate-fade-in"
       style={{ borderColor: 'var(--border-color)' }}
     >
-      <DollarSign size={40} className="mx-auto mb-4 text-xinuco-muted opacity-30" />
-      <p className="text-sm font-medium text-xinuco-text mb-1">Sin servicios registrados</p>
-      <p className="text-xs text-xinuco-muted mb-6">Añade tu primer servicio para comenzar a operar.</p>
-      <button onClick={onCreate} className="btn-primary inline-flex items-center gap-2 text-sm">
-        <Plus size={15} />
-        Añadir Servicio
+      <div
+        className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
+        style={{ background: 'color-mix(in srgb, var(--primary-color) 10%, transparent)' }}
+      >
+        <DollarSign size={32} style={{ color: 'var(--primary-color)' }} />
+      </div>
+      <div className="space-y-2 mb-8 max-w-md">
+        <p className="text-lg font-semibold text-xinuco-text">Catálogo vacío</p>
+        <p className="text-sm text-xinuco-muted leading-relaxed">
+          Aún no has registrado ningún servicio. Añade tu primer corte, tratamiento o producto para comenzar a recibir reservas.
+        </p>
+      </div>
+      <button onClick={onCreate} className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm transition-all hover:scale-105 active:scale-95 shadow-lg" style={{ boxShadow: '0 4px 15px color-mix(in srgb, var(--primary-color) 25%, transparent)' }}>
+        <Plus size={18} strokeWidth={2.5} />
+        Añadir Primer Servicio
       </button>
     </div>
   )
