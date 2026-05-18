@@ -181,3 +181,49 @@ export async function deleteStaffSchedule(scheduleId: string): Promise<ActionRes
   revalidatePath('/[slug]/dashboard/staff', 'page')
   return { success: true }
 }
+
+/**
+ * saveStaffSchedulesBatch — Actualización masiva del horario semanal de un empleado.
+ * Estrategia: Elimina todos los registros actuales y hace un insert masivo (Batch) de los nuevos.
+ * Cliente autenticado → RLS valida pertenencia al business_id.
+ */
+export async function saveStaffSchedulesBatch(
+  businessId: string,
+  staffId: string,
+  schedules: Omit<StaffSchedule, 'id' | 'created_at' | 'updated_at'>[]
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  // PASO 1: Limpiar el calendario actual del empleado en este negocio
+  const { error: deleteError } = await supabase
+    .from('staff_schedules')
+    .delete()
+    .eq('staff_id', staffId)
+    .eq('business_id', businessId)
+
+  if (deleteError) {
+    return { error: `Error al limpiar horarios: ${deleteError.message}` }
+  }
+
+  // PASO 2: Insertar masivamente si hay horarios activos
+  if (schedules.length > 0) {
+    // 🛡️ Blindaje de seguridad: Forzamos los IDs en el servidor
+    const safeSchedulesToInsert = schedules.map(schedule => ({
+      ...schedule,
+      business_id: businessId,
+      staff_id: staffId
+    }))
+
+    const { error: insertError } = await supabase
+      .from('staff_schedules')
+      .insert(safeSchedulesToInsert)
+
+    if (insertError) {
+      return { error: `Error al guardar horarios: ${insertError.message}` }
+    }
+  }
+
+  // PASO 3: Refrescar la caché de Next.js
+  revalidatePath('/[slug]/dashboard/staff', 'page')
+  return { success: true }
+}
