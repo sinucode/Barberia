@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useTransition, useState, useMemo } from 'react'
+import { useReducer, useTransition, useState, useMemo, useEffect } from 'react'
 import {
   Check, ChevronLeft, AlertCircle, Loader2,
   Calendar, Clock, Scissors, User, Sparkles, Phone,
@@ -120,6 +120,13 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
   const [state, dispatch] = useReducer(wizardReducer, initialState)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    // Breve timeout para mostrar el esqueleto (Zero-Flicker UX effect)
+    const t = setTimeout(() => setIsMounted(true), 300)
+    return () => clearTimeout(t)
+  }, [])
 
   const upcomingDates = useMemo(() => getUpcomingDates(14), [])
 
@@ -223,35 +230,101 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         summary={selectedService?.name}
         onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 1 })}
       >
-        <div className="flex flex-col gap-2.5 px-1 pb-2">
-          {services.map(svc => (
-            <button
-              key={svc.id}
-              onClick={() => dispatch({ type: 'SET_SERVICE', payload: svc.id })}
-              className="flex items-center justify-between p-4 rounded-2xl border transition-all duration-200 text-left group active:scale-[0.98]"
-              style={{
-                background: 'var(--surface-color, rgba(255,255,255,0.03))',
-                borderColor: 'var(--border-color)',
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold text-xinuco-text group-hover:text-[var(--primary-color)] transition-colors">
-                  {svc.name}
-                </span>
-                <span className="text-xs text-xinuco-muted flex items-center gap-1.5">
-                  <Clock size={11} />
-                  {svc.duration_minutes} min
-                  {svc.description && <span className="opacity-60">· {svc.description}</span>}
-                </span>
-              </div>
-              <span
-                className="text-sm font-bold tabular-nums shrink-0 ml-4"
-                style={{ color: 'var(--primary-color)' }}
+        <div className="flex flex-col gap-3 px-1 pb-2">
+          {!isMounted ? (
+            // Skeleton de carga parpadeante (Premium Minimalist)
+            <>
+              {[1, 2, 3].map((i) => (
+                <div 
+                  key={i} 
+                  className="w-full rounded-2xl border animate-pulse flex flex-col p-4 gap-3"
+                  style={{
+                    background: 'var(--surface-color, rgba(255,255,255,0.02))',
+                    borderColor: 'var(--border-color)',
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-white/5 shrink-0" />
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="h-4 w-3/4 bg-white/10 rounded" />
+                      <div className="h-3 w-1/2 bg-white/5 rounded" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-white/5">
+                    <div className="h-4 w-1/4 bg-white/10 rounded" />
+                    <div className="h-8 w-24 bg-white/10 rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : services.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-xinuco-muted gap-2 border rounded-2xl" style={{ borderColor: 'var(--border-color)', background: 'var(--surface-color, rgba(255,255,255,0.02))' }}>
+              <Scissors size={28} className="opacity-40" />
+              <p className="text-sm font-medium">No hay servicios disponibles</p>
+              <p className="text-xs opacity-60">Pronto agregaremos nuestro catálogo.</p>
+            </div>
+          ) : (
+            services.map(svc => (
+              <div
+                key={svc.id}
+                className="flex flex-col p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.01] group"
+                style={{
+                  background: 'var(--surface-color, rgba(255,255,255,0.03))',
+                  borderColor: 'var(--border-color)',
+                }}
               >
-                {formatCOP(svc.price)}
-              </span>
-            </button>
-          ))}
+                {/* Cabecera del Servicio */}
+                <div className="flex items-start gap-4">
+                  {/* Imagen (Placeholder elegante) */}
+                  <div 
+                    className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0 border"
+                    style={{ 
+                      background: 'color-mix(in srgb, var(--primary-color) 10%, transparent)',
+                      borderColor: 'color-mix(in srgb, var(--primary-color) 20%, transparent)',
+                    }}
+                  >
+                    <Sparkles size={20} style={{ color: 'var(--primary-color)' }} />
+                  </div>
+                  
+                  {/* Detalles */}
+                  <div className="flex flex-col flex-1 min-w-0 pt-0.5">
+                    <h3 className="text-base font-semibold text-xinuco-text group-hover:text-[var(--primary-color)] transition-colors truncate">
+                      {svc.name}
+                    </h3>
+                    <p className="text-xs text-xinuco-muted mt-1 line-clamp-2 leading-relaxed opacity-80">
+                      {svc.description || 'Servicio profesional premium.'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer del Servicio (Duración, Precio y Botón) */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t" style={{ borderColor: 'color-mix(in srgb, var(--border-color) 50%, transparent)' }}>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-xinuco-muted flex items-center gap-1.5 font-medium">
+                      <Clock size={12} />
+                      {svc.duration_minutes} min
+                    </span>
+                    <span className="text-lg font-bold tabular-nums mt-0.5" style={{ color: 'var(--primary-color)' }}>
+                      {formatCOP(svc.price)}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => dispatch({ type: 'SET_SERVICE', payload: svc.id })}
+                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 flex items-center gap-2"
+                    style={{
+                      background: 'var(--primary-color)',
+                      color: 'var(--bg-color)',
+                      boxShadow: '0 4px 15px color-mix(in srgb, var(--primary-color) 25%, transparent)',
+                    }}
+                  >
+                    Seleccionar
+                    <ChevronLeft size={14} className="rotate-180" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </StepAccordion>
 
