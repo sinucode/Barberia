@@ -35,7 +35,7 @@ export default async function DashboardLayout({
   ])
 
   return (
-    <DashboardSidebar slug={slug}>
+    <DashboardSidebar slug={slug} business={business}>
       <div className="flex flex-col min-h-screen">
         {/* Header en desktop y mobile */}
         {business && (

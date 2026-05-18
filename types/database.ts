@@ -119,9 +119,10 @@ export type StaffRole = 'super_admin' | 'admin' | 'barber' | 'manicurist'
 export interface Staff {
   id:          string
   business_id: string
-  user_id:     string | null  // nullable — staff sin cuenta auth todavía
-  name:        string
-  role:        StaffRole
+  name?:       string         // deprecado (mantener por compatibilidad temporal si es necesario)
+  full_name:   string
+  specialty_role: string
+  role?:       StaffRole      // deprecado
   is_active:   boolean
   created_at:  string
   updated_at:  string

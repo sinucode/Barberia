@@ -2,11 +2,13 @@
 
 import { useState, useTransition, useCallback, useRef, useEffect } from 'react'
 import {
-  Plus, X, Loader2, Clock, DollarSign,
+  Plus, X, Loader2, Clock, DollarSign, Scissors,
   MoreVertical, Pencil, Power, Trash2, Save,
 } from 'lucide-react'
 import { createService, updateService, toggleServiceStatus } from '@/actions/services'
 import type { Service } from '@/types/database'
+import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
+import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // UTILIDADES
@@ -79,38 +81,33 @@ export function ServiceManager({ initialServices, businessId }: ServiceManagerPr
 
   return (
     <>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="flex items-center gap-4">
-          <div
-            className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: 'color-mix(in srgb, var(--primary-color) 15%, transparent)' }}
-          >
-            <DollarSign size={24} style={{ color: 'var(--primary-color)' }} />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-xinuco-text">Menú de Servicios</h1>
-            <p className="text-sm text-xinuco-muted mt-0.5">Configura cortes, precios y duraciones.</p>
-          </div>
-        </div>
-
-        {services.length > 0 && (
+      <AdminPageHeader
+        title="Menú de Servicios"
+        subtitle="Configura cortes, precios y duraciones."
+        hasData={services.length > 0}
+        actionButton={
           <button
             id="btn-add-service"
             onClick={handleCreate}
-            className="btn-primary flex items-center gap-2 shrink-0 animate-fade-in"
+            className="btn-primary flex items-center gap-2 animate-fade-in"
           >
             <Plus size={16} strokeWidth={2.5} />
             <span className="hidden sm:inline">Añadir Servicio</span>
             <span className="sm:hidden">Añadir</span>
           </button>
-        )}
-      </div>
+        }
+      />
 
       {/* Tabla Premium Minimalist */}
       <section aria-label="Lista de servicios" className="mt-6">
         {services.length === 0 ? (
-          <EmptyState onCreate={handleCreate} />
+          <AdminEmptyState 
+            icon={Scissors} 
+            title="Catálogo vacío" 
+            description="Aún no has registrado ningún servicio. Añade tu primer corte, tratamiento o producto para comenzar a recibir reservas." 
+            actionLabel="Añadir Primer Servicio" 
+            onAction={handleCreate} 
+          />
         ) : (
           <div className="overflow-x-auto rounded-xl animate-fade-in" style={{ border: '1px solid var(--border-color)' }}>
             <table className="w-full text-sm" aria-label="Catálogo de servicios">
@@ -172,36 +169,6 @@ export function ServiceManager({ initialServices, businessId }: ServiceManagerPr
         />
       )}
     </>
-  )
-}
-
-// ════════════════════════════════════════════════════════════════════════════════
-// EMPTY STATE
-// ════════════════════════════════════════════════════════════════════════════════
-
-function EmptyState({ onCreate }: { onCreate: () => void }) {
-  return (
-    <div
-      className="rounded-xl border border-dashed text-center py-24 px-6 flex flex-col items-center justify-center animate-fade-in"
-      style={{ borderColor: 'var(--border-color)' }}
-    >
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-6"
-        style={{ background: 'color-mix(in srgb, var(--primary-color) 10%, transparent)' }}
-      >
-        <DollarSign size={32} style={{ color: 'var(--primary-color)' }} />
-      </div>
-      <div className="space-y-2 mb-8 max-w-md">
-        <p className="text-lg font-semibold text-xinuco-text">Catálogo vacío</p>
-        <p className="text-sm text-xinuco-muted leading-relaxed">
-          Aún no has registrado ningún servicio. Añade tu primer corte, tratamiento o producto para comenzar a recibir reservas.
-        </p>
-      </div>
-      <button onClick={onCreate} className="btn-primary inline-flex items-center gap-2 px-6 py-3 text-sm transition-all hover:scale-105 active:scale-95 shadow-lg" style={{ boxShadow: '0 4px 15px color-mix(in srgb, var(--primary-color) 25%, transparent)' }}>
-        <Plus size={18} strokeWidth={2.5} />
-        Añadir Primer Servicio
-      </button>
-    </div>
   )
 }
 

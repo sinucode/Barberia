@@ -361,7 +361,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
 
           {/* Tarjetas del Staff */}
           {staff.map(st => {
-            const initials = st.name
+            const initials = st.full_name
               .split(' ')
               .map(n => n[0])
               .join('')
@@ -387,8 +387,8 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
                 >
                   {initials}
                 </div>
-                <span className="text-sm font-semibold text-xinuco-text line-clamp-1">{st.name}</span>
-                <span className="text-[10px] text-xinuco-muted capitalize -mt-1">{st.role}</span>
+                <span className="text-sm font-semibold text-xinuco-text line-clamp-1">{st.full_name}</span>
+                <span className="text-[10px] text-xinuco-muted capitalize -mt-1">{st.specialty_role}</span>
               </button>
             )
           })}

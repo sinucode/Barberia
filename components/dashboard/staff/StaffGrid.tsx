@@ -52,7 +52,7 @@ function StaffCard({ member }: { member: Staff }) {
     }
   }
 
-  const roleConfig = getRoleConfig(member.role)
+  const roleConfig = getRoleConfig(member.specialty_role || '')
   const RoleIcon = roleConfig.icon
 
   return (
@@ -69,7 +69,7 @@ function StaffCard({ member }: { member: Staff }) {
         </div>
 
         <div className="flex flex-col">
-          <h3 className="font-bold text-xinuco-text text-base">{member.name}</h3>
+          <h3 className="font-bold text-xinuco-text text-base">{member.full_name}</h3>
           
           {/* Badge de Rol */}
           <span className={`inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider border ${roleConfig.bg} ${roleConfig.color} w-fit`}>

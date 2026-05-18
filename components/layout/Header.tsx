@@ -1,8 +1,13 @@
+'use client'
+
+import { useContext } from 'react'
 import Image from 'next/image'
 import { Scissors } from 'lucide-react'
 import type { Business } from '@/types/database'
 import { AvatarSkeleton } from '@/components/ui/Skeleton'
 import { UserDropdown } from '@/components/layout/UserDropdown'
+import { SidebarContext } from '@/components/layout/DashboardSidebar'
+import { useDateTime } from '@/lib/hooks/useDateTime'
 
 interface HeaderProps {
   business:  Pick<Business, 'name' | 'branding'>
@@ -22,14 +27,8 @@ interface HeaderProps {
  */
 export function Header({ business, userName, isLoading = false }: HeaderProps) {
   const { branding } = business
-
-  // ── Fecha elegante ────────────────────────────────────────────
-  const today = new Date()
-  const dayName = today.toLocaleDateString('es-MX', { weekday: 'long' })
-  const dayNum  = today.getDate()
-  const month   = today.toLocaleDateString('es-MX', { month: 'short' })
-  // "jueves, 24 may" → capitalizar primera letra
-  const dateLabel = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum} ${month}`
+  const { isCollapsed } = useContext(SidebarContext)
+  const dateTime = useDateTime()
 
   // ── Iniciales del usuario ─────────────────────────────────────
   const initials = userName
@@ -46,36 +45,27 @@ export function Header({ business, userName, isLoading = false }: HeaderProps) {
     <header className="sticky top-0 z-40 bg-xinuco-bg/80 backdrop-blur-md border-b border-xinuco-border">
       <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto gap-3">
 
-        {/* ── Izquierda: fecha ──────────────────────────────── */}
-        <div className="flex flex-col min-w-0">
-          <time
-            dateTime={today.toISOString().split('T')[0]}
-            className="text-xs font-medium text-xinuco-muted leading-none"
-          >
-            {dateLabel}
-          </time>
-          {/* Nombre del negocio bajo la fecha */}
-          <div className="flex items-center gap-1.5 mt-1">
-            {branding.logo_url ? (
-              <Image
-                src={branding.logo_url}
-                alt={`Logo de ${business.name}`}
-                width={16}
-                height={16}
-                className="rounded object-cover shrink-0"
-              />
-            ) : (
-              <Scissors
-                size={13}
-                strokeWidth={2.5}
-                className="shrink-0"
-                style={{ color: 'var(--primary-color)' }}
-              />
-            )}
-            <span className="text-sm font-semibold text-xinuco-text leading-none truncate">
-              {business.name}
-            </span>
-          </div>
+        {/* ── Izquierda: Info dinámica según isCollapsed ──────── */}
+        <div className="flex flex-col min-w-0 transition-opacity duration-300">
+          {isCollapsed ? (
+            <div className="flex items-center gap-2 animate-fade-in whitespace-nowrap overflow-hidden">
+              <span className="font-serif font-bold text-sm text-xinuco-text tracking-wide truncate">
+                {business.name}
+              </span>
+              <span className="text-xinuco-muted text-xs mx-1 opacity-50">•</span>
+              {dateTime ? (
+                <span className="text-xs text-xinuco-muted uppercase tracking-widest font-medium">
+                  {dateTime.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }).replace('.', '')} 
+                  <span className="mx-2 opacity-50">•</span> 
+                  {dateTime.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+                </span>
+              ) : (
+                <div className="w-32 h-3 rounded bg-xinuco-surface animate-pulse" />
+              )}
+            </div>
+          ) : (
+            <div className="h-8 animate-fade-in" /> /* Espacio limpio y ejecutivo cuando expandido */
+          )}
         </div>
 
         {/* ── Derecha: avatar ───────────────────────────────── */}

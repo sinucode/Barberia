@@ -38,8 +38,7 @@ export async function createStaffMember(
   businessId: string,
   data: {
     full_name: string
-    role: string
-    user_id?: string | null
+    specialty_role: string
   }
 ): Promise<ActionResult> {
   const supabase = await createClient()
@@ -48,9 +47,8 @@ export async function createStaffMember(
     .from('staff')
     .insert({
       business_id: businessId,
-      name:        data.full_name,
-      role:        data.role as StaffRole,
-      user_id:     data.user_id ?? null,
+      full_name:   data.full_name,
+      specialty_role: data.specialty_role,
       is_active:   true,
     } as any)
     .select()
