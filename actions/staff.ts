@@ -190,7 +190,7 @@ export async function deleteStaffSchedule(scheduleId: string): Promise<ActionRes
 export async function saveStaffSchedulesBatch(
   businessId: string,
   staffId: string,
-  schedules: Omit<StaffSchedule, 'id' | 'created_at' | 'updated_at'>[]
+  schedules: Omit<StaffSchedule, 'id' | 'created_at' | 'updated_at' | 'business_id' | 'staff_id'>[]
 ): Promise<ActionResult> {
   const supabase = await createClient()
 

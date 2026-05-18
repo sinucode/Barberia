@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { X, Loader2, Save, CalendarDays } from 'lucide-react'
-import { getStaffSchedules, upsertStaffSchedule, deleteStaffSchedule } from '@/actions/staff'
+import { getStaffSchedules, saveStaffSchedulesBatch } from '@/actions/staff'
 import type { StaffSchedule } from '@/types/database'
 
 // 0 = Domingo, 1 = Lunes ... 6 = Sábado
@@ -127,37 +127,27 @@ export function StaffScheduleSheet({
     
     startTransition(async () => {
       try {
-        const promises = []
+        // 1. Filtrar y mapear ÚNICAMENTE los días que están activos
+        const activeSchedules = Object.values(daysState)
+          .filter(day => day.isWorking)
+          .map(day => ({
+            day_of_week: day.day_of_week,
+            start_time: day.start_time,
+            end_time: day.end_time
+          }))
         
-        for (const day of Object.values(daysState)) {
-          if (day.isWorking) {
-            // Upsert (crear o actualizar)
-            promises.push(
-              upsertStaffSchedule(businessId, staffId, {
-                day_of_week: day.day_of_week,
-                start_time: day.start_time,
-                end_time: day.end_time
-              })
-            )
-          } else if (!day.isWorking && day.existingId) {
-            // Si no trabaja hoy pero antes sí trabajaba, eliminar el registro
-            promises.push(deleteStaffSchedule(day.existingId))
-          }
-        }
+        // 2. Enviar el arreglo completo en un solo viaje (Bulk Insert)
+        const result = await saveStaffSchedulesBatch(businessId, staffId, activeSchedules)
         
-        const results = await Promise.all(promises)
-        
-        // Verificar si hubo algún error
-        const failed = results.find(r => r && r.error)
-        if (failed) {
-          setError(failed.error || 'Error al guardar algunos horarios.')
+        if (result.error) {
+          setError(result.error)
           return
         }
         
         // Éxito, cerrar panel
         onClose()
       } catch (err: any) {
-        setError(err?.message || 'Ocurrió un error inesperado.')
+        setError(err?.message || 'Ocurrió un error inesperado al guardar.')
       }
     })
   }
