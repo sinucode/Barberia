@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Play, Clock, CheckCircle2, XCircle, AlertCircle, CalendarX } from 'lucide-react'
 import { parseTimeRange, formatTime, getDurationMinutes } from '@/lib/utils/time'
 import type { Appointment, AppointmentStatus } from '@/types/database'
+import { NewAppointmentButton } from './NewAppointmentButton'
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -209,7 +210,7 @@ function AgendaItem({ appt }: { appt: Appointment }) {
 }
 
 /** Empty state cuando no hay citas en el día */
-function AgendaEmpty() {
+function AgendaEmpty({ slug }: { slug: string }) {
   return (
     <div className="card flex flex-col items-center justify-center py-10 gap-3 text-center">
       <div
@@ -222,9 +223,7 @@ function AgendaEmpty() {
         <p className="text-sm font-semibold text-xinuco-text">Sin citas para hoy</p>
         <p className="text-xs text-xinuco-muted mt-1">Las nuevas citas aparecerán aquí</p>
       </div>
-      <button id="btn-new-appointment" className="btn-primary mt-1 !px-4 !py-2 !text-xs">
-        + Nueva cita
-      </button>
+      <NewAppointmentButton slug={slug} />
     </div>
   )
 }
@@ -348,7 +347,7 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
         </div>
 
         {agenda.length === 0 ? (
-          <AgendaEmpty />
+          <AgendaEmpty slug={slug} />
         ) : (
           <ul className="flex flex-col" aria-label="Lista de citas del día">
             {agenda.map((appt) => (
