@@ -123,6 +123,16 @@ export interface StaffService {
   business_id: string   // → businesses.id (redundante para RLS)
 }
 
+// ---------- Tabla: staff_schedules ----------
+export interface StaffSchedule {
+  id:          string
+  business_id: string   // → businesses.id
+  staff_id:    string   // → staff.id
+  day_of_week: number   // 0 = Domingo, 1 = Lunes … 6 = Sábado
+  start_time:  string   // TIME, ej: '09:00'
+  end_time:    string   // TIME, ej: '18:00'
+}
+
 // ---------- Helpers tipados ----------
 /**
  * Tipo Row genérico para cualquier tabla — facilita la generación de inserts
@@ -167,6 +177,11 @@ export interface Database {
         Row:    StaffService
         Insert: StaffService
         Update: Partial<StaffService>
+      }
+      staff_schedules: {
+        Row:    StaffSchedule
+        Insert: Omit<StaffSchedule, 'id'>
+        Update: Partial<Omit<StaffSchedule, 'id'>>
       }
     }
   }

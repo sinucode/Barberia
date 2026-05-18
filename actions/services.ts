@@ -2,8 +2,20 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import type { Service } from '@/types/database'
 
-export async function getServices(businessId: string) {
+// ── Tipo del resultado de las operaciones ────────────────────────────────────
+interface ActionResult {
+  success?: boolean
+  error?:   string
+  data?:    Service | Service[]
+}
+
+/**
+ * getServices — Obtiene los servicios de un negocio específico.
+ * Usa el cliente autenticado → RLS filtra por business_id automáticamente.
+ */
+export async function getServices(businessId: string): Promise<Service[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -13,30 +25,82 @@ export async function getServices(businessId: string) {
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return data
+  return data as Service[]
 }
 
-export async function createService(businessId: string, data: { name: string, duration_minutes: number, price: number }) {
+/**
+ * createService — Crea un nuevo servicio para un negocio.
+ * Cliente autenticado → RLS valida que el usuario pertenezca al business_id.
+ */
+export async function createService(
+  businessId: string,
+  data: {
+    name: string
+    description?: string
+    duration_minutes: number
+    price: number
+  }
+): Promise<ActionResult> {
   const supabase = await createClient()
 
   const { data: result, error } = await supabase
     .from('services')
     .insert({
-      business_id: businessId,
-      name: data.name,
+      business_id:      businessId,
+      name:             data.name,
+      description:      data.description ?? null,
       duration_minutes: data.duration_minutes,
-      price: data.price,
-      is_active: true
+      price:            data.price,
+      is_active:        true,
     } as any)
     .select()
+    .single()
 
-  if (error) return { error: error.message }
-  
+  if (error) {
+    if (error.code === '23505') {
+      return { error: 'Ya existe un servicio con ese nombre en este negocio.' }
+    }
+    return { error: error.message }
+  }
+
   revalidatePath('/[slug]/dashboard/services', 'page')
-  return { success: true, data: result }
+  return { success: true, data: result as Service }
 }
 
-export async function toggleServiceStatus(serviceId: string, isActive: boolean) {
+/**
+ * updateService — Actualiza los datos de un servicio existente.
+ * El .eq('id') garantiza mutación atómica (sin fugas cross-tenant).
+ */
+export async function updateService(
+  serviceId: string,
+  data: {
+    name?: string
+    description?: string
+    duration_minutes?: number
+    price?: number
+  }
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('services')
+    .update(data as any)
+    .eq('id', serviceId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/[slug]/dashboard/services', 'page')
+  return { success: true }
+}
+
+/**
+ * toggleServiceStatus — Activa o desactiva un servicio.
+ * El .eq('id') es obligatorio para evitar mutación masiva.
+ */
+export async function toggleServiceStatus(
+  serviceId: string,
+  isActive: boolean
+): Promise<ActionResult> {
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -45,7 +109,7 @@ export async function toggleServiceStatus(serviceId: string, isActive: boolean) 
     .eq('id', serviceId)
 
   if (error) return { error: error.message }
-  
+
   revalidatePath('/[slug]/dashboard/services', 'page')
   return { success: true }
 }
