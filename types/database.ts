@@ -12,11 +12,14 @@ export interface BusinessBranding {
   font_family:     string   // Ej: "Inter" | "Bebas Neue"
 }
 
-// ---------- Brand Config (columna JSONB: brand_config) ----------
+// ---------- Brand Config (columna JSONB: brand_config) — FUENTE ÚNICA DE VERDAD ----------
 export interface BrandConfig {
-  primaryColor:  string   // Hex: "#C5A059"
-  fontFamily:    string   // Ej: "inter" | "bebas-neue"
-  logoUrl?:      string   // Reservado para el futuro
+  primaryColor:    string   // Hex: "#C5A059"
+  secondaryColor:  string   // Surface / cards: "#1A1A1A"
+  bgColor:         string   // Fondo principal: "#080808"
+  textColor:       string   // Texto principal: "#F4F4F4"
+  fontFamily:      string   // Ej: "inter" | "playfair" | "oswald"
+  logoUrl?:        string   // URL del logo (opcional)
 }
 
 // ---------- Feature Flags ----------

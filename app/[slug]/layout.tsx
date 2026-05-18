@@ -52,8 +52,11 @@ function resolveFontClass(fontKey?: string): { className: string; variable: stri
 // ════════════════════════════════════════════════════════════════════════════════
 
 const DEFAULT_BRAND_CONFIG: BrandConfig = {
-  primaryColor: '#C5A059',
-  fontFamily:   'inter',
+  primaryColor:   '#C5A059',
+  secondaryColor: '#1A1A1A',
+  bgColor:        '#080808',
+  textColor:      '#F4F4F4',
+  fontFamily:     'inter',
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -106,10 +109,10 @@ export default async function TenantLayout({
   const { slug } = await params
   const supabase = await createClient()
 
-  // Consultar la base de datos extrayendo branding (legacy) + brand_config (nuevo)
+  // Consulta única — brand_config es la FUENTE ÚNICA DE VERDAD
   const { data: business, error } = await supabase
     .from('businesses')
-    .select('id, name, slug, is_active, branding, brand_config')
+    .select('id, name, slug, is_active, brand_config')
     .eq('slug', slug)
     .single<Business>()
 
@@ -117,31 +120,26 @@ export default async function TenantLayout({
     notFound()
   }
 
-  // ── Extraer configuraciones con cascada de prioridad ──────────────────────
-  // Prioridad: brand_config (si tiene valores reales) > branding (legacy)
-  const { branding } = business
-  const brandConfig = (business.brand_config as BrandConfig) ?? {}
-
-  // Determinar color primario: brand_config sobreescribe SOLO si no es el default "#000000"
-  const brandConfigHasCustomColor = brandConfig.primaryColor && brandConfig.primaryColor !== '#000000'
-  const primaryColor = brandConfigHasCustomColor
-    ? brandConfig.primaryColor
-    : (branding?.primary_color ?? '#C5A059')
+  // Extraer brand_config con defaults seguros
+  const bc = (business.brand_config as BrandConfig) ?? DEFAULT_BRAND_CONFIG
+  const primaryColor   = bc.primaryColor   || '#C5A059'
+  const secondaryColor = bc.secondaryColor || '#1A1A1A'
+  const bgColor        = bc.bgColor        || '#080808'
+  const textColor      = bc.textColor      || '#F4F4F4'
+  const fontKey        = bc.fontFamily     || 'inter'
 
   // Resolver fuente SSR (Zero-Flicker)
-  const fontKey = brandConfig.fontFamily || branding?.font_family || 'inter'
   const { className: fontClassName, variable: fontVariable } = resolveFontClass(fontKey)
 
-  // Construir CSS variables para inyección
+  // CSS Variables — inyección directa en el DOM
   const cssVars: React.CSSProperties & Record<string, string> = {
-    // ── Tokens unificados ──
     '--brand-primary':   primaryColor,
     '--primary-color':   primaryColor,
     '--primary-dark':    shadeColor(primaryColor, -20),
-    '--secondary-color': branding?.secondary_color ?? '#1A1A1A',
-    '--bg-color':        branding?.bg_color        ?? '#080808',
-    '--text-color':      branding?.text_color      ?? '#F4F4F4',
-    '--border-color':    `${branding?.secondary_color ?? '#1A1A1A'}CC`,
+    '--secondary-color': secondaryColor,
+    '--bg-color':        bgColor,
+    '--text-color':      textColor,
+    '--border-color':    `${secondaryColor}CC`,
     '--font-family':     fontKey,
   }
 

@@ -98,15 +98,27 @@ export async function updateBusinessTheme(businessId: string, config: BrandConfi
     return { error: 'No autenticado. Inicia sesión para continuar.' }
   }
 
-  // 2. Validación estricta de formato hexadecimal
-  if (!HEX_COLOR_REGEX.test(config.primaryColor)) {
-    return { error: `Color primario inválido: "${config.primaryColor}". Usa formato hexadecimal (ej: #C5A059).` }
+  // 2. Validación estricta de formato hexadecimal para todos los colores
+  const colorFields = [
+    { key: 'primaryColor',   value: config.primaryColor },
+    { key: 'secondaryColor', value: config.secondaryColor },
+    { key: 'bgColor',        value: config.bgColor },
+    { key: 'textColor',      value: config.textColor },
+  ] as const
+
+  for (const { key, value } of colorFields) {
+    if (!HEX_COLOR_REGEX.test(value)) {
+      return { error: `Color inválido en "${key}": "${value}". Usa formato hexadecimal (ej: #C5A059).` }
+    }
   }
 
   // 3. Sanitizar el payload — solo campos permitidos
   const safeConfig: BrandConfig = {
-    primaryColor: config.primaryColor,
-    fontFamily:   config.fontFamily.trim().toLowerCase(),
+    primaryColor:   config.primaryColor,
+    secondaryColor: config.secondaryColor,
+    bgColor:        config.bgColor,
+    textColor:      config.textColor,
+    fontFamily:     config.fontFamily.trim().toLowerCase(),
     ...(config.logoUrl ? { logoUrl: config.logoUrl } : {}),
   }
 
@@ -121,7 +133,7 @@ export async function updateBusinessTheme(businessId: string, config: BrandConfi
   }
 
   // 5. Invalidar caché — la UI del tenant y el dashboard se refrescan
-  revalidatePath(`/`)  // Revalida todas las rutas del tenant
+  revalidatePath(`/`)
   return { success: true }
 }
 
