@@ -1,35 +1,43 @@
 'use client'
 
-import { useReducer, useTransition, useState } from 'react'
-import { Check, ChevronRight, AlertCircle, Loader2, Calendar } from 'lucide-react'
+import { useReducer, useTransition, useState, useMemo } from 'react'
+import {
+  Check, ChevronLeft, AlertCircle, Loader2,
+  Calendar, Clock, Scissors, User, Sparkles, Phone,
+} from 'lucide-react'
 import type { Service, Staff } from '@/types/database'
-// Importar las Server Actions
 import { createAppointment, getAvailableSlots } from '@/actions/appointments'
 
-// ── Tipos y Estado del Wizard ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════════
+// ESTADO CENTRALIZADO (useReducer)
+// ════════════════════════════════════════════════════════════════════════════════
+
 export type BookingStep = 1 | 2 | 3 | 4
 
 interface BookingState {
   currentStep: BookingStep
   serviceId: string | null
-  staffId: string | null // 'any' significa cualquiera
+  staffId: string | null       // 'any' = cualquier profesional
   date: string | null
   time: string | null
   slots: string[]
   isLoadingSlots: boolean
-  userData: { name: string; phone: string } | null
+  userData: { name: string; phone: string }
+  isConfirmed: boolean
 }
 
 type BookingAction =
-  | { type: 'SET_SERVICE'; payload: string }
-  | { type: 'SET_STAFF'; payload: string }
-  | { type: 'SET_DATE'; payload: string }
-  | { type: 'SET_SLOTS'; payload: string[] }
+  | { type: 'SET_SERVICE';       payload: string }
+  | { type: 'SET_STAFF';         payload: string }
+  | { type: 'SET_DATE';          payload: string }
+  | { type: 'SET_SLOTS';         payload: string[] }
   | { type: 'SET_LOADING_SLOTS'; payload: boolean }
-  | { type: 'SET_TIME'; payload: string }
-  | { type: 'SET_USER'; payload: { name: string; phone: string } }
-  | { type: 'GOTO_STEP'; payload: BookingStep }
+  | { type: 'SET_TIME';          payload: string }
+  | { type: 'SET_USER_NAME';     payload: string }
+  | { type: 'SET_USER_PHONE';    payload: string }
+  | { type: 'GOTO_STEP';         payload: BookingStep }
   | { type: 'RESET_FROM_COLLISION' }
+  | { type: 'CONFIRMED' }
 
 const initialState: BookingState = {
   currentStep: 1,
@@ -39,7 +47,8 @@ const initialState: BookingState = {
   time: null,
   slots: [],
   isLoadingSlots: false,
-  userData: null,
+  userData: { name: '', phone: '' },
+  isConfirmed: false,
 }
 
 function wizardReducer(state: BookingState, action: BookingAction): BookingState {
@@ -56,32 +65,71 @@ function wizardReducer(state: BookingState, action: BookingAction): BookingState
       return { ...state, isLoadingSlots: action.payload }
     case 'SET_TIME':
       return { ...state, time: action.payload, currentStep: 4 }
-    case 'SET_USER':
-      return { ...state, userData: action.payload }
+    case 'SET_USER_NAME':
+      return { ...state, userData: { ...state.userData, name: action.payload } }
+    case 'SET_USER_PHONE':
+      return { ...state, userData: { ...state.userData, phone: action.payload } }
     case 'GOTO_STEP':
       return { ...state, currentStep: action.payload }
     case 'RESET_FROM_COLLISION':
-      // Mantiene los datos pero regresa al paso de fecha/hora para reintentar
       return { ...state, time: null, currentStep: 3, slots: [] }
+    case 'CONFIRMED':
+      return { ...state, isConfirmed: true }
     default:
       return state
   }
 }
 
-// ── Props del Componente ────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════════
+// UTILIDADES
+// ════════════════════════════════════════════════════════════════════════════════
+
+/** Formatea precio a COP visual — 15000 → "$ 15.000" */
+function formatCOP(price: number): string {
+  return '$ ' + price.toLocaleString('es-CO')
+}
+
+/** Genera un arreglo de las próximas N fechas a partir de hoy */
+function getUpcomingDates(count: number): { dateStr: string; dayName: string; dayNum: number; monthName: string; isToday: boolean }[] {
+  const dates = []
+  for (let i = 0; i < count; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() + i)
+    dates.push({
+      dateStr: d.toISOString().split('T')[0],
+      dayName: d.toLocaleDateString('es-CO', { weekday: 'short' }),
+      dayNum: d.getDate(),
+      monthName: d.toLocaleDateString('es-CO', { month: 'short' }),
+      isToday: i === 0,
+    })
+  }
+  return dates
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL — BookingWizard
+// ════════════════════════════════════════════════════════════════════════════════
+
 interface BookingWizardProps {
   businessId: string
   services: Service[]
   staff: Staff[]
 }
 
-// ── Componente Principal ────────────────────────────────────────────────────
 export function BookingWizard({ businessId, services, staff }: BookingWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialState)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  // Cargar slots al elegir fecha
+  const upcomingDates = useMemo(() => getUpcomingDates(14), [])
+
+  // ── Resolver nombres para los resúmenes ──────────────────────────────────
+  const selectedService = services.find(s => s.id === state.serviceId)
+  const selectedStaff = state.staffId === 'any'
+    ? null
+    : staff.find(s => s.id === state.staffId)
+
+  // ── Cargar slots al elegir fecha ─────────────────────────────────────────
   const handleDateSelect = async (selectedDate: string) => {
     dispatch({ type: 'SET_DATE', payload: selectedDate })
     if (!state.serviceId) return
@@ -90,37 +138,33 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
     try {
       const res = await getAvailableSlots(businessId, state.serviceId, selectedDate, state.staffId)
       dispatch({ type: 'SET_SLOTS', payload: res.slots || [] })
-    } catch (e) {
-      console.error(e)
+    } catch {
       dispatch({ type: 'SET_SLOTS', payload: [] })
     }
   }
 
-  // Handlers
+  // ── Confirmar la reserva ─────────────────────────────────────────────────
   const handleConfirm = () => {
-    if (!state.serviceId || !state.date || !state.time || !state.userData) return
-    
+    if (!state.serviceId || !state.date || !state.time) return
+    if (!state.userData.name.trim() || !state.userData.phone.trim()) return
+
     setError(null)
-    
-    // UI Optimista con prevención de colisiones
+
     startTransition(async () => {
       try {
-        const payload = {
+        const res = await createAppointment({
           businessId,
           staffId: state.staffId,
           serviceId: state.serviceId as string,
           date: state.date as string,
           time: state.time as string,
-          clientData: state.userData as { name: string; phone: string }
-        }
+          clientData: state.userData,
+        })
 
-        const res = await createAppointment(payload)
-        
         if (res.error) {
           if (res.error === 'collision') {
             setError('¡Uy! Alguien se te adelantó. Este horario acaba de ser ocupado.')
             dispatch({ type: 'RESET_FROM_COLLISION' })
-            // Recargar slots automáticamente
             if (state.date) handleDateSelect(state.date)
           } else {
             setError(res.message || 'Ocurrió un error al agendar tu cita.')
@@ -128,209 +172,411 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
           return
         }
 
-        alert('¡Cita Confirmada con éxito!')
-        
-      } catch (err: any) {
+        dispatch({ type: 'CONFIRMED' })
+      } catch {
         setError('Error inesperado de red. Intenta de nuevo.')
       }
     })
   }
 
-  // Helper para renderizar los encabezados colapsables del acordeón
-  const renderStepHeader = (step: BookingStep, title: string, summary?: string) => {
-    const isCompleted = state.currentStep > step
-    const isActive = state.currentStep === step
-    
+  // ── Pantalla de confirmación exitosa ──────────────────────────────────────
+  if (state.isConfirmed) {
     return (
-      <div 
-        className={`flex items-center justify-between p-4 rounded-xl transition-colors cursor-pointer border
-          ${isActive ? 'bg-xinuco-surface/40 border-xinuco-primary' : 'bg-transparent border-transparent'}`}
-        onClick={() => isCompleted && dispatch({ type: 'GOTO_STEP', payload: step })}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold
-            ${isCompleted ? 'bg-emerald-500 text-white' : isActive ? 'bg-[var(--primary-color)] text-white' : 'bg-xinuco-surface text-xinuco-muted'}`}
-          >
-            {isCompleted ? <Check size={14} /> : step}
-          </div>
-          <div className="flex flex-col">
-            <span className={`text-sm font-semibold ${isActive ? 'text-xinuco-text' : 'text-xinuco-muted'}`}>
-              {title}
-            </span>
-            {isCompleted && summary && (
-              <span className="text-xs text-[var(--primary-color)]">{summary}</span>
-            )}
-          </div>
+      <div className="max-w-md mx-auto flex flex-col items-center text-center py-16 px-4 animate-fade-in">
+        <div
+          className="w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-lg"
+          style={{ background: 'var(--primary-color)' }}
+        >
+          <Check size={36} className="text-white" />
         </div>
+        <h2 className="text-2xl font-bold text-xinuco-text mb-2">¡Cita Confirmada!</h2>
+        <p className="text-sm text-xinuco-muted leading-relaxed">
+          Tu cita con <strong className="text-xinuco-text">{selectedStaff?.name || 'tu profesional'}</strong> para{' '}
+          <strong className="text-xinuco-text">{selectedService?.name}</strong> el{' '}
+          <strong className="text-xinuco-text">{state.date}</strong> a las{' '}
+          <strong style={{ color: 'var(--primary-color)' }}>{state.time}</strong> ha sido agendada con éxito.
+        </p>
+        <p className="text-xs text-xinuco-muted mt-4 opacity-60">Te contactaremos por WhatsApp si hay algún cambio.</p>
       </div>
     )
   }
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col gap-4 max-w-xl mx-auto w-full">
-      {/* Mensaje de Error (Colisiones) */}
+    <div className="flex flex-col gap-3 max-w-xl mx-auto w-full">
+      {/* Error de colisión */}
       {error && (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-2 animate-slide-up">
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-start gap-3 animate-fade-in">
           <AlertCircle size={18} className="shrink-0 mt-0.5" />
           <p>{error}</p>
         </div>
       )}
 
-      {/* Paso 1: Servicios */}
-      <div className="flex flex-col gap-2">
-        {renderStepHeader(1, 'Selecciona un Servicio', 
-          state.serviceId ? services.find(s => s.id === state.serviceId)?.name : undefined
-        )}
-        
-        {state.currentStep === 1 && (
-          <div className="grid gap-3 p-2 animate-fade-in">
-            {services.map(svc => (
-              <button
-                key={svc.id}
-                onClick={() => dispatch({ type: 'SET_SERVICE', payload: svc.id })}
-                className="flex justify-between items-center p-4 rounded-xl bg-xinuco-surface border border-xinuco-border hover:border-[var(--primary-color)] transition-all text-left"
-              >
-                <div>
-                  <h4 className="text-sm font-semibold text-xinuco-text">{svc.name}</h4>
-                  <p className="text-xs text-xinuco-muted mt-1">{svc.duration_minutes} min</p>
-                </div>
-                <span className="font-medium text-xinuco-text">
-                  $ {svc.price.toLocaleString('es-CO')}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Paso 2: Profesional */}
-      <div className="flex flex-col gap-2">
-        {renderStepHeader(2, '¿Con quién te atiendes?',
-          state.staffId === 'any' ? 'Cualquier profesional' : staff.find(s => s.id === state.staffId)?.name
-        )}
-
-        {state.currentStep === 2 && (
-          <div className="grid grid-cols-2 gap-3 p-2 animate-fade-in">
+      {/* ────────────────────────────────────────────────────────────────────
+          PASO 1: ¿Qué te harás?
+          ──────────────────────────────────────────────────────────────────── */}
+      <StepAccordion
+        step={1}
+        currentStep={state.currentStep}
+        title="¿Qué te harás?"
+        icon={<Scissors size={14} />}
+        summary={selectedService?.name}
+        onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 1 })}
+      >
+        <div className="flex flex-col gap-2.5 px-1 pb-2">
+          {services.map(svc => (
             <button
-              onClick={() => dispatch({ type: 'SET_STAFF', payload: 'any' })}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-xinuco-surface border border-xinuco-border hover:border-[var(--primary-color)] transition-all"
+              key={svc.id}
+              onClick={() => dispatch({ type: 'SET_SERVICE', payload: svc.id })}
+              className="flex items-center justify-between p-4 rounded-2xl border transition-all duration-200 text-left group active:scale-[0.98]"
+              style={{
+                background: 'var(--surface-color, rgba(255,255,255,0.03))',
+                borderColor: 'var(--border-color)',
+              }}
             >
-              <div className="w-10 h-10 rounded-full bg-xinuco-border flex items-center justify-center">✨</div>
-              <span className="text-sm font-medium text-xinuco-text">Cualquiera</span>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-semibold text-xinuco-text group-hover:text-[var(--primary-color)] transition-colors">
+                  {svc.name}
+                </span>
+                <span className="text-xs text-xinuco-muted flex items-center gap-1.5">
+                  <Clock size={11} />
+                  {svc.duration_minutes} min
+                  {svc.description && <span className="opacity-60">· {svc.description}</span>}
+                </span>
+              </div>
+              <span
+                className="text-sm font-bold tabular-nums shrink-0 ml-4"
+                style={{ color: 'var(--primary-color)' }}
+              >
+                {formatCOP(svc.price)}
+              </span>
             </button>
-            
-            {staff.map(st => (
+          ))}
+        </div>
+      </StepAccordion>
+
+      {/* ────────────────────────────────────────────────────────────────────
+          PASO 2: ¿Con quién?
+          ──────────────────────────────────────────────────────────────────── */}
+      <StepAccordion
+        step={2}
+        currentStep={state.currentStep}
+        title="¿Con quién?"
+        icon={<User size={14} />}
+        summary={state.staffId === 'any' ? 'Cualquier profesional' : selectedStaff?.name}
+        onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 2 })}
+      >
+        <div className="grid grid-cols-2 gap-3 px-1 pb-2">
+          {/* Tarjeta "Cualquiera" */}
+          <button
+            onClick={() => dispatch({ type: 'SET_STAFF', payload: 'any' })}
+            className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border transition-all duration-200 active:scale-[0.97]"
+            style={{
+              background: 'var(--surface-color, rgba(255,255,255,0.03))',
+              borderColor: 'var(--border-color)',
+            }}
+          >
+            <div
+              className="w-12 h-12 rounded-full flex items-center justify-center"
+              style={{ background: 'color-mix(in srgb, var(--primary-color) 12%, transparent)' }}
+            >
+              <Sparkles size={20} style={{ color: 'var(--primary-color)' }} />
+            </div>
+            <span className="text-sm font-semibold text-xinuco-text">Cualquiera</span>
+            <span className="text-[10px] text-xinuco-muted -mt-1">Máx. disponibilidad</span>
+          </button>
+
+          {/* Tarjetas del Staff */}
+          {staff.map(st => {
+            const initials = st.name
+              .split(' ')
+              .map(n => n[0])
+              .join('')
+              .substring(0, 2)
+              .toUpperCase()
+
+            return (
               <button
                 key={st.id}
                 onClick={() => dispatch({ type: 'SET_STAFF', payload: st.id })}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-xinuco-surface border border-xinuco-border hover:border-[var(--primary-color)] transition-all"
+                className="flex flex-col items-center justify-center gap-2.5 p-5 rounded-2xl border transition-all duration-200 active:scale-[0.97]"
+                style={{
+                  background: 'var(--surface-color, rgba(255,255,255,0.03))',
+                  borderColor: 'var(--border-color)',
+                }}
               >
-                <div className="w-10 h-10 rounded-full bg-[color-mix(in_srgb,var(--primary-color)_20%,transparent)] text-[var(--primary-color)] flex items-center justify-center font-bold">
-                  {st.name[0]}
+                <div
+                  className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm tracking-widest"
+                  style={{
+                    background: 'color-mix(in srgb, var(--primary-color) 12%, transparent)',
+                    color: 'var(--primary-color)',
+                  }}
+                >
+                  {initials}
                 </div>
-                <span className="text-sm font-medium text-xinuco-text">{st.name}</span>
+                <span className="text-sm font-semibold text-xinuco-text line-clamp-1">{st.name}</span>
+                <span className="text-[10px] text-xinuco-muted capitalize -mt-1">{st.role}</span>
               </button>
-            ))}
+            )
+          })}
+        </div>
+      </StepAccordion>
+
+      {/* ────────────────────────────────────────────────────────────────────
+          PASO 3: Fecha y Hora
+          ──────────────────────────────────────────────────────────────────── */}
+      <StepAccordion
+        step={3}
+        currentStep={state.currentStep}
+        title="¿Cuándo?"
+        icon={<Calendar size={14} />}
+        summary={state.date && state.time ? `${state.date} · ${state.time}` : undefined}
+        onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 3 })}
+      >
+        <div className="flex flex-col gap-5 px-1 pb-2">
+          {/* Selector Horizontal de Fechas */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+            {upcomingDates.map(d => {
+              const isSelected = state.date === d.dateStr
+              return (
+                <button
+                  key={d.dateStr}
+                  onClick={() => handleDateSelect(d.dateStr)}
+                  className="flex flex-col items-center justify-center min-w-[64px] py-3 px-2 rounded-2xl border transition-all duration-200 shrink-0 active:scale-[0.95]"
+                  style={{
+                    background: isSelected ? 'var(--primary-color)' : 'var(--surface-color, rgba(255,255,255,0.03))',
+                    borderColor: isSelected ? 'var(--primary-color)' : 'var(--border-color)',
+                    color: isSelected ? 'var(--bg-color)' : undefined,
+                  }}
+                >
+                  <span className={`text-[10px] uppercase font-bold ${isSelected ? '' : 'text-xinuco-muted'}`}>
+                    {d.isToday ? 'Hoy' : d.dayName}
+                  </span>
+                  <span className={`text-xl font-bold leading-tight mt-0.5 ${isSelected ? '' : 'text-xinuco-text'}`}>
+                    {d.dayNum}
+                  </span>
+                  <span className={`text-[9px] uppercase ${isSelected ? 'opacity-70' : 'text-xinuco-muted'}`}>
+                    {d.monthName}
+                  </span>
+                </button>
+              )
+            })}
           </div>
-        )}
-      </div>
 
-      {/* Paso 3: Fecha y Hora */}
-      <div className="flex flex-col gap-2">
-        {renderStepHeader(3, 'Fecha y Hora',
-          state.date && state.time ? `${state.date} a las ${state.time}` : undefined
-        )}
-
-        {state.currentStep === 3 && (
-          <div className="p-4 bg-xinuco-surface border border-xinuco-border rounded-xl animate-fade-in flex flex-col gap-4">
-            
-            {/* Simulador de Días (simplificado para el Wizard) */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              {/* Para demo generamos hoy y los próximos 5 días */}
-              {[...Array(6)].map((_, i) => {
-                const d = new Date()
-                d.setDate(d.getDate() + i)
-                const dateStr = d.toISOString().split('T')[0]
-                const dayName = d.toLocaleDateString('es-CO', { weekday: 'short' })
-                const dayNum = d.getDate()
-                
-                return (
+          {/* Cuadrícula de Horas (Slots) */}
+          <div className="min-h-[120px]">
+            {!state.date ? (
+              <div className="flex flex-col items-center justify-center py-10 text-xinuco-muted gap-2 opacity-40">
+                <Calendar size={28} />
+                <p className="text-xs font-medium">Selecciona un día para ver horarios</p>
+              </div>
+            ) : state.isLoadingSlots ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary-color)' }} />
+                <p className="text-xs text-xinuco-muted font-medium">Buscando disponibilidad…</p>
+              </div>
+            ) : state.slots.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-xinuco-muted gap-2">
+                <Clock size={24} className="opacity-40" />
+                <p className="text-sm font-medium">Sin horarios disponibles</p>
+                <p className="text-xs opacity-60">Intenta con otro día o profesional.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {state.slots.map(slot => (
                   <button
-                    key={dateStr}
-                    onClick={() => handleDateSelect(dateStr)}
-                    className={`flex flex-col items-center justify-center min-w-[60px] p-2 rounded-xl border transition-all shrink-0
-                      ${state.date === dateStr 
-                        ? 'bg-[var(--primary-color)] border-[var(--primary-color)] text-white' 
-                        : 'bg-transparent border-xinuco-border text-xinuco-muted hover:border-[var(--primary-color)]'}`}
+                    key={slot}
+                    onClick={() => dispatch({ type: 'SET_TIME', payload: slot })}
+                    className="py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-[0.95]"
+                    style={{
+                      borderColor: 'color-mix(in srgb, var(--primary-color) 40%, transparent)',
+                      color: 'var(--primary-color)',
+                    }}
                   >
-                    <span className="text-[10px] uppercase font-bold">{dayName}</span>
-                    <span className="text-lg font-bold">{dayNum}</span>
+                    {slot}
                   </button>
-                )
-              })}
-            </div>
-
-            {/* Horas disponibles (Slots) */}
-            <div className="mt-2 min-h-[100px]">
-              {!state.date ? (
-                <div className="flex flex-col items-center justify-center h-full text-xinuco-muted py-6 gap-2 opacity-50">
-                  <Calendar size={24} />
-                  <p className="text-xs">Selecciona un día para ver los horarios</p>
-                </div>
-              ) : state.isLoadingSlots ? (
-                <div className="flex justify-center items-center py-8">
-                  <Loader2 size={24} className="animate-spin text-[var(--primary-color)]" />
-                </div>
-              ) : state.slots.length === 0 ? (
-                <p className="text-sm text-center text-xinuco-muted py-8">No hay citas disponibles para este día.</p>
-              ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {state.slots.map(s => (
-                    <button
-                      key={s}
-                      onClick={() => dispatch({ type: 'SET_TIME', payload: s })}
-                      className="px-2 py-2 rounded-lg border border-[var(--primary-color)] text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-colors text-sm font-semibold"
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      </StepAccordion>
 
-      {/* Paso 4: Tus Datos */}
-      <div className="flex flex-col gap-2">
-        {renderStepHeader(4, 'Tus Datos')}
-
-        {state.currentStep === 4 && (
-          <div className="p-4 bg-xinuco-surface border border-xinuco-border rounded-xl animate-fade-in flex flex-col gap-4">
-            <input 
-              type="text" 
-              placeholder="Nombre Completo" 
-              className="input-base"
-              onChange={(e) => dispatch({ type: 'SET_USER', payload: { ...state.userData, name: e.target.value } as any })}
-            />
-            <input 
-              type="tel" 
-              placeholder="Teléfono (WhatsApp)" 
-              className="input-base"
-              onChange={(e) => dispatch({ type: 'SET_USER', payload: { ...state.userData, phone: e.target.value } as any })}
-            />
-
-            <button
-              onClick={handleConfirm}
-              disabled={isPending}
-              className="mt-4 w-full py-4 rounded-xl bg-[var(--primary-color)] text-white font-bold text-lg flex justify-center items-center gap-2 shadow-[0_0_20px_color-mix(in_srgb,var(--primary-color)_30%,transparent)] transition-transform active:scale-[0.98]"
-            >
-              {isPending ? <Loader2 size={20} className="animate-spin" /> : 'Confirmar Cita'}
-            </button>
+      {/* ────────────────────────────────────────────────────────────────────
+          PASO 4: Tus Datos
+          ──────────────────────────────────────────────────────────────────── */}
+      <StepAccordion
+        step={4}
+        currentStep={state.currentStep}
+        title="Tus Datos"
+        icon={<Phone size={14} />}
+        onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 4 })}
+      >
+        <div className="flex flex-col gap-4 px-1 pb-2">
+          {/* Resumen de la cita */}
+          <div
+            className="flex flex-col gap-2 p-4 rounded-2xl text-xs"
+            style={{
+              background: 'color-mix(in srgb, var(--primary-color) 6%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)',
+            }}
+          >
+            <div className="flex justify-between">
+              <span className="text-xinuco-muted">Servicio</span>
+              <span className="font-semibold text-xinuco-text">{selectedService?.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xinuco-muted">Profesional</span>
+              <span className="font-semibold text-xinuco-text">{selectedStaff?.name || 'Cualquiera'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xinuco-muted">Fecha</span>
+              <span className="font-semibold text-xinuco-text">{state.date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xinuco-muted">Hora</span>
+              <span className="font-semibold" style={{ color: 'var(--primary-color)' }}>{state.time}</span>
+            </div>
+            {selectedService && (
+              <div className="flex justify-between pt-1 mt-1" style={{ borderTop: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)' }}>
+                <span className="text-xinuco-muted">Total</span>
+                <span className="font-bold" style={{ color: 'var(--primary-color)' }}>{formatCOP(selectedService.price)}</span>
+              </div>
+            )}
           </div>
+
+          {/* Formulario */}
+          <div className="flex flex-col gap-3">
+            <input
+              type="text"
+              placeholder="Tu nombre completo"
+              value={state.userData.name}
+              onChange={(e) => dispatch({ type: 'SET_USER_NAME', payload: e.target.value })}
+              className="input-base !py-4 !text-base"
+              autoComplete="name"
+            />
+            <input
+              type="tel"
+              placeholder="WhatsApp (ej: 300 123 4567)"
+              value={state.userData.phone}
+              onChange={(e) => dispatch({ type: 'SET_USER_PHONE', payload: e.target.value })}
+              className="input-base !py-4 !text-base"
+              inputMode="tel"
+              autoComplete="tel"
+            />
+          </div>
+
+          {/* Botón Confirmar */}
+          <button
+            onClick={handleConfirm}
+            disabled={isPending || !state.userData.name.trim() || !state.userData.phone.trim()}
+            className="w-full py-4 rounded-2xl font-bold text-lg flex justify-center items-center gap-2.5 transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+            style={{
+              background: 'var(--primary-color)',
+              color: 'var(--bg-color)',
+              boxShadow: '0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent)',
+            }}
+          >
+            {isPending ? (
+              <>
+                <Loader2 size={20} className="animate-spin" />
+                Reservando…
+              </>
+            ) : (
+              'Confirmar Reserva'
+            )}
+          </button>
+        </div>
+      </StepAccordion>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// STEP ACCORDION — Componente reutilizable para cada paso
+// ════════════════════════════════════════════════════════════════════════════════
+
+function StepAccordion({
+  step,
+  currentStep,
+  title,
+  icon,
+  summary,
+  onGoBack,
+  children,
+}: {
+  step: BookingStep
+  currentStep: BookingStep
+  title: string
+  icon: React.ReactNode
+  summary?: string
+  onGoBack: () => void
+  children: React.ReactNode
+}) {
+  const isCompleted = currentStep > step
+  const isActive = currentStep === step
+  const isLocked = currentStep < step
+
+  if (isLocked) return null
+
+  return (
+    <div className="animate-fade-in">
+      {/* Header del paso */}
+      <button
+        type="button"
+        className="flex items-center justify-between w-full px-4 py-3.5 rounded-2xl transition-all duration-200"
+        style={{
+          background: isActive
+            ? 'color-mix(in srgb, var(--primary-color) 8%, transparent)'
+            : 'transparent',
+          border: isActive
+            ? '1px solid color-mix(in srgb, var(--primary-color) 25%, transparent)'
+            : '1px solid transparent',
+        }}
+        onClick={() => isCompleted && onGoBack()}
+        disabled={!isCompleted}
+      >
+        <div className="flex items-center gap-3">
+          {/* Indicador numérico */}
+          <div
+            className="flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-colors"
+            style={{
+              background: isCompleted
+                ? '#22c55e'
+                : isActive
+                  ? 'var(--primary-color)'
+                  : 'var(--surface-color, #1a1a1a)',
+              color: isCompleted || isActive ? 'white' : 'var(--muted-color)',
+            }}
+          >
+            {isCompleted ? <Check size={14} /> : icon}
+          </div>
+
+          <div className="flex flex-col text-left">
+            <span className={`text-sm font-semibold ${isActive ? 'text-xinuco-text' : 'text-xinuco-muted'}`}>
+              {title}
+            </span>
+            {isCompleted && summary && (
+              <span className="text-xs font-medium" style={{ color: 'var(--primary-color)' }}>
+                {summary}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {isCompleted && (
+          <span className="text-[10px] text-xinuco-muted uppercase tracking-wider font-semibold">
+            Cambiar
+          </span>
         )}
-      </div>
+      </button>
+
+      {/* Contenido del paso */}
+      {isActive && (
+        <div className="mt-2 animate-slide-up">
+          {children}
+        </div>
+      )}
     </div>
   )
 }

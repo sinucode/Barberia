@@ -92,6 +92,16 @@ body {
   /* Safe area para móvil (bottom nav) */
   .pb-safe { padding-bottom: env(safe-area-inset-bottom, 16px); }
   .mb-safe { margin-bottom: env(safe-area-inset-bottom, 16px); }
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
+  /* Ocultar scrollbar horizontal manteniendo funcionalidad */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ============================================================

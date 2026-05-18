@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import type { Business } from '@/types/database'
+import type { Business, Service, Staff } from '@/types/database'
 import { BookingWizard } from '@/components/booking/BookingWizard'
 
 interface PublicBookingPageProps {
@@ -57,52 +57,69 @@ export default async function PublicBookingPage({ params }: PublicBookingPagePro
       .order('name'),
   ])
 
-  const services = servicesRes.data ?? []
-  const staff = staffRes.data ?? []
+  const services = (servicesRes.data ?? []) as Service[]
+  const staff = (staffRes.data ?? []) as Staff[]
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: 'var(--bg-color)' }}>
-      {/* Header Premium Publico */}
-      <header className="relative pt-12 pb-8 px-4 flex flex-col items-center overflow-hidden">
-        {/* Background Blur */}
-        <div 
-          className="absolute inset-0 z-0 opacity-20 pointer-events-none"
+    <div className="min-h-screen" style={{ background: 'var(--bg-color)' }}>
+      {/* ════════════════════════════════════════════════════════════════════
+          HEADER PREMIUM — El Escaparate del Tenant
+          ════════════════════════════════════════════════════════════════════ */}
+      <header className="relative pt-safe">
+        {/* Gradient ambient glow */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
           style={{
-            background: 'radial-gradient(circle at top, var(--primary-color), transparent 70%)',
-            filter: 'blur(40px)'
+            background: 'radial-gradient(ellipse 80% 50% at 50% 0%, color-mix(in srgb, var(--primary-color) 20%, transparent), transparent)',
           }}
         />
-        
-        <div className="relative z-10 flex flex-col items-center text-center">
+
+        <div className="relative z-10 flex flex-col items-center text-center pt-14 pb-10 px-6">
+          {/* Logo o Iniciales */}
           {business.branding?.logo_url ? (
-            <img 
-              src={business.branding.logo_url} 
+            <img
+              src={business.branding.logo_url}
               alt={`Logo de ${business.name}`}
-              className="w-20 h-20 rounded-full object-cover mb-4 border-2 shadow-lg"
-              style={{ borderColor: 'var(--primary-color)' }}
+              className="w-20 h-20 rounded-2xl object-cover mb-5 shadow-xl ring-2 ring-white/10"
             />
           ) : (
-            <div 
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold mb-4 shadow-lg"
-              style={{ background: 'var(--primary-color)', color: 'white' }}
+            <div
+              className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-bold mb-5 shadow-xl"
+              style={{ background: 'var(--primary-color)', color: 'var(--bg-color)' }}
             >
               {business.name.substring(0, 2).toUpperCase()}
             </div>
           )}
-          
-          <h1 className="text-2xl font-bold text-xinuco-text">{business.name}</h1>
-          <p className="text-sm text-xinuco-muted mt-1 max-w-xs">
-            Reserva tu cita en segundos. Elige el servicio y profesional que prefieras.
+
+          {/* Nombre del negocio — tipografía serif premium */}
+          <h1
+            className="text-3xl font-bold tracking-tight text-xinuco-text"
+            style={{ fontFamily: "'Outfit', var(--font-family)" }}
+          >
+            {business.name}
+          </h1>
+          <p className="text-sm text-xinuco-muted mt-2 max-w-xs leading-relaxed">
+            Reserva tu cita en segundos.
+            <br />
+            <span className="text-xs opacity-70">Elige servicio, profesional y horario.</span>
           </p>
+
+          {/* Divider con glow */}
+          <div
+            className="mt-6 w-12 h-0.5 rounded-full opacity-60"
+            style={{ background: 'var(--primary-color)' }}
+          />
         </div>
       </header>
 
-      {/* Orquestador del Wizard */}
-      <main className="px-4 mt-2">
-        <BookingWizard 
-          businessId={business.id} 
-          services={services as any} 
-          staff={staff as any} 
+      {/* ════════════════════════════════════════════════════════════════════
+          BOOKING WIZARD — El Motor Visual
+          ════════════════════════════════════════════════════════════════════ */}
+      <main className="px-4 pb-32">
+        <BookingWizard
+          businessId={business.id}
+          services={services}
+          staff={staff}
         />
       </main>
     </div>
