@@ -1,108 +1,104 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { addMinutes, format, parseISO, isBefore, isAfter, isEqual, startOfDay, endOfDay } from 'date-fns'
-import type { OperatingHours, Appointment } from '@/types/database'
+import { addMinutes, format, parseISO, isBefore, isAfter, getDay } from 'date-fns'
 
-/**
- * TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
- * Implementa la lógica de asignación considerando staff y recursos físicos (Workstations).
- */
+// ════════════════════════════════════════════════════════════════════════════════
+// TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
+// Basado en staff_schedules (turnos individuales) + detección de colisiones.
+// ════════════════════════════════════════════════════════════════════════════════
+
 export async function getAvailableSlots(
   businessId: string,
   serviceId: string,
   date: string, // Formato YYYY-MM-DD
-  staffId: string | null | 'any'
+  staffId?: string | null
 ) {
   const supabase = await createClient()
 
-  // 1. Consultas Iniciales: Negocio, Servicio y Citas
-  const [
-    { data: business },
-    { data: service },
-    { data: existingAppointments }
-  ] = await Promise.all([
-    supabase.from('businesses').select('operating_hours, workstations_count').eq('id', businessId).single(),
-    supabase.from('services').select('duration_minutes').eq('id', serviceId).single(),
-    supabase
-      .from('appointments')
-      .select('*')
-      .eq('business_id', businessId)
-      .not('status', 'eq', 'cancelled')
-      // Filtramos citas que se solapen con el día solicitado
-      .gte('time_range', `[${date} 00:00:00+00, ${date} 23:59:59+00]`)
-  ])
+  // 1. Datos Base: Obtener la duración del servicio
+  const { data: service, error: serviceError } = await supabase
+    .from('services')
+    .select('duration_minutes')
+    .eq('id', serviceId)
+    .single()
 
-  if (!business || !service) return { slots: [] }
+  if (serviceError || !service) throw new Error('Servicio no encontrado.')
 
-  const hours = business.operating_hours as OperatingHours
-  const workstations = business.workstations_count || 1
   const duration = service.duration_minutes
 
-  // 2. Determinar horario de apertura/cierre para el día de la semana
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
-  const dayIndex = new Date(`${date}T00:00:00`).getDay()
-  const dayKey = dayNames[dayIndex]
-  const dayConfig = hours[dayKey]
+  // 2. Consulta de Colisiones: Obtener citas del día
+  const startOfDay = `${date} 00:00:00+00`
+  const endOfDay = `${date} 23:59:59+00`
 
-  if (!dayConfig || !dayConfig.is_open) return { slots: [] }
+  let apptQuery = supabase
+    .from('appointments')
+    .select('barber_id, time_range')
+    .eq('business_id', businessId)
+    .not('status', 'eq', 'cancelled')
+    .filter('time_range', 'ov', `[${startOfDay}, ${endOfDay}]`)
 
-  // 3. Generar bloques de tiempo (Intervalos de 30 min)
-  const slots: string[] = []
-  const startTime = new Date(`${date}T${dayConfig.open_time}:00`)
-  const endTime = new Date(`${date}T${dayConfig.close_time}:00`)
-  
-  // Función auxiliar para parsear TSTZRANGE
-  const parseRange = (rangeStr: string) => {
-    const match = rangeStr.match(/\["([^"]+)","([^"]+)"\)/)
+  if (staffId && staffId !== 'any') apptQuery = apptQuery.eq('barber_id', staffId)
+
+  const { data: appointments } = await apptQuery
+
+  // 3. Horarios Hábiles: Obtener turnos de trabajo del staff
+  const targetDate = parseISO(date)
+  const dayOfWeek = getDay(targetDate)
+
+  let scheduleQuery = supabase
+    .from('staff_schedules')
+    .select('staff_id, start_time, end_time')
+    .eq('business_id', businessId)
+    .eq('day_of_week', dayOfWeek)
+
+  if (staffId && staffId !== 'any') scheduleQuery = scheduleQuery.eq('staff_id', staffId)
+
+  const { data: schedules } = await scheduleQuery
+
+  if (!schedules || schedules.length === 0) return { slots: [] }
+
+  // Parsear los rangos de citas (TSTZRANGE) a objetos Date nativos
+  const bookedIntervals = (appointments || []).map((app) => {
+    const match = app.time_range.match(/\["?([^",]+)"?,\s*"?([^",)]+)"?\)/)
     if (!match) return null
-    return { start: new Date(match[1]), end: new Date(match[2]) }
-  }
+    return { barber_id: app.barber_id, start: new Date(match[1]), end: new Date(match[2]) }
+  }).filter(Boolean) as { barber_id: string; start: Date; end: Date }[]
 
-  let currentSlotStart = startTime
+  const availableSlots = new Set<string>()
 
-  while (isBefore(addMinutes(currentSlotStart, duration), endTime) || isEqual(addMinutes(currentSlotStart, duration), endTime)) {
-    const slotStart = currentSlotStart
-    const slotEnd = addMinutes(slotStart, duration)
+  // 4. Generación de Intervalos y Filtro Core Logic
+  for (const schedule of schedules) {
+    const shiftStart = parseISO(`${date}T${schedule.start_time}`)
+    const shiftEnd = parseISO(`${date}T${schedule.end_time}`)
+    const staffBookings = bookedIntervals.filter((b) => b.barber_id === schedule.staff_id)
 
-    // --- CÁLCULO DE LÓGICA DE COLISIÓN ---
-    
-    // Filtro 1: Staff Específico
-    let staffCollision = false
-    if (staffId && staffId !== 'any') {
-      staffCollision = (existingAppointments || []).some(app => {
-        if (app.barber_id !== staffId) return false
-        const range = parseRange(app.time_range)
-        if (!range) return false
-        // Lógica de solapamiento: (start1 < end2 && start2 < end1)
-        return slotStart < range.end && range.start < slotEnd
+    let currentSlotStart = shiftStart
+
+    while (isBefore(currentSlotStart, shiftEnd)) {
+      const currentSlotEnd = addMinutes(currentSlotStart, duration)
+
+      // Edge Case: Descartar si la cita cruza la hora de salida
+      if (isAfter(currentSlotEnd, shiftEnd)) break
+
+      const hasOverlap = staffBookings.some((booking) => {
+        return currentSlotStart < booking.end && currentSlotEnd > booking.start
       })
+
+      if (!hasOverlap) availableSlots.add(format(currentSlotStart, 'HH:mm'))
+
+      currentSlotStart = addMinutes(currentSlotStart, 30) // Incremento de 30 mins
     }
-
-    // Filtro 2: Cuello de Botella Físico (Workstations)
-    const concurrentAppointments = (existingAppointments || []).filter(app => {
-      const range = parseRange(app.time_range)
-      if (!range) return false
-      return slotStart < range.end && range.start < slotEnd
-    }).length
-
-    const physicalCollision = concurrentAppointments >= workstations
-
-    if (!staffCollision && !physicalCollision) {
-      slots.push(format(slotStart, 'HH:mm'))
-    }
-
-    // Avanzar puntero en bloques de 30 min
-    currentSlotStart = addMinutes(currentSlotStart, 30)
   }
 
-  return { slots }
+  return { slots: Array.from(availableSlots).sort() }
 }
 
-/**
- * TAREA 2: EL INYECTOR SEGURO (createAppointment)
- * Inserta la cita con formato TSTZRANGE y manejo de Race Conditions.
- */
+// ════════════════════════════════════════════════════════════════════════════════
+// TAREA 2: EL INYECTOR SEGURO (createAppointment)
+// Inserta la cita con formato TSTZRANGE y manejo de Race Conditions.
+// ════════════════════════════════════════════════════════════════════════════════
+
 export async function createAppointment(formData: {
   businessId: string
   staffId: string | null
