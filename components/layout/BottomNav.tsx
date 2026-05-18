@@ -32,10 +32,10 @@ export function BottomNav({ slug }: BottomNavProps) {
 
   const navItems: NavItem[] = [
     { id: 'nav-dashboard',    href: `/${slug}/dashboard`,    icon: LayoutDashboard, label: 'Inicio' },
-    { id: 'nav-appointments', href: `/${slug}/appointments`, icon: CalendarDays,    label: 'Agenda' },
-    { id: 'nav-services',     href: `/${slug}/services`,     icon: Scissors,        label: 'Servicios' },
-    { id: 'nav-reports',      href: `/${slug}/reports`,      icon: BarChart2,       label: 'Reportes' },
-    { id: 'nav-settings',     href: `/${slug}/settings`,     icon: Settings,        label: 'Ajustes' },
+    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays,    label: 'Agenda' },
+    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,        label: 'Servicios' },
+    { id: 'nav-reports',      href: `/${slug}/dashboard/reports`,      icon: BarChart2,       label: 'Reportes' },
+    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,        label: 'Ajustes' },
   ]
 
   return (
