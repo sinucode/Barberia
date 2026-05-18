@@ -107,7 +107,7 @@ export interface Service {
   name:               string
   description:        string | null
   duration_minutes:   number
-  price:              number
+  price_cop:          number
   is_active:          boolean
   created_at:         string
   updated_at:         string

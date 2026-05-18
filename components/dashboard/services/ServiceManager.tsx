@@ -289,7 +289,7 @@ function ServiceRow({
       {/* Precio */}
       <td className="px-5 py-4">
         <span className="font-semibold text-xinuco-text tabular-nums">
-          {formatCOP(service.price)}
+          {formatCOP(service.price_cop)}
         </span>
       </td>
 
@@ -408,7 +408,7 @@ function ServiceSheet({
   const [name, setName]                   = useState(service?.name ?? '')
   const [description, setDesc]            = useState(service?.description ?? '')
   const [duration, setDuration]           = useState(String(service?.duration_minutes ?? '30'))
-  const [priceDisplay, setPriceDisplay]   = useState(service?.price ? formatCOP(service.price) : '')
+  const [priceDisplay, setPriceDisplay]   = useState(service?.price_cop ? formatCOP(service.price_cop) : '')
   const [formError, setFormError]         = useState<string | null>(null)
   const [isPending, startTransition]      = useTransition()
 
@@ -451,7 +451,7 @@ function ServiceSheet({
           const result = await updateService(service.id, {
             name:             name.trim(),
             description:      description.trim() || undefined,
-            price,
+            price_cop:        price,
             duration_minutes: durationMin,
           })
 
@@ -465,7 +465,7 @@ function ServiceSheet({
             ...service,
             name:             name.trim(),
             description:      description.trim() || null,
-            price,
+            price_cop:        price,
             duration_minutes: durationMin,
           })
         } else {
@@ -474,7 +474,7 @@ function ServiceSheet({
             name:             name.trim(),
             description:      description.trim() || undefined,
             duration_minutes: durationMin,
-            price,
+            price_cop:        price,
           })
 
           if (result.error) {

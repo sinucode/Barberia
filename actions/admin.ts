@@ -41,13 +41,12 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
     name,
     slug,
     is_active: true,
-    branding: {
-      primary_color:   primaryColor,
-      secondary_color: '#1A1A1A',
-      bg_color:        bgColor,
-      text_color:      '#F4F4F4',
-      logo_url:        null,
-      font_family:     'Inter',
+    brand_config: {
+      primaryColor:   primaryColor,
+      secondaryColor: '#1A1A1A',
+      bgColor:        bgColor,
+      textColor:      '#F4F4F4',
+      fontFamily:     'Inter',
     },
   }
 

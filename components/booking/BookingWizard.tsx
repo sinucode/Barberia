@@ -305,7 +305,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
                       {svc.duration_minutes} min
                     </span>
                     <span className="text-lg font-bold tabular-nums mt-0.5" style={{ color: 'var(--primary-color)' }}>
-                      {formatCOP(svc.price)}
+                      {formatCOP(svc.price_cop)}
                     </span>
                   </div>
 
@@ -513,7 +513,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
             {selectedService && (
               <div className="flex justify-between pt-1 mt-1" style={{ borderTop: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)' }}>
                 <span className="text-xinuco-muted">Total</span>
-                <span className="font-bold" style={{ color: 'var(--primary-color)' }}>{formatCOP(selectedService.price)}</span>
+                <span className="font-bold" style={{ color: 'var(--primary-color)' }}>{formatCOP(selectedService.price_cop)}</span>
               </div>
             )}
           </div>

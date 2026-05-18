@@ -38,7 +38,7 @@ export async function createService(
     name: string
     description?: string
     duration_minutes: number
-    price: number
+    price_cop: number
   }
 ): Promise<ActionResult> {
   const supabase = await createClient()
@@ -50,7 +50,7 @@ export async function createService(
       name:             data.name,
       description:      data.description ?? null,
       duration_minutes: data.duration_minutes,
-      price:            data.price,
+      price_cop:        data.price_cop,
       is_active:        true,
     } as any)
     .select()
@@ -77,7 +77,7 @@ export async function updateService(
     name?: string
     description?: string
     duration_minutes?: number
-    price?: number
+    price_cop?: number
   }
 ): Promise<ActionResult> {
   const supabase = await createClient()
