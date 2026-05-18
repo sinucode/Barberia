@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { Business, BrandConfig } from '@/types/database'
 
@@ -117,7 +117,7 @@ export default async function TenantLayout({
 
   // 2. Guard: tenant no existe o inactivo
   if (error || !business || !business.is_active) {
-    redirect('/not-found')
+    notFound()
   }
 
   // 3. Extraer configuraciones
