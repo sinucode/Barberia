@@ -12,6 +12,13 @@ export interface BusinessBranding {
   font_family:     string   // Ej: "Inter" | "Bebas Neue"
 }
 
+// ---------- Brand Config (columna JSONB: brand_config) ----------
+export interface BrandConfig {
+  primaryColor:  string   // Hex: "#C5A059"
+  fontFamily:    string   // Ej: "inter" | "bebas-neue"
+  logoUrl?:      string   // Reservado para el futuro
+}
+
 // ---------- Feature Flags ----------
 export interface BusinessFeatures {
   loyalty: boolean;
@@ -44,6 +51,7 @@ export interface Business {
   is_active:        boolean
   branding:         BusinessBranding
   features_enabled: BusinessFeatures
+  brand_config:     BrandConfig        // JSONB — tema visual del tenant
   operating_hours?: OperatingHours     // JSONB
   workstations_count?: number          // INT
   created_at:       string
