@@ -106,36 +106,49 @@ export default async function TenantLayout({
   const { slug } = await params
   const supabase = await createClient()
 
-  // Consultar la base de datos extrayendo el brand_config (JSONB)
-  const { data: business } = await supabase
+  // Consultar la base de datos extrayendo branding (legacy) + brand_config (nuevo)
+  const { data: business, error } = await supabase
     .from('businesses')
-    .select('id, name, brand_config, is_active')
+    .select('id, name, slug, is_active, branding, brand_config')
     .eq('slug', slug)
     .single<Business>()
 
-  if (!business || !business.is_active) {
+  if (error || !business || !business.is_active) {
     notFound()
   }
 
-  // Extraer variables con fallbacks seguros
-  const brandConfig = (business.brand_config as BrandConfig) || {}
-  const primaryColor = brandConfig.primaryColor || '#C5A059'
-  const fontFamilyRaw = brandConfig.fontFamily || 'inter'
-  
-  // Normalizar llave del diccionario de fuentes
-  const normalizedFontKey = fontFamilyRaw.toLowerCase().replace(/\s+/g, '')
-  const selectedFont = FONT_DICTIONARY[normalizedFontKey] || FONT_DICTIONARY.inter
+  // ── Extraer configuraciones con cascada de prioridad ──────────────────────
+  // Prioridad: brand_config (si tiene valores reales) > branding (legacy)
+  const { branding } = business
+  const brandConfig = (business.brand_config as BrandConfig) ?? {}
+
+  // Determinar color primario: brand_config sobreescribe SOLO si no es el default "#000000"
+  const brandConfigHasCustomColor = brandConfig.primaryColor && brandConfig.primaryColor !== '#000000'
+  const primaryColor = brandConfigHasCustomColor
+    ? brandConfig.primaryColor
+    : (branding?.primary_color ?? '#C5A059')
+
+  // Resolver fuente SSR (Zero-Flicker)
+  const fontKey = brandConfig.fontFamily || branding?.font_family || 'inter'
+  const { className: fontClassName, variable: fontVariable } = resolveFontClass(fontKey)
+
+  // Construir CSS variables para inyección
+  const cssVars: React.CSSProperties & Record<string, string> = {
+    // ── Tokens unificados ──
+    '--brand-primary':   primaryColor,
+    '--primary-color':   primaryColor,
+    '--primary-dark':    shadeColor(primaryColor, -20),
+    '--secondary-color': branding?.secondary_color ?? '#1A1A1A',
+    '--bg-color':        branding?.bg_color        ?? '#080808',
+    '--text-color':      branding?.text_color      ?? '#F4F4F4',
+    '--border-color':    `${branding?.secondary_color ?? '#1A1A1A'}CC`,
+    '--font-family':     fontKey,
+  }
 
   return (
     <div 
-      className={`${selectedFont.className} ${selectedFont.variable} min-h-screen antialiased flex flex-col`}
-      style={{ 
-        '--brand-primary': primaryColor,
-        // Compatibilidad con variables previas de tokens heredados
-        '--primary-color': primaryColor, 
-        '--bg-color': '#080808', // Respaldo global
-        '--text-color': '#F4F4F4', // Respaldo global
-      } as React.CSSProperties}
+      className={`${fontClassName} ${fontVariable} min-h-screen antialiased flex flex-col`}
+      style={cssVars}
     >
       {children}
     </div>
