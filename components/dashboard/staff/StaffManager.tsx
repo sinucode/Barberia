@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { createStaffMember, toggleStaffStatus } from '@/actions/staff'
 import type { Staff, StaffRole } from '@/types/database'
+import { StaffScheduleSheet } from './StaffScheduleSheet'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // CONFIGURACIÓN DE ROLES
@@ -48,6 +49,9 @@ interface StaffManagerProps {
 export function StaffManager({ initialStaff, businessId }: StaffManagerProps) {
   const [staffList, setStaffList] = useState<Staff[]>(initialStaff)
   const [sheetOpen, setSheetOpen] = useState(false)
+  
+  // Estado para controlar a qué empleado le estamos viendo el horario
+  const [scheduleStaff, setScheduleStaff] = useState<{ id: string, name: string } | null>(null)
 
   const handleCreateSuccess = useCallback((newStaff: Staff) => {
     setStaffList(prev => [newStaff, ...prev])
@@ -94,6 +98,7 @@ export function StaffManager({ initialStaff, businessId }: StaffManagerProps) {
                 onToggle={(updated) => 
                   setStaffList(prev => prev.map(m => m.id === updated.id ? updated : m))
                 } 
+                onOpenSchedule={() => setScheduleStaff({ id: member.id, name: member.name })}
               />
             ))}
           </div>
@@ -106,6 +111,16 @@ export function StaffManager({ initialStaff, businessId }: StaffManagerProps) {
           businessId={businessId} 
           onClose={() => setSheetOpen(false)} 
           onSuccess={handleCreateSuccess} 
+        />
+      )}
+
+      {/* Sheet de Horarios */}
+      {scheduleStaff && (
+        <StaffScheduleSheet
+          businessId={businessId}
+          staffId={scheduleStaff.id}
+          staffName={scheduleStaff.name}
+          onClose={() => setScheduleStaff(null)}
         />
       )}
     </>
@@ -136,10 +151,12 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
 
 function StaffCard({ 
   member, 
-  onToggle 
+  onToggle,
+  onOpenSchedule
 }: { 
   member: Staff
   onToggle: (updated: Staff) => void 
+  onOpenSchedule: () => void
 }) {
   const [isPending, startTransition] = useTransition()
 
@@ -234,7 +251,7 @@ function StaffCard({
       <div className="flex items-center gap-2">
         <button 
           className="flex-1 btn-ghost !py-2 !px-3 text-xs flex items-center justify-center gap-2"
-          onClick={() => alert('Próximamente: Gestión de Horarios')}
+          onClick={onOpenSchedule}
         >
           <CalendarDays size={14} />
           Ver Horario
