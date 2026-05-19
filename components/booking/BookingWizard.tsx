@@ -23,7 +23,7 @@ interface BookingState {
   time: string | null
   slots: string[]
   isLoadingSlots: boolean
-  userData: { name: string; phone: string }
+  userData: { name: string; phone: string; email: string }
   isConfirmed: boolean
 }
 
@@ -36,6 +36,7 @@ type BookingAction =
   | { type: 'SET_TIME';          payload: string }
   | { type: 'SET_USER_NAME';     payload: string }
   | { type: 'SET_USER_PHONE';    payload: string }
+  | { type: 'SET_USER_EMAIL';    payload: string }
   | { type: 'GOTO_STEP';         payload: BookingStep }
   | { type: 'RESET_FROM_COLLISION' }
   | { type: 'CONFIRMED' }
@@ -48,7 +49,7 @@ const initialState: BookingState = {
   time: null,
   slots: [],
   isLoadingSlots: false,
-  userData: { name: '', phone: '' },
+  userData: { name: '', phone: '', email: '' },
   isConfirmed: false,
 }
 
@@ -70,6 +71,8 @@ function wizardReducer(state: BookingState, action: BookingAction): BookingState
       return { ...state, userData: { ...state.userData, name: action.payload } }
     case 'SET_USER_PHONE':
       return { ...state, userData: { ...state.userData, phone: action.payload } }
+    case 'SET_USER_EMAIL':
+      return { ...state, userData: { ...state.userData, email: action.payload } }
     case 'GOTO_STEP':
       return { ...state, currentStep: action.payload }
     case 'RESET_FROM_COLLISION':
@@ -191,6 +194,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
           {
             full_name: state.userData.name,
             phone: state.userData.phone,
+            email: state.userData.email.trim() ? state.userData.email : null,
           }
         )
 
@@ -587,6 +591,14 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
               className="input-base !py-4 !text-base"
               inputMode="tel"
               autoComplete="tel"
+            />
+            <input
+              type="email"
+              placeholder="Correo electrónico (Opcional)"
+              value={state.userData.email}
+              onChange={(e) => dispatch({ type: 'SET_USER_EMAIL', payload: e.target.value })}
+              className="input-base !py-4 !text-base"
+              autoComplete="email"
             />
           </div>
 
