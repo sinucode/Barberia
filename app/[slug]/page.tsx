@@ -51,10 +51,10 @@ export default async function PublicBookingPage({ params }: PublicBookingPagePro
       .order('name'),
     supabase
       .from('staff')
-      .select('*')
+      .select('id, full_name, specialty_role, is_active')
       .eq('business_id', business.id)
       .eq('is_active', true)
-      .order('name'),
+      .order('full_name'),
   ])
 
   const services = (servicesRes.data ?? []) as Service[]

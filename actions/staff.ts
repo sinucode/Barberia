@@ -225,3 +225,42 @@ export async function saveStaffSchedulesBatch(
   revalidatePath('/[slug]/dashboard/staff', 'page')
   return { success: true }
 }
+
+/**
+ * getAvailableSlotsAction — Llama a la función RPC segura en PostgreSQL
+ * para obtener los horarios disponibles.
+ */
+export async function getAvailableSlotsAction(
+  businessId: string,
+  staffId: string | null,
+  date: string, // Formato YYYY-MM-DD
+  durationMinutes: number = 30
+) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.rpc('get_available_slots', {
+    p_business_id: businessId,
+    p_staff_id: staffId,
+    p_date: date,
+    p_duration_minutes: durationMinutes
+  } as any)
+
+  if (error) {
+    return { error: `Error al calcular espacios: ${error.message}`, slots: [] }
+  }
+
+  // Normalizar el resultado. Supabase a veces devuelve [{ "get_available_slots": "09:00" }] en lugar de ["09:00"]
+  let slotsArray: string[] = []
+  if (Array.isArray(data)) {
+    if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
+       slotsArray = data.map(obj => Object.values(obj)[0] as string)
+    } else {
+       slotsArray = data as string[]
+    }
+  }
+
+  // Asegurar formato HH:MM (eliminar segundos si PostgREST devuelve "09:00:00")
+  slotsArray = slotsArray.map(s => s.substring(0, 5))
+
+  return { success: true, slots: slotsArray }
+}

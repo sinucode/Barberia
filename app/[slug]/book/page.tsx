@@ -26,7 +26,7 @@ export default async function BookPage({ params }: BookPageProps) {
   // Fetch de los servicios y el staff para el BookingWizard
   const [servicesRes, staffRes] = await Promise.all([
     supabase.from('services').select('*').eq('business_id', business.id).eq('is_active', true).order('name'),
-    supabase.from('staff').select('*').eq('business_id', business.id).eq('is_active', true).order('name'),
+    supabase.from('staff').select('id, full_name, specialty_role, is_active').eq('business_id', business.id).eq('is_active', true).order('full_name'),
   ])
 
   const services = (servicesRes.data ?? []) as Service[]

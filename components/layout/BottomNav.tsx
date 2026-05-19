@@ -3,7 +3,7 @@
 import Link        from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
+  Users,
   CalendarDays,
   Scissors,
   BarChart2,
@@ -31,9 +31,9 @@ export function BottomNav({ slug }: BottomNavProps) {
   const pathname = usePathname()
 
   const navItems: NavItem[] = [
-    { id: 'nav-dashboard',    href: `/${slug}/dashboard`,    icon: LayoutDashboard, label: 'Inicio' },
     { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays,    label: 'Agenda' },
     { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,        label: 'Servicios' },
+    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,           label: 'Staff' },
     { id: 'nav-reports',      href: `/${slug}/dashboard/reports`,      icon: BarChart2,       label: 'Reportes' },
     { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,        label: 'Ajustes' },
   ]

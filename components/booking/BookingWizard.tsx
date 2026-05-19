@@ -6,7 +6,8 @@ import {
   Calendar, Clock, Scissors, User, Sparkles, Phone,
 } from 'lucide-react'
 import type { Service, Staff } from '@/types/database'
-import { createAppointment, getAvailableSlots } from '@/actions/appointments'
+import { createAppointment } from '@/actions/appointments'
+import { getAvailableSlotsAction } from '@/actions/staff'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // ESTADO CENTRALIZADO (useReducer)
@@ -89,18 +90,18 @@ function formatCOP(price: number): string {
   return '$ ' + price.toLocaleString('es-CO')
 }
 
-/** Genera un arreglo de las próximas N fechas a partir de hoy */
-function getUpcomingDates(count: number): { dateStr: string; dayName: string; dayNum: number; monthName: string; isToday: boolean }[] {
+/** Genera un arreglo de N fechas a partir de un desfase de días */
+function getUpcomingDates(count: number, offsetDays: number = 0): { dateStr: string; dayName: string; dayNum: number; monthName: string; isToday: boolean }[] {
   const dates = []
   for (let i = 0; i < count; i++) {
     const d = new Date()
-    d.setDate(d.getDate() + i)
+    d.setDate(d.getDate() + offsetDays + i)
     dates.push({
       dateStr: d.toISOString().split('T')[0],
       dayName: d.toLocaleDateString('es-CO', { weekday: 'short' }),
       dayNum: d.getDate(),
       monthName: d.toLocaleDateString('es-CO', { month: 'short' }),
-      isToday: i === 0,
+      isToday: offsetDays === 0 && i === 0,
     })
   }
   return dates
@@ -121,6 +122,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [weekOffset, setWeekOffset] = useState(0)
 
   useEffect(() => {
     // Breve timeout para mostrar el esqueleto (Zero-Flicker UX effect)
@@ -128,7 +130,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
     return () => clearTimeout(t)
   }, [])
 
-  const upcomingDates = useMemo(() => getUpcomingDates(14), [])
+  const upcomingDates = useMemo(() => getUpcomingDates(7, weekOffset * 7), [weekOffset])
 
   // ── Resolver nombres para los resúmenes ──────────────────────────────────
   const selectedService = services.find(s => s.id === state.serviceId)
@@ -143,8 +145,27 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
 
     dispatch({ type: 'SET_LOADING_SLOTS', payload: true })
     try {
-      const res = await getAvailableSlots(businessId, state.serviceId, selectedDate, state.staffId)
-      dispatch({ type: 'SET_SLOTS', payload: res.slots || [] })
+      const duration = selectedService?.duration_minutes || 30
+      // staffId es 'any' si es cualquiera, pasamos null o un string especial si la DB lo requiere,
+      // la acción de Supabase p_staff_id puede requerir un UUID válido o null.
+      // Si staffId es 'any', usamos null
+      const finalStaffId = state.staffId === 'any' ? null : state.staffId
+      
+      const res = await getAvailableSlotsAction(businessId, finalStaffId as any, selectedDate, duration)
+      
+      let finalSlots = res.slots || []
+      
+      // Filtrar horas pasadas si la cita es para HOY
+      const today = new Date().toISOString().split('T')[0]
+      if (selectedDate === today) {
+        const now = new Date()
+        const currentHour = now.getHours()
+        const currentMinute = now.getMinutes()
+        const currentTimeStr = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`
+        finalSlots = finalSlots.filter((slot: string) => slot >= currentTimeStr)
+      }
+
+      dispatch({ type: 'SET_SLOTS', payload: finalSlots })
     } catch {
       dispatch({ type: 'SET_SLOTS', payload: [] })
     }
@@ -198,7 +219,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         </div>
         <h2 className="text-2xl font-bold text-xinuco-text mb-2">¡Cita Confirmada!</h2>
         <p className="text-sm text-xinuco-muted leading-relaxed">
-          Tu cita con <strong className="text-xinuco-text">{selectedStaff?.name || 'tu profesional'}</strong> para{' '}
+          Tu cita con <strong className="text-xinuco-text">{selectedStaff?.full_name || 'tu profesional'}</strong> para{' '}
           <strong className="text-xinuco-text">{selectedService?.name}</strong> el{' '}
           <strong className="text-xinuco-text">{state.date}</strong> a las{' '}
           <strong style={{ color: 'var(--primary-color)' }}>{state.time}</strong> ha sido agendada con éxito.
@@ -336,7 +357,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         currentStep={state.currentStep}
         title="¿Con quién?"
         icon={<User size={14} />}
-        summary={state.staffId === 'any' ? 'Cualquier profesional' : selectedStaff?.name}
+        summary={state.staffId === 'any' ? 'Cualquier profesional' : selectedStaff?.full_name}
         onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 2 })}
       >
         <div className="grid grid-cols-2 gap-3 px-1 pb-2">
@@ -407,6 +428,31 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 3 })}
       >
         <div className="flex flex-col gap-5 px-1 pb-2">
+          {/* Controles de Navegación Semanal */}
+          <div className="flex justify-between items-center px-1">
+            <button 
+              onClick={() => setWeekOffset(w => Math.max(0, w - 1))}
+              disabled={weekOffset === 0}
+              className="p-1.5 rounded-lg border transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--xinuco-text)', background: 'var(--surface-color, rgba(255,255,255,0.02))' }}
+              title="Semana anterior"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-xinuco-muted">
+              {weekOffset === 0 ? 'Esta Semana' : weekOffset === 1 ? 'Próxima Semana' : `En ${weekOffset} Semanas`}
+            </span>
+            <button 
+              onClick={() => setWeekOffset(w => w + 1)}
+              disabled={weekOffset >= 4} // Máx 4 semanas a futuro
+              className="p-1.5 rounded-lg border transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+              style={{ borderColor: 'var(--border-color)', color: 'var(--xinuco-text)', background: 'var(--surface-color, rgba(255,255,255,0.02))' }}
+              title="Siguiente semana"
+            >
+              <ChevronLeft size={16} className="rotate-180" />
+            </button>
+          </div>
+
           {/* Selector Horizontal de Fechas */}
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
             {upcomingDates.map(d => {
@@ -500,7 +546,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
             </div>
             <div className="flex justify-between">
               <span className="text-xinuco-muted">Profesional</span>
-              <span className="font-semibold text-xinuco-text">{selectedStaff?.name || 'Cualquiera'}</span>
+              <span className="font-semibold text-xinuco-text">{selectedStaff?.full_name || 'Cualquiera'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-xinuco-muted">Fecha</span>
