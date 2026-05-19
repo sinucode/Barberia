@@ -6,7 +6,7 @@ import {
   Calendar, Clock, Scissors, User, Sparkles, Phone,
 } from 'lucide-react'
 import type { Service, Staff } from '@/types/database'
-import { createAppointment } from '@/actions/appointments'
+import { createBooking } from '@/actions/appointments'
 import { getAvailableSlotsAction } from '@/actions/staff'
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -180,14 +180,19 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
 
     startTransition(async () => {
       try {
-        const res = await createAppointment({
-          businessId,
-          staffId: state.staffId,
-          serviceId: state.serviceId as string,
-          date: state.date as string,
-          time: state.time as string,
-          clientData: state.userData,
-        })
+        const res = await createBooking(
+          {
+            businessId,
+            staffId: state.staffId,
+            serviceId: state.serviceId as string,
+            date: state.date as string,
+            time: state.time as string,
+          },
+          {
+            full_name: state.userData.name,
+            phone: state.userData.phone,
+          }
+        )
 
         if (res.error) {
           if (res.error === 'collision') {

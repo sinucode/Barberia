@@ -33,12 +33,12 @@ export async function getAvailableSlots(
 
   let apptQuery = supabase
     .from('appointments')
-    .select('barber_id, time_range')
+    .select('staff_id, time_range')
     .eq('business_id', businessId)
     .not('status', 'eq', 'cancelled')
     .filter('time_range', 'ov', `[${startOfDay}, ${endOfDay}]`)
 
-  if (staffId && staffId !== 'any') apptQuery = apptQuery.eq('barber_id', staffId)
+  if (staffId && staffId !== 'any') apptQuery = apptQuery.eq('staff_id', staffId)
 
   const { data: appointments } = await apptQuery
 
@@ -62,8 +62,8 @@ export async function getAvailableSlots(
   const bookedIntervals = (appointments || []).map((app) => {
     const match = app.time_range.match(/\["?([^",]+)"?,\s*"?([^",)]+)"?\)/)
     if (!match) return null
-    return { barber_id: app.barber_id, start: new Date(match[1]), end: new Date(match[2]) }
-  }).filter(Boolean) as { barber_id: string; start: Date; end: Date }[]
+    return { staff_id: app.staff_id, start: new Date(match[1]), end: new Date(match[2]) }
+  }).filter(Boolean) as { staff_id: string; start: Date; end: Date }[]
 
   const availableSlots = new Set<string>()
 
@@ -71,7 +71,7 @@ export async function getAvailableSlots(
   for (const schedule of schedules) {
     const shiftStart = parseISO(`${date}T${schedule.start_time}`)
     const shiftEnd = parseISO(`${date}T${schedule.end_time}`)
-    const staffBookings = bookedIntervals.filter((b) => b.barber_id === schedule.staff_id)
+    const staffBookings = bookedIntervals.filter((b) => b.staff_id === schedule.staff_id)
 
     let currentSlotStart = shiftStart
 
@@ -95,20 +95,26 @@ export async function getAvailableSlots(
 }
 
 // ════════════════════════════════════════════════════════════════════════════════
-// TAREA 2: EL INYECTOR SEGURO (createAppointment)
+// TAREA 2: EL INYECTOR SEGURO (createBooking)
 // Inserta la cita con formato TSTZRANGE y manejo de Race Conditions.
 // ════════════════════════════════════════════════════════════════════════════════
 
-export async function createAppointment(formData: {
-  businessId: string
-  staffId: string | null
-  serviceId: string
-  date: string
-  time: string
-  clientData: { name: string; phone: string }
-}) {
+export async function createBooking(
+  bookingData: {
+    businessId: string
+    staffId: string | null
+    serviceId: string
+    date: string
+    time: string
+  },
+  customerData: {
+    full_name: string
+    phone: string
+    email?: string | null
+  }
+) {
   const supabase = await createClient()
-  const { businessId, staffId, serviceId, date, time, clientData } = formData
+  const { businessId, staffId, serviceId, date, time } = bookingData
 
   // 1. Validación de Identidad (Anti-IDOR)
   const { data: { user } } = await supabase.auth.getUser()
@@ -131,17 +137,50 @@ export async function createAppointment(formData: {
   const formatDB = (d: Date) => format(d, "yyyy-MM-dd HH:mm:ss") + '+00'
   const range = `[${formatDB(start)},${formatDB(end)})`
 
-  // 5. Inserción con detección de colisión física (Race Condition)
-  const finalBarberId = (!staffId || staffId === 'any') ? null : staffId
+  // 5. Lógica CRM (SELECT + INSERT transaccional)
+  // Paso A: Buscar cliente existente por teléfono
+  const { data: existingCustomer, error: searchError } = await supabase
+    .from('customers')
+    .select('id')
+    .eq('business_id', businessId)
+    .eq('phone', customerData.phone)
+    .maybeSingle()
+
+  if (searchError) {
+    return { error: 'db_error', message: `Error buscando cliente: ${searchError.message}` }
+  }
+
+  let customerId = existingCustomer?.id
+
+  // Paso B: Si no existe, crear el cliente
+  if (!customerId) {
+    const { data: newCustomer, error: insertCustomerError } = await supabase
+      .from('customers')
+      .insert({
+        business_id: businessId,
+        full_name: customerData.full_name,
+        phone: customerData.phone,
+        email: customerData.email === undefined ? null : customerData.email,
+      } as any)
+      .select('id')
+      .single()
+
+    if (insertCustomerError || !newCustomer) {
+      return { error: 'db_error', message: `Error registrando nuevo cliente: ${insertCustomerError?.message || 'ID no retornado'}` }
+    }
+    customerId = newCustomer.id
+  }
+
+  // 6. Inserción de Cita con llaves foráneas y detección de colisión física (Race Condition)
+  const finalStaffId = (!staffId || staffId === 'any') ? null : staffId
 
   const { error } = await supabase
     .from('appointments')
     .insert({
       business_id: businessId,
-      barber_id: finalBarberId,
-      service_name: service.name,
-      customer_name: clientData.name,
-      customer_phone: clientData.phone,
+      staff_id: finalStaffId,
+      service_id: serviceId,
+      customer_id: customerId,
       time_range: range,
       status: 'pending'
     } as any)

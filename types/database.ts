@@ -72,6 +72,17 @@ export interface Profile {
   created_at:  string
 }
 
+// ---------- Tabla: customers ----------
+export interface Customer {
+  id:          string
+  business_id: string
+  full_name:   string
+  phone:       string
+  email:       string | null
+  created_at:  string
+  updated_at:  string
+}
+
 // ---------- Tabla: appointments ----------
 export type AppointmentStatus =
   | 'pending'
@@ -83,12 +94,17 @@ export type AppointmentStatus =
 
 export interface Appointment {
   id:            string
-  business_id:   string   // UUID → businesses.id
-  barber_id:     string | null // UUID → profiles.id (nullable if staff is 'any' or not specified)
-  customer_name: string
-  customer_phone: string | null
-  service_name:  string | null
+  business_id:   string
+  staff_id:      string | null 
+  customer_id:   string
+  service_id:    string
   status:        AppointmentStatus
+  // -- DEPRECADO: Mantenido temporalmente para compatibilidad UI --
+  customer_name?: string
+  customer_phone?: string | null
+  service_name?:  string | null
+  barber_id?:     string | null
+  // ---------------------------------------------------------------
   /**
    * TSTZRANGE viene de Supabase como string con formato:
    * '["2025-01-01 10:00:00+00","2025-01-01 11:00:00+00")'
@@ -174,6 +190,11 @@ export interface Database {
         Row:    Appointment
         Insert: AppointmentInsert
         Update: Partial<AppointmentInsert>
+      }
+      customers: {
+        Row:    Customer
+        Insert: Omit<Customer, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Customer, 'id' | 'created_at' | 'updated_at'>>
       }
       services: {
         Row:    Service
