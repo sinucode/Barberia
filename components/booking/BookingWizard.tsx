@@ -194,7 +194,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
           {
             full_name: state.userData.name,
             phone: state.userData.phone,
-            email: state.userData.email.trim() ? state.userData.email : null,
+            email: (state.userData.email || '').trim() ? state.userData.email : null,
           }
         )
 
@@ -595,7 +595,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
             <input
               type="email"
               placeholder="Correo electrónico (Opcional)"
-              value={state.userData.email}
+              value={state.userData.email || ''}
               onChange={(e) => dispatch({ type: 'SET_USER_EMAIL', payload: e.target.value })}
               className="input-base !py-4 !text-base"
               autoComplete="email"
