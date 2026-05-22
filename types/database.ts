@@ -84,13 +84,11 @@ export interface Customer {
 }
 
 // ---------- Tabla: appointments ----------
-export type AppointmentStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'in_progress'
-  | 'completed'
-  | 'cancelled'
-  | 'no_show'
+export type AppointmentStatus = 'scheduled' | 'in_progress' | 'ready_to_pay' | 'completed' | 'cancelled' | 'no_show';
+export type ShiftStatus = 'open' | 'closed';
+export type SaleStatus = 'pending' | 'paid' | 'voided';
+export type ItemType = 'service' | 'product';
+export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'loyalty_points' | 'mixed';
 
 export interface Appointment {
   id:            string
@@ -110,7 +108,8 @@ export interface Appointment {
    * '["2025-01-01 10:00:00+00","2025-01-01 11:00:00+00")'
    * Parsear con parseTimeRange() de @/lib/utils/time
    */
-  time_range:    string
+  time_range?:    string
+  start_time?:    string
   notes:         string | null
   created_at:    string
   updated_at:    string
@@ -216,6 +215,77 @@ export interface Database {
         Insert: Omit<StaffSchedule, 'id'>
         Update: Partial<Omit<StaffSchedule, 'id'>>
       }
+      cash_register_shifts: {
+        Row:    CashRegisterShift
+        Insert: Omit<CashRegisterShift, 'id' | 'created_at'>
+        Update: Partial<Omit<CashRegisterShift, 'id' | 'created_at'>>
+      }
+      sales: {
+        Row:    Sale
+        Insert: Omit<Sale, 'id' | 'created_at'>
+        Update: Partial<Omit<Sale, 'id' | 'created_at'>>
+      }
+      sale_items: {
+        Row:    SaleItem
+        Insert: Omit<SaleItem, 'id' | 'created_at'>
+        Update: Partial<Omit<SaleItem, 'id' | 'created_at'>>
+      }
+      payments: {
+        Row:    Payment
+        Insert: Omit<Payment, 'id' | 'created_at'>
+        Update: Partial<Omit<Payment, 'id' | 'created_at'>>
+      }
     }
   }
+}
+
+// ---------- Módulos de Caja y Ventas ----------
+export interface CashRegisterShift {
+  id: string;
+  business_id: string;
+  opened_by: string | null;
+  closed_by: string | null;
+  opened_at: string;
+  closed_at: string | null;
+  status: ShiftStatus;
+  opening_balance: number;
+  actual_closing_balance: number | null;
+  created_at: string;
+}
+
+export interface Sale {
+  id: string;
+  business_id: string;
+  shift_id: string;
+  appointment_id: string | null;
+  customer_id: string | null;
+  subtotal: number;
+  discount_amount: number;
+  tip_amount: number;
+  total_amount: number;
+  status: SaleStatus;
+  created_at: string;
+}
+
+export interface SaleItem {
+  id: string;
+  business_id: string;
+  sale_id: string;
+  staff_id: string | null;
+  item_type: ItemType;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  created_at: string;
+}
+
+export interface Payment {
+  id: string;
+  business_id: string;
+  sale_id: string;
+  shift_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  created_at: string;
 }

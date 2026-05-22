@@ -2,6 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { addMinutes, format, parseISO, isBefore, isAfter, getDay } from 'date-fns'
+import { revalidatePath } from 'next/cache'
+import type { AppointmentStatus } from '@/types/database'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
@@ -94,107 +96,24 @@ export async function getAvailableSlots(
   return { slots: Array.from(availableSlots).sort() }
 }
 
-// ════════════════════════════════════════════════════════════════════════════════
-// TAREA 2: EL INYECTOR SEGURO (createBooking)
-// Inserta la cita con formato TSTZRANGE y manejo de Race Conditions.
-// ════════════════════════════════════════════════════════════════════════════════
-
-export async function createBooking(
-  bookingData: {
-    businessId: string
-    staffId: string | null
-    serviceId: string
-    date: string
-    time: string
-  },
-  customerData: {
-    full_name: string
-    phone: string
-    email?: string | null
-  }
-) {
+/**
+ * updateAppointmentStatus — Actualiza el estado de una cita.
+ */
+export async function updateAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
   const supabase = await createClient()
-  const { businessId, staffId, serviceId, date, time } = bookingData
-
-  // 1. Validación de Identidad (Anti-IDOR)
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'unauthorized' }
-
-  // 2. Obtener duración del servicio
-  const { data: service } = await supabase
-    .from('services')
-    .select('name, duration_minutes')
-    .eq('id', serviceId)
-    .single()
-
-  if (!service) return { error: 'not_found', message: 'Servicio no encontrado' }
-
-  // 3. Calcular rango de tiempo
-  const start = new Date(`${date}T${time}:00Z`) // Forzamos UTC para consistencia
-  const end = addMinutes(start, service.duration_minutes)
-
-  // 4. Formato Estricto TSTZRANGE para Postgres
-  const formatDB = (d: Date) => format(d, "yyyy-MM-dd HH:mm:ss") + '+00'
-  const range = `[${formatDB(start)},${formatDB(end)})`
-
-  // 5. Lógica CRM (SELECT + INSERT transaccional)
-  // Paso A: Buscar cliente existente por teléfono
-  const { data: existingCustomer, error: searchError } = await supabase
-    .from('customers')
-    .select('id')
-    .eq('business_id', businessId)
-    .eq('phone', customerData.phone)
-    .maybeSingle()
-
-  if (searchError) {
-    return { error: 'db_error', message: `Error buscando cliente: ${searchError.message}` }
-  }
-
-  let customerId = existingCustomer?.id
-
-  // Paso B: Si no existe, crear el cliente
-  if (!customerId) {
-    const { data: newCustomer, error: insertCustomerError } = await supabase
-      .from('customers')
-      .insert({
-        business_id: businessId,
-        full_name: customerData.full_name,
-        phone: customerData.phone,
-        email: customerData.email === undefined ? null : customerData.email,
-      } as any)
-      .select('id')
-      .single()
-
-    if (insertCustomerError || !newCustomer) {
-      return { error: 'db_error', message: `Error registrando nuevo cliente: ${insertCustomerError?.message || 'ID no retornado'}` }
-    }
-    customerId = newCustomer.id
-  }
-
-  // 6. Inserción de Cita con llaves foráneas y detección de colisión física (Race Condition)
-  const finalStaffId = (!staffId || staffId === 'any') ? null : staffId
 
   const { error } = await supabase
     .from('appointments')
-    .insert({
-      business_id: businessId,
-      staff_id: finalStaffId,
-      service_id: serviceId,
-      customer_id: customerId,
-      time_range: range,
-      status: 'pending'
-    } as any)
+    .update({ status } as any)
+    .eq('id', appointmentId)
 
   if (error) {
-    // Código 23P01: Exclusion Violation (Postgres level collision)
-    if (error.code === '23P01') {
-      return { 
-        error: 'collision', 
-        message: 'Este horario acaba de ser ocupado. Por favor selecciona otro.' 
-      }
-    }
-    return { error: 'db_error', message: error.message }
+    console.error('Error updating appointment status:', error)
+    return { error: error.message }
   }
 
+  revalidatePath('/[slug]/dashboard', 'page')
   return { success: true }
 }
+
+
