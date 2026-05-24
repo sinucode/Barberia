@@ -65,7 +65,15 @@ export interface Business {
   features_enabled: BusinessFeatures
   brand_config:     BrandConfig        // JSONB — tema visual del tenant
   operating_hours?: OperatingHours     // JSONB
-  workstations_count?: number          // INT
+  workstations_count?: number          // INT — deprecado: usar tabla workstations
+  // ── Configuración operativa ──────────────────────────────────────────────
+  appointment_interval_minutes?: number  // 15 | 30 — granularidad de slots en el calendario
+  // ── Programa de lealtad ──────────────────────────────────────────────────
+  loyalty_point_value_cop?: number       // COP que equivale 1 punto (ej: 1000 = $1.000 COP)
+  loyalty_expiry_months?:   number       // Meses de vigencia de los puntos
+  // ── SaaS Billing (RF23) — columnas pendientes de migración ───────────────
+  stripe_customer_id?:      string | null
+  subscription_status?:     'active' | 'past_due' | 'canceled' | 'trialing' | null
   created_at:       string
 }
 
@@ -126,15 +134,16 @@ export interface Appointment {
 
 // ---------- Tabla: services ----------
 export interface Service {
-  id:                 string
-  business_id:        string
-  name:               string
-  description:        string | null
-  duration_minutes:   number
-  price_cop:          number
-  is_active:          boolean
-  created_at:         string
-  updated_at:         string
+  id:                   string
+  business_id:          string
+  name:                 string
+  description:          string | null
+  duration_minutes:     number
+  buffer_time_minutes:  number   // Tiempo de limpieza/preparación post-servicio (sumado a duration para calcular slots)
+  price_cop:            number   // Precio en COP como INTEGER (sin decimales)
+  is_active:            boolean
+  created_at:           string
+  updated_at:           string
 }
 
 // ---------- Tabla: staff ----------
@@ -333,4 +342,59 @@ export interface Payment {
   amount: number;
   payment_method: PaymentMethod;
   created_at: string;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SPRINT 3 — Tablas confirmadas por The Vault (pendientes de migración en Supabase)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ---------- Tabla: workstations (RF5) ----------
+export interface Workstation {
+  id:          string   // UUID
+  business_id: string   // UUID → businesses.id
+  name:        string   // Ej: "Silla 1", "Spa Pedicure A"
+  is_active:   boolean
+  created_at:  string
+}
+
+// ---------- Tabla: service_workstations (pivot RF5 ↔ RF7) ----------
+// Vincula qué tipos de workstation requiere cada servicio
+export interface ServiceWorkstation {
+  service_id:     string   // UUID → services.id
+  workstation_id: string   // UUID → workstations.id
+  business_id:    string   // UUID → businesses.id (redundante para RLS)
+}
+
+// ---------- Tabla: commission_rules (RF14) ----------
+// Lógica de cascada: staff+service > solo staff > regla global del negocio
+export interface CommissionRule {
+  id:                    string
+  business_id:           string          // UUID → businesses.id
+  staff_id:              string | null   // null = aplica a todos
+  service_id:            string | null   // null = aplica a todos los servicios
+  commission_percentage: number          // INTEGER: ej. 40 = 40%
+  fixed_amount:          number          // INTEGER COP — alternativa al porcentaje
+  created_at:            string
+}
+
+// ---------- Tabla: commission_queue (trigger on_appointment_status_change) ----------
+// Cola transaccional que el trigger inserta al completar una cita
+// Un Cron Job / Webhook la procesa en segundo plano
+export interface CommissionQueueEntry {
+  id:             string
+  appointment_id: string    // UUID → appointments.id
+  processed:      boolean
+  created_at:     string
+}
+
+// ---------- Tabla: loyalty_ledgers (RF17) ----------
+export interface LoyaltyLedger {
+  id:                    string
+  business_id:           string          // UUID → businesses.id
+  client_id:             string          // UUID → customers.id
+  points_added:          number          // INTEGER
+  points_redeemed:       number          // INTEGER
+  transaction_reference: string | null   // UUID → appointments.id o sales.id
+  expires_at:            string | null   // TIMESTAMPTZ
+  created_at:            string
 }

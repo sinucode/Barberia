@@ -148,12 +148,13 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
 
     dispatch({ type: 'SET_LOADING_SLOTS', payload: true })
     try {
-      const duration = selectedService?.duration_minutes || 30
-      // staffId es 'any' si es cualquiera, pasamos null o un string especial si la DB lo requiere,
-      // la acción de Supabase p_staff_id puede requerir un UUID válido o null.
-      // Si staffId es 'any', usamos null
+      // Duración total = servicio + buffer de limpieza (buffer_time_minutes)
+      // El RPC usa este valor para bloquear el hueco completo e impedir citas encimadas
+      const duration = (selectedService?.duration_minutes || 30)
+                     + (selectedService?.buffer_time_minutes || 0)
+
       const finalStaffId = state.staffId === 'any' ? null : state.staffId
-      
+
       const res = await getAvailableSlotsAction(businessId, finalStaffId as any, selectedDate, duration)
       
       let finalSlots = res.slots || []
