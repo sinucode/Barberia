@@ -2,7 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { PaymentMethod, CashRegisterShift, Sale, SaleItem, Payment } from '@/types/database'
+import type { PaymentMethod, CashRegisterShift, Sale, SaleItem, Payment, Json } from '@/types/database'
+import { logAction } from './audit'
+import { earnPoints } from '@/actions/loyalty'
 
 /**
  * getActiveShift — Obtiene el turno de caja abierto actualmente para un negocio.
@@ -107,6 +109,26 @@ export async function openShift(businessId: string, startingCash: number) {
     return { error: `Error de base de datos: ${error.message}` }
   }
 
+  // ── Audit log ────────────────────────────────────────────────────────────────
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+
+    await logAction({
+      businessId:  businessId,
+      actorId:     user.id,
+      actorName:   profile?.full_name ?? null,
+      action:      'shift.opened',
+      entityType:  'shift',
+      newValue:    { opening_balance: startingCash } as unknown as Json,
+    })
+  } catch {
+    // Silenciar
+  }
+
   revalidatePath('/[slug]/dashboard', 'page')
   return { success: true }
 }
@@ -151,6 +173,27 @@ export async function closeShift(businessId: string, shiftId: string, actualClos
   if (error) {
     console.error('Error closing shift:', error)
     return { error: `Error de base de datos: ${error.message}` }
+  }
+
+  // ── Audit log ────────────────────────────────────────────────────────────────
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single()
+
+    await logAction({
+      businessId:  businessId,
+      actorId:     user.id,
+      actorName:   profile?.full_name ?? null,
+      action:      'shift.closed',
+      entityType:  'shift',
+      entityId:    shiftId,
+      newValue:    { actual_closing_balance: actualClosingBalance, status: 'closed' } as unknown as Json,
+    })
+  } catch {
+    // Silenciar
   }
 
   revalidatePath('/[slug]/dashboard', 'page')
@@ -243,6 +286,34 @@ export async function checkoutAppointment(params: CheckoutAppointmentParams) {
 
   if (result?.error) {
     return { error: result.error, message: result.message }
+  }
+
+  // ── Programa de Lealtad (RF17) ────────────────────────────────────────────
+  // Otorgar puntos al cliente si la cita tiene customer_id.
+  // Operación best-effort: un fallo aquí NO revierte el cobro.
+  if (result.sale_id) {
+    try {
+      const { data: appt } = await supabase
+        .from('appointments')
+        .select('customer_id')
+        .eq('id', appointmentId)
+        .maybeSingle()
+
+      if (appt?.customer_id) {
+        // Base de puntos = total cobrado (subtotal + tip - discount)
+        const saleAmount = items.reduce(
+          (sum, item) => sum + item.unitPrice * item.quantity,
+          0
+        ) + tipAmount - discountAmount
+
+        if (saleAmount > 0) {
+          await earnPoints(businessId, appt.customer_id, saleAmount, result.sale_id)
+        }
+      }
+    } catch (loyaltyErr) {
+      // No propagar — el cobro ya fue exitoso
+      console.warn('[loyalty] earnPoints failed silently:', loyaltyErr)
+    }
   }
 
   revalidatePath('/[slug]/dashboard', 'page')

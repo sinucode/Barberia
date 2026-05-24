@@ -259,6 +259,21 @@ export interface Database {
         Insert: Omit<Payment, 'id' | 'created_at'>
         Update: Partial<Omit<Payment, 'id' | 'created_at'>>
       }
+      staff_ledger: {
+        Row:    StaffLedgerEntry
+        Insert: Omit<StaffLedgerEntry, 'id' | 'created_at'>
+        Update: never
+      }
+      expenses: {
+        Row:    Expense
+        Insert: Omit<Expense, 'id' | 'created_at'>
+        Update: Partial<Omit<Expense, 'id' | 'created_at'>>
+      }
+    }
+    Views: {
+      staff_ledger_balances: {
+        Row: StaffLedgerBalance
+      }
     }
     Functions: {
       // RPC atómico de cobro — reemplaza 4 inserts separados con una transacción real
@@ -328,6 +343,15 @@ export interface Database {
         Args: { business_slug: string }
         Returns: void
       }
+      // RPC P&G (RF16) — Calcula el estado de resultados de un negocio en un período
+      get_profit_loss: {
+        Args: {
+          p_business_id: string
+          p_date_from:   string
+          p_date_to:     string
+        }
+        Returns: Json
+      }
     }
   }
 }
@@ -384,6 +408,25 @@ export interface Payment {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// RF19 — Audit Logs (Immutable Audit Trail)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ---------- Tabla: audit_logs ----------
+export interface AuditLog {
+  id:          string
+  business_id: string
+  actor_id:    string | null
+  actor_name:  string | null
+  action:      string
+  entity_type: string
+  entity_id:   string | null
+  old_value:   Json | null
+  new_value:   Json | null
+  ip_address:  string | null
+  created_at:  string
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // SPRINT 3 — Tablas confirmadas por The Vault (pendientes de migración en Supabase)
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -424,6 +467,66 @@ export interface CommissionQueueEntry {
   appointment_id: string    // UUID → appointments.id
   processed:      boolean
   created_at:     string
+}
+
+// ---------- Tabla: staff_ledger (RF15) ----------
+export type LedgerEntryType = 'commission' | 'tip' | 'advance' | 'payment'
+
+export interface StaffLedgerEntry {
+  id:           string
+  business_id:  string          // UUID → businesses.id
+  staff_id:     string          // UUID → staff.id
+  entry_type:   LedgerEntryType
+  amount:       number          // INTEGER COP — siempre positivo
+  notes:        string | null
+  reference_id: string | null   // UUID → appointments.id o sales.id
+  created_at:   string
+}
+
+// Vista: staff_ledger_balances — saldo acumulado por empleado
+export interface StaffLedgerBalance {
+  business_id:    string
+  staff_id:       string
+  total_earned:   number   // INTEGER COP — comisiones + propinas
+  total_advances: number   // INTEGER COP — anticipos
+  total_paid_out: number   // INTEGER COP — liquidaciones
+  current_balance: number  // INTEGER COP — earned - advances - paid_out
+}
+
+// ---------- Tabla: expenses (RF16) ----------
+export type ExpenseCategory = 'rent' | 'supplies' | 'utilities' | 'salary' | 'other'
+
+export interface Expense {
+  id:           string
+  business_id:  string
+  category:     ExpenseCategory
+  description:  string
+  amount:       number   // INTEGER COP — NUNCA FLOAT
+  expense_date: string   // DATE string 'YYYY-MM-DD'
+  is_recurring: boolean
+  created_by:   string | null
+  created_at:   string
+}
+
+// ---------- P&G Result (retorno de get_profit_loss RPC) ----------
+export interface ProfitLossCategoryEntry {
+  category: string
+  total:    number
+}
+
+export interface ProfitLossResult {
+  revenue: {
+    services: number
+    retail:   number
+    total:    number
+  }
+  expenses: {
+    total:       number
+    by_category: ProfitLossCategoryEntry[]
+  }
+  gross_profit: number
+  commissions:  number
+  net_profit:   number
 }
 
 // ---------- Tabla: loyalty_ledgers (RF17) ----------

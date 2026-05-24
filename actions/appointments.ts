@@ -3,7 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { addMinutes, format, parseISO, isBefore, isAfter, getDay } from 'date-fns'
 import { revalidatePath } from 'next/cache'
-import type { AppointmentStatus } from '@/types/database'
+import type { AppointmentStatus, Json } from '@/types/database'
+import { logAction } from './audit'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
@@ -102,6 +103,13 @@ export async function getAvailableSlots(
 export async function updateAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
   const supabase = await createClient()
 
+  // Obtener el estado anterior y el business_id antes de actualizar
+  const { data: existing } = await supabase
+    .from('appointments')
+    .select('status, business_id, staff_id')
+    .eq('id', appointmentId)
+    .single()
+
   const { error } = await supabase
     .from('appointments')
     .update({ status })
@@ -110,6 +118,29 @@ export async function updateAppointmentStatus(appointmentId: string, status: App
   if (error) {
     console.error('Error updating appointment status:', error)
     return { error: error.message }
+  }
+
+  // ── Audit log (nunca bloquea la operación principal) ─────────────────────────
+  if (existing?.business_id) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = user
+        ? await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+        : { data: null }
+
+      await logAction({
+        businessId:  existing.business_id,
+        actorId:     user?.id ?? null,
+        actorName:   profile?.full_name ?? null,
+        action:      'appointment.status_changed',
+        entityType:  'appointment',
+        entityId:    appointmentId,
+        oldValue:    { status: existing.status } as unknown as Json,
+        newValue:    { status } as unknown as Json,
+      })
+    } catch {
+      // Silenciar — el log nunca rompe la operación principal
+    }
   }
 
   revalidatePath('/[slug]/dashboard', 'page')

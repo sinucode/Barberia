@@ -3,7 +3,7 @@
 import { useState, createContext, useContext } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Scissors, BarChart2, Settings, ChevronRight, Users, Store, Percent } from 'lucide-react'
+import { CalendarDays, Scissors, BarChart2, Settings, ChevronRight, Users, Store, Percent, Wallet, Receipt, Gift } from 'lucide-react'
 import type { Business } from '@/types/database'
 import { useDateTime } from '@/lib/hooks/useDateTime'
 
@@ -30,6 +30,8 @@ export function DashboardSidebar({
     { href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios' },
     { href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff' },
     { href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones' },
+    { href: `/${slug}/dashboard/expenses`,     icon: Receipt,      label: 'Gastos' },
+    { href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger' },
     { href: `/${slug}/dashboard/reports`,      icon: BarChart2,    label: 'Reportes' },
     { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración' },
   ]

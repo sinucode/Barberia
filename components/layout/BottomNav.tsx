@@ -6,7 +6,7 @@ import {
   Users,
   CalendarDays,
   Scissors,
-  Percent,
+  Wallet,
   Settings,
 } from 'lucide-react'
 
@@ -33,7 +33,7 @@ export function BottomNav({ slug }: BottomNavProps) {
   const navItems: NavItem[] = [
     { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda' },
     { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios' },
-    { id: 'nav-commissions',  href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones' },
+    { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger' },
     { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff' },
     { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes' },
   ]

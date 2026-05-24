@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { Staff, StaffRole, StaffSchedule } from '@/types/database'
+import type { Staff, StaffRole, StaffSchedule, Json } from '@/types/database'
+import { logAction } from './audit'
 
 // ── Tipo del resultado de las operaciones ────────────────────────────────────
 interface ActionResult {
@@ -61,6 +62,26 @@ export async function createStaffMember(
     return { error: error.message }
   }
 
+  // ── Audit log ────────────────────────────────────────────────────────────────
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = user
+      ? await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      : { data: null }
+
+    await logAction({
+      businessId:  businessId,
+      actorId:     user?.id ?? null,
+      actorName:   profile?.full_name ?? null,
+      action:      'staff.created',
+      entityType:  'staff',
+      entityId:    (result as Staff).id,
+      newValue:    { full_name: data.full_name, specialty_role: data.specialty_role } as unknown as Json,
+    })
+  } catch {
+    // Silenciar
+  }
+
   revalidatePath('/[slug]/dashboard/staff', 'page')
   return { success: true, data: result as Staff }
 }
@@ -75,12 +96,42 @@ export async function toggleStaffStatus(
 ): Promise<ActionResult> {
   const supabase = await createClient()
 
+  // Obtener business_id antes de actualizar (necesario para el audit log)
+  const { data: existing } = await supabase
+    .from('staff')
+    .select('business_id, full_name, is_active')
+    .eq('id', staffId)
+    .single()
+
   const { error } = await supabase
     .from('staff')
     .update({ is_active: isActive })
     .eq('id', staffId)
 
   if (error) return { error: error.message }
+
+  // ── Audit log ────────────────────────────────────────────────────────────────
+  if (existing?.business_id) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = user
+        ? await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+        : { data: null }
+
+      await logAction({
+        businessId:  existing.business_id,
+        actorId:     user?.id ?? null,
+        actorName:   profile?.full_name ?? null,
+        action:      isActive ? 'staff.activated' : 'staff.deactivated',
+        entityType:  'staff',
+        entityId:    staffId,
+        oldValue:    { is_active: existing.is_active, full_name: existing.full_name } as unknown as Json,
+        newValue:    { is_active: isActive,            full_name: existing.full_name } as unknown as Json,
+      })
+    } catch {
+      // Silenciar
+    }
+  }
 
   revalidatePath('/[slug]/dashboard/staff', 'page')
   return { success: true }
