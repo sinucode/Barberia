@@ -309,6 +309,11 @@ export interface Database {
         Insert: Omit<WalkIn, 'id' | 'created_at' | 'arrived_at'> & { arrived_at?: string }
         Update: Partial<Omit<WalkIn, 'id' | 'created_at'>>
       }
+      fixed_assets: {
+        Row:    FixedAsset
+        Insert: Omit<FixedAsset, 'id' | 'created_at'>
+        Update: Partial<Omit<FixedAsset, 'id' | 'created_at' | 'business_id'>>
+      }
     }
     Views: {
       staff_ledger_balances: {
@@ -444,6 +449,26 @@ export interface Database {
           p_tip_amount:       number
         }
         Returns: void
+      }
+      // RPC Activos Fijos (RF21) — Calcula el cronograma de depreciación de un activo
+      get_depreciation_schedule: {
+        Args: {
+          p_business_id: string
+          p_asset_id:    string
+        }
+        Returns: Json
+      }
+      // RPC Activos Fijos (RF21) — Suma el valor en libros de todos los activos activos
+      get_total_asset_value: {
+        Args: {
+          p_business_id: string
+        }
+        Returns: Json
+      }
+      // RPC Contabilidad (RF22) — Resumen de ingresos, egresos y posición neta por período
+      get_accounting_summary: {
+        Args: { p_business_id: string; p_date_from: string; p_date_to: string }
+        Returns: Json
       }
     }
   }
@@ -653,4 +678,76 @@ export interface LoyaltyLedger {
   transaction_reference: string | null   // UUID → appointments.id o sales.id
   expires_at:            string | null   // TIMESTAMPTZ
   created_at:            string
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RF21 — Activos Fijos (Fixed Assets)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type FixedAssetCategory = 'equipment' | 'furniture' | 'technology' | 'vehicle' | 'other'
+export type DepreciationMethod = 'straight_line' | 'declining_balance'
+
+export interface FixedAsset {
+  id:                  string
+  business_id:         string
+  name:                string
+  category:            FixedAssetCategory
+  description:         string | null
+  serial_number:       string | null
+  location:            string | null
+  purchase_date:       string            // DATE 'YYYY-MM-DD'
+  purchase_price:      number            // INTEGER COP
+  salvage_value:       number            // INTEGER COP
+  depreciation_method: DepreciationMethod
+  useful_life_months:  number            // INTEGER
+  is_active:           boolean
+  created_by:          string | null
+  created_at:          string
+}
+
+export interface DepreciationSchedule {
+  asset_id:                 string
+  name:                     string
+  purchase_price:           number
+  salvage_value:            number
+  current_value:            number
+  accumulated_depreciation: number
+  months_elapsed:           number
+  months_remaining:         number
+  is_fully_depreciated:     boolean
+}
+
+export interface AssetPortfolioSummary {
+  total_book_value:     number
+  total_purchase_price: number
+  total_depreciation:   number
+  asset_count:          number
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RF22 — Trazabilidad Contable (Accounting Journal)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type JournalEntryType    = 'income' | 'expense'
+export type JournalEntrySubtype = 'sale' | 'operating_expense' | 'staff_payout' | 'asset_depreciation'
+
+export interface JournalEntry {
+  entry_id:        string
+  business_id:     string
+  entry_date:      string   // TIMESTAMPTZ ISO string
+  entry_type:      JournalEntryType
+  entry_subtype:   JournalEntrySubtype
+  description:     string
+  amount:          number   // INTEGER COP, always positive
+  category:        string | null
+  reference_id:    string | null
+  reference_table: string | null
+}
+
+export interface AccountingSummary {
+  total_income:   number   // INTEGER COP
+  total_expense:  number   // INTEGER COP
+  net_position:   number   // INTEGER COP (can be negative)
+  period_from:    string   // DATE string
+  period_to:      string   // DATE string
 }
