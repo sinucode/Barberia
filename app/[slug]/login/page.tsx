@@ -44,7 +44,9 @@ export default function LoginPage({ params }: LoginPageProps) {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        const metadataSlug = user.user_metadata?.slug as string | undefined
+        // 🛡️ SECURITY: Leer slug desde app_metadata (solo el servidor puede escribirlo).
+        // user_metadata es editable por el cliente → vulnerable a redirects manipulados.
+        const metadataSlug = user.app_metadata?.slug as string | undefined
 
         if (metadataSlug === slug) {
           // Caso A: Match -> Redirige al dashboard del tenant
