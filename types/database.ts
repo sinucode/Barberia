@@ -314,6 +314,16 @@ export interface Database {
         Insert: Omit<FixedAsset, 'id' | 'created_at'>
         Update: Partial<Omit<FixedAsset, 'id' | 'created_at' | 'business_id'>>
       }
+      inventory_items: {
+        Row:    InventoryItem
+        Insert: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<InventoryItem, 'id' | 'created_at' | 'business_id'>>
+      }
+      inventory_movements: {
+        Row:    InventoryMovement
+        Insert: Omit<InventoryMovement, 'id' | 'created_at'>
+        Update: never
+      }
     }
     Views: {
       staff_ledger_balances: {
@@ -468,6 +478,19 @@ export interface Database {
       // RPC Contabilidad (RF22) — Resumen de ingresos, egresos y posición neta por período
       get_accounting_summary: {
         Args: { p_business_id: string; p_date_from: string; p_date_to: string }
+        Returns: Json
+      }
+      // RPC Inventario — Registra un movimiento de stock de forma atómica
+      record_inventory_movement: {
+        Args: {
+          p_business_id:   string
+          p_item_id:       string
+          p_quantity:      number
+          p_type:          string
+          p_notes?:        string | null
+          p_reference_id?: string | null
+          p_user_id?:      string | null
+        }
         Returns: Json
       }
     }
@@ -750,4 +773,46 @@ export interface AccountingSummary {
   net_position:   number   // INTEGER COP (can be negative)
   period_from:    string   // DATE string
   period_to:      string   // DATE string
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Inventario (Inventory Management)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type InventoryCategory = 'general' | 'hair' | 'skincare' | 'tools' | 'other'
+export type MovementType = 'purchase' | 'sale' | 'adjustment' | 'waste'
+
+export interface InventoryItem {
+  id:            string
+  business_id:   string
+  name:          string
+  sku:           string | null
+  category:      InventoryCategory
+  description:   string | null
+  current_stock: number    // INTEGER
+  min_stock:     number    // INTEGER — low stock threshold
+  unit_price:    number | null  // INTEGER COP — selling price
+  unit_cost:     number | null  // INTEGER COP — purchase cost
+  is_active:     boolean
+  created_by:    string | null
+  created_at:    string
+  updated_at:    string
+}
+
+export interface InventoryMovement {
+  id:            string
+  business_id:   string
+  item_id:       string
+  quantity:      number    // INTEGER — positive=in, negative=out
+  movement_type: MovementType
+  reference_id:  string | null
+  notes:         string | null
+  created_by:    string | null
+  created_at:    string
+}
+
+export interface InventoryMovementResult {
+  new_stock:      number
+  low_stock_warn: boolean
+  item_id:        string
 }

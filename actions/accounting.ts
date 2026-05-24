@@ -103,8 +103,7 @@ export async function getAccountingSummary(
     return { data: null, error: 'Acceso denegado.' }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any).rpc('get_accounting_summary', {
+  const { data, error } = await supabase.rpc('get_accounting_summary', {
     p_business_id: businessId,
     p_date_from:   dateFrom,
     p_date_to:     dateTo,

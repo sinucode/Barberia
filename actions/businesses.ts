@@ -3,7 +3,14 @@
 import { createClient, createAdminClient }      from '@/lib/supabase/server'
 import { revalidatePath }    from 'next/cache'
 import { Database }          from '@/types/database.types'
-import type { BusinessInsert, BusinessFeatures, BrandConfig, Json } from '@/types/database'
+import type { BusinessInsert, BusinessFeatures, BrandConfig, BusinessBranding, Json } from '@/types/database'
+
+// ── Tipos de resultado compartidos ────────────────────────────────────────────
+
+interface ActionResult {
+  success?: boolean
+  error?:   string
+}
 
 // ── Regex estricta para colores hexadecimales (#RGB, #RRGGBB, #RRGGBBAA) ──────
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/
@@ -136,6 +143,103 @@ export async function updateBusinessTheme(businessId: string, config: BrandConfi
 
   // 5. Invalidar caché — la UI del tenant y el dashboard se refrescan
   revalidatePath(`/`)
+  return { success: true }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// updateBusinessBranding — Actualiza la columna `branding` (JSONB) del tenant
+// ════════════════════════════════════════════════════════════════════════════════
+
+export async function updateBusinessBranding(
+  businessId: string,
+  branding:   Partial<BusinessBranding>,
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  // 1. Verificar sesión
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado. Inicia sesión para continuar.' }
+
+  // 2. Verificar que el usuario pertenezca a este negocio (Anti-IDOR)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('business_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.business_id !== businessId) {
+    return { error: 'Autorización denegada.' }
+  }
+
+  // 3. Leer el branding actual para hacer merge (no pisar campos existentes)
+  const { data: biz, error: fetchError } = await supabase
+    .from('businesses')
+    .select('branding')
+    .eq('id', businessId)
+    .single()
+
+  if (fetchError || !biz) return { error: 'No se pudo obtener la configuración actual.' }
+
+  const current = (biz.branding ?? {}) as unknown as BusinessBranding
+  const merged: BusinessBranding = { ...current, ...branding }
+
+  // 4. Persistir el JSONB fusionado
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update({ branding: merged as unknown as Record<string, Json> })
+    .eq('id', businessId)
+
+  if (updateError) return { error: updateError.message }
+
+  revalidatePath('/[slug]/dashboard', 'layout')
+  return { success: true }
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// updateBusinessInfo — Actualiza campos básicos del negocio (nombre, etc.)
+// ════════════════════════════════════════════════════════════════════════════════
+
+export async function updateBusinessInfo(
+  businessId: string,
+  info:        { name?: string },
+): Promise<ActionResult> {
+  const supabase = await createClient()
+
+  // 1. Verificar sesión
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado. Inicia sesión para continuar.' }
+
+  // 2. Verificar que el usuario pertenezca a este negocio (Anti-IDOR)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('business_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile || profile.business_id !== businessId) {
+    return { error: 'Autorización denegada.' }
+  }
+
+  // 3. Validar que el nombre no esté vacío si se provee
+  if (info.name !== undefined && !info.name.trim()) {
+    return { error: 'El nombre del negocio no puede estar vacío.' }
+  }
+
+  const payload: { name?: string } = {}
+  if (info.name !== undefined) payload.name = info.name.trim()
+
+  if (Object.keys(payload).length === 0) {
+    return { success: true }  // Nada que actualizar
+  }
+
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update(payload)
+    .eq('id', businessId)
+
+  if (updateError) return { error: updateError.message }
+
+  revalidatePath('/[slug]/dashboard', 'layout')
   return { success: true }
 }
 

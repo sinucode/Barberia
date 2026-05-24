@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   CalendarDays, Scissors, BarChart2, Settings, ChevronRight,
   Users, Store, Percent, Wallet, Receipt, Gift, LayoutGrid, Shield, UserPlus,
-  BookUser, Package, BookOpen,
+  BookUser, Package, BookOpen, ShoppingBag, Archive,
   type LucideIcon,
 } from 'lucide-react'
 import type { Business, BusinessFeatures } from '@/types/database'
@@ -37,6 +37,8 @@ function buildLinks(slug: string, features: BusinessFeatures): NavLink[] {
     { href: `/${slug}/dashboard/workstations`, icon: LayoutGrid,   label: 'Estaciones',      feature: 'workstations' },
     { href: `/${slug}/dashboard/walk-ins`,    icon: UserPlus,     label: 'Walk-ins',         feature: 'walk_ins' },
     { href: `/${slug}/dashboard/crm`,          icon: BookUser,     label: 'Clientes',         feature: 'crm' },
+    { href: `/${slug}/dashboard/retail`,       icon: ShoppingBag,  label: 'Punto de Venta',  feature: 'retail_sales' },
+    { href: `/${slug}/dashboard/inventory`,    icon: Archive,      label: 'Inventario',       feature: 'inventory' },
     { href: `/${slug}/dashboard/audit`,        icon: Shield,       label: 'Auditoría',       feature: 'audit_logs' },
     { href: `/${slug}/dashboard/fixed-assets`, icon: Package,      label: 'Activos Fijos',   feature: 'fixed_assets' },
     { href: `/${slug}/dashboard/accounting`,   icon: BookOpen,     label: 'Contabilidad',    feature: 'advanced_reports' },
