@@ -3,8 +3,19 @@
 
 import { Resend } from 'resend'
 
-// Singleton — se instancia una vez por proceso de Node.js
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazy singleton — se instancia la primera vez que se envía un correo.
+// Esto evita que el build falle si RESEND_API_KEY no está definida en el
+// entorno de build (solo se necesita en runtime).
+let _resend: Resend | null = null
+
+function getResend(): Resend {
+  if (!_resend) {
+    const key = process.env.RESEND_API_KEY
+    if (!key) throw new Error('[resend] RESEND_API_KEY no está configurada.')
+    _resend = new Resend(key)
+  }
+  return _resend
+}
 
 export interface EmailPayload {
   to:      string
@@ -17,6 +28,7 @@ export async function sendEmail(
   payload: EmailPayload,
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const resend = getResend()
     await resend.emails.send({
       from:    payload.from ?? 'Xinuco <noreply@xinuco.app>',
       to:      payload.to,
