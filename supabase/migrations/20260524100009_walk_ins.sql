@@ -3,7 +3,7 @@
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.walk_ins (
-  id             UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id    UUID        NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   customer_name  TEXT        NOT NULL,
   customer_phone TEXT        DEFAULT NULL,

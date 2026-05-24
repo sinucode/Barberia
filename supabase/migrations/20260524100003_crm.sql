@@ -11,7 +11,7 @@ ALTER TABLE public.customers
 
 -- ── 2. Tabla: customer_notes ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.customer_notes (
-  id             UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id    UUID        NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   customer_id    UUID        NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,
   staff_id       UUID        REFERENCES public.staff(id),

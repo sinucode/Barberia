@@ -47,7 +47,7 @@ ALTER TABLE public.businesses
 -- ════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.workstations (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id UUID NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
   is_active   BOOLEAN NOT NULL DEFAULT true,
@@ -95,7 +95,7 @@ CREATE POLICY "Tenants can manage their service_workstations"
 -- ════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.commission_rules (
-  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id           UUID    NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   staff_id              UUID    REFERENCES public.staff(id) ON DELETE CASCADE,    -- null = aplica a todos
   service_id            UUID    REFERENCES public.services(id) ON DELETE CASCADE, -- null = aplica a todos
@@ -125,7 +125,7 @@ CREATE POLICY "Admins can manage commission rules"
 -- ════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.commission_queue (
-  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   appointment_id UUID NOT NULL REFERENCES public.appointments(id) ON DELETE CASCADE,
   processed      BOOLEAN NOT NULL DEFAULT false,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -143,7 +143,7 @@ CREATE INDEX IF NOT EXISTS idx_commission_queue_unprocessed
 -- ════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.loyalty_ledgers (
-  id                    UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id           UUID NOT NULL REFERENCES public.businesses(id)  ON DELETE CASCADE,
   client_id             UUID NOT NULL REFERENCES public.customers(id)   ON DELETE CASCADE,
   points_added          INTEGER NOT NULL DEFAULT 0 CHECK (points_added >= 0),

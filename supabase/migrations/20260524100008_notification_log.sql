@@ -6,7 +6,7 @@
 
 -- Extensión uuid ya disponible vía schema inicial
 CREATE TABLE IF NOT EXISTS public.notification_log (
-  id                UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id       UUID        NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   appointment_id    UUID                 REFERENCES public.appointments(id) ON DELETE SET NULL,
   notification_type TEXT        NOT NULL CHECK (notification_type IN ('confirmation', 'reminder', 'cancellation')),

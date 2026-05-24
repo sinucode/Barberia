@@ -21,8 +21,8 @@
 CREATE OR REPLACE FUNCTION public.create_retail_sale(
   p_business_id     UUID,
   p_shift_id        UUID,
-  p_customer_id     UUID    DEFAULT NULL,
   p_payment_method  TEXT,
+  p_customer_id     UUID    DEFAULT NULL,
   p_tip_amount      INTEGER DEFAULT 0,
   p_discount_amount INTEGER DEFAULT 0,
   p_items           JSONB   DEFAULT '[]'::JSONB

@@ -28,7 +28,7 @@
 -- ════════════════════════════════════════════════════════════════════════════
 
 CREATE TABLE IF NOT EXISTS public.staff_ledger (
-  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id  UUID        NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   staff_id     UUID        NOT NULL REFERENCES public.staff(id)      ON DELETE CASCADE,
   entry_type   TEXT        NOT NULL

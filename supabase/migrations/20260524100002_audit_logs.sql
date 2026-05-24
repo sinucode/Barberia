@@ -5,7 +5,7 @@
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.audit_logs (
-  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   business_id  UUID        NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
   actor_id     UUID        REFERENCES auth.users(id),  -- NULL para eventos de sistema
   actor_name   TEXT,                                    -- Denormalizado para precisión histórica
