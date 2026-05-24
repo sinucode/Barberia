@@ -1,10 +1,11 @@
 // app/[slug]/dashboard/settings/notifications/page.tsx
-// RF18 — Configuración de Notificaciones por Correo (solo lectura + preview)
-// El toggle real se hace desde Super Admin (feature flag en la BD)
+// RF18 — Configuración de Notificaciones por Correo + Panel Cron
 
 import type { Metadata } from 'next'
 import { notFound }       from 'next/navigation'
-import { getBusinessBySlug } from '@/actions/businesses'
+import { getBusinessBySlug }  from '@/actions/businesses'
+import { getNotificationLog } from '@/actions/notifications'
+import { CronPanel }          from '@/components/dashboard/settings/CronPanel'
 import type { BusinessFeatures } from '@/types/database'
 import {
   appointmentConfirmationEmail,
@@ -14,7 +15,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Notificaciones — Xinuco',
-  description: 'Estado y preview de las notificaciones por correo electrónico.',
+  description: 'Estado, cron job y preview de las notificaciones por correo electrónico.',
 }
 
 // ── Datos de muestra para el preview ─────────────────────────────────────────
@@ -23,7 +24,7 @@ const PREVIEW_DATA = {
   businessName:    'Barbería Demo',
   serviceName:     'Corte Premium',
   staffName:       'Carlos Rodríguez',
-  startTime:       new Date(Date.now() + 86_400_000).toISOString(), // mañana
+  startTime:       new Date(Date.now() + 86_400_000).toISOString(),
   durationMinutes: 45,
   priceCop:        35_000,
   businessPhone:   '+57 300 123 4567',
@@ -52,7 +53,6 @@ function StatusBadge({ ok, labelOn, labelOff }: { ok: boolean; labelOn: string; 
   )
 }
 
-// ── Tarjeta de estado ─────────────────────────────────────────────────────────
 function StatusCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{
@@ -67,17 +67,13 @@ function StatusCard({ title, children }: { title: string; children: React.ReactN
   )
 }
 
-// ── Preview de plantilla en iframe ────────────────────────────────────────────
 function TemplatePreview({ title, html }: { title: string; html: string }) {
   return (
     <div style={{ marginBottom: '32px' }}>
       <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: '#C5A059' }}>
         {title}
       </h3>
-      <div style={{
-        border: '1px solid #222', borderRadius: '8px', overflow: 'hidden',
-        background: '#080808',
-      }}>
+      <div style={{ border: '1px solid #222', borderRadius: '8px', overflow: 'hidden', background: '#080808' }}>
         <iframe
           srcDoc={html}
           title={title}
@@ -100,14 +96,18 @@ export default async function NotificationsSettingsPage({
   const business = await getBusinessBySlug(slug)
   if (!business) notFound()
 
-  const features        = business.features_enabled as unknown as BusinessFeatures
-  const emailEnabled    = features?.notifications_email === true
-  const resendConfigured = Boolean(process.env.RESEND_API_KEY)
+  const features           = business.features_enabled as unknown as BusinessFeatures
+  const emailEnabled       = features?.notifications_email === true
+  const resendConfigured   = Boolean(process.env.RESEND_API_KEY)
+  const cronSecretPresent  = Boolean(process.env.CRON_SECRET)
 
-  // Generar previews en el servidor (sin JS en el cliente)
-  const confirmationHtml  = appointmentConfirmationEmail(PREVIEW_DATA)
-  const reminderHtml      = appointmentReminderEmail(PREVIEW_DATA)
-  const cancellationHtml  = appointmentCancellationEmail({
+  // Cargar historial de notificaciones
+  const { data: notifLog } = await getNotificationLog(business.id, 50)
+
+  // Generar previews en el servidor
+  const confirmationHtml = appointmentConfirmationEmail(PREVIEW_DATA)
+  const reminderHtml     = appointmentReminderEmail(PREVIEW_DATA)
+  const cancellationHtml = appointmentCancellationEmail({
     customerName: PREVIEW_DATA.customerName,
     businessName: PREVIEW_DATA.businessName,
     serviceName:  PREVIEW_DATA.serviceName,
@@ -116,14 +116,14 @@ export default async function NotificationsSettingsPage({
 
   return (
     <div style={{ maxWidth: '860px', margin: '0 auto', color: '#F4F4F4' }}>
+
       {/* Header */}
       <div style={{ paddingBottom: '24px', borderBottom: '1px solid #222', marginBottom: '32px' }}>
         <h1 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 700, letterSpacing: '-0.5px' }}>
           Notificaciones por Correo
         </h1>
         <p style={{ margin: 0, fontSize: '14px', color: '#999', maxWidth: '600px', lineHeight: '1.6' }}>
-          Estado del módulo RF18 y preview de las plantillas enviadas a los clientes.
-          Para habilitar o deshabilitar el módulo, contacta al Super Admin.
+          Estado del módulo RF18 — cron job de recordatorios, historial de envíos y preview de plantillas.
         </p>
       </div>
 
@@ -134,26 +134,17 @@ export default async function NotificationsSettingsPage({
         </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '16px' }}>
           <StatusCard title="Módulo RF18 — Email">
-            <StatusBadge
-              ok={emailEnabled}
-              labelOn="Habilitado"
-              labelOff="Deshabilitado"
-            />
+            <StatusBadge ok={emailEnabled} labelOn="Habilitado" labelOff="Deshabilitado" />
             <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666', lineHeight: '1.5' }}>
-              Controlado por feature flag <code style={{ color: '#C5A059' }}>notifications_email</code> en la BD.
-              Solo el Super Admin puede modificarlo.
+              Feature flag <code style={{ color: '#C5A059' }}>notifications_email</code> — solo el Super Admin puede modificarlo.
             </p>
           </StatusCard>
 
           <StatusCard title="API Key — Resend">
-            <StatusBadge
-              ok={resendConfigured}
-              labelOn="Configurado"
-              labelOff="No configurado"
-            />
+            <StatusBadge ok={resendConfigured} labelOn="Configurado" labelOff="No configurado" />
             <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666', lineHeight: '1.5' }}>
-              Variable de entorno <code style={{ color: '#C5A059' }}>RESEND_API_KEY</code>{' '}
-              {resendConfigured ? 'está presente en el servidor.' : 'no está definida. Los correos no se enviarán.'}
+              Variable <code style={{ color: '#C5A059' }}>RESEND_API_KEY</code>{' '}
+              {resendConfigured ? 'presente en el servidor.' : 'no definida — los correos no se enviarán.'}
             </p>
           </StatusCard>
 
@@ -162,23 +153,34 @@ export default async function NotificationsSettingsPage({
               noreply@xinuco.app
             </span>
             <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#666', lineHeight: '1.5' }}>
-              Dirección desde la que se envían todos los correos. Configurable en{' '}
-              <code style={{ color: '#C5A059' }}>lib/email/resend.ts</code>.
+              Configurable en <code style={{ color: '#C5A059' }}>lib/email/resend.ts</code>.
             </p>
           </StatusCard>
         </div>
       </section>
 
-      {/* Información de eventos */}
+      {/* ── Cron Job Panel (Client Component) ─────────────────────────────── */}
+      <section style={{ marginBottom: '40px' }}>
+        <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#C5A059', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          Cron Job & Historial
+        </h2>
+        <CronPanel
+          businessId={business.id}
+          cronSecret={cronSecretPresent}
+          initialLog={notifLog ?? []}
+        />
+      </section>
+
+      {/* Disparadores */}
       <section style={{ marginBottom: '40px' }}>
         <h2 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 600, color: '#C5A059', textTransform: 'uppercase', letterSpacing: '1px' }}>
           Disparadores de Notificación
         </h2>
         <div style={{ background: '#111', border: '1px solid #222', borderRadius: '8px', overflow: 'hidden' }}>
           {[
-            { evento: 'Nueva reserva',       correo: 'Confirmación',   estado: emailEnabled ? 'Activo' : 'Inactivo' },
-            { evento: '24 h antes de cita',  correo: 'Recordatorio',   estado: 'Cron job pendiente' },
-            { evento: 'Cita cancelada',      correo: 'Cancelación',    estado: emailEnabled ? 'Activo' : 'Inactivo' },
+            { evento: 'Nueva reserva',      correo: 'Confirmación',  estado: emailEnabled ? 'Activo' : 'Inactivo' },
+            { evento: '24 h antes de cita', correo: 'Recordatorio',  estado: cronSecretPresent && emailEnabled ? 'Activo' : 'Pendiente config' },
+            { evento: 'Cita cancelada',     correo: 'Cancelación',   estado: emailEnabled ? 'Activo' : 'Inactivo' },
           ].map(({ evento, correo, estado }, i) => (
             <div key={i} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -199,9 +201,6 @@ export default async function NotificationsSettingsPage({
             </div>
           ))}
         </div>
-        <p style={{ margin: '10px 0 0 0', fontSize: '12px', color: '#555' }}>
-          * El recordatorio de 24 h requiere un cron job externo que llame a <code style={{ color: '#C5A059' }}>sendBookingReminder()</code>.
-        </p>
       </section>
 
       {/* Previews de plantillas */}
@@ -212,11 +211,11 @@ export default async function NotificationsSettingsPage({
         <p style={{ margin: '-12px 0 24px 0', fontSize: '13px', color: '#666' }}>
           Así se ven los correos que reciben tus clientes. Datos de ejemplo.
         </p>
-
         <TemplatePreview title="1. Confirmación de Reserva" html={confirmationHtml} />
-        <TemplatePreview title="2. Recordatorio 24 h Antes"  html={reminderHtml}      />
-        <TemplatePreview title="3. Aviso de Cancelación"     html={cancellationHtml}  />
+        <TemplatePreview title="2. Recordatorio 24 h Antes"  html={reminderHtml}     />
+        <TemplatePreview title="3. Aviso de Cancelación"     html={cancellationHtml} />
       </section>
+
     </div>
   )
 }

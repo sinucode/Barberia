@@ -14,6 +14,9 @@ import { createClient }          from '@supabase/supabase-js'
 import { sendBookingReminder }   from '@/lib/email/notifications'
 import type { Database }         from '@/types/database'
 
+// Forzar renderizado dinámico — esta ruta nunca debe ser cacheada por Next.js
+export const dynamic = 'force-dynamic'
+
 // ── Tipo del cliente con el esquema de Xinuco ─────────────────────────────────
 type XinucoAdmin = ReturnType<typeof createClient<Database>>
 
