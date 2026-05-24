@@ -52,7 +52,7 @@ export async function createService(
       duration_minutes: data.duration_minutes,
       price_cop:        data.price_cop,
       is_active:        true,
-    } as any)
+    })
     .select()
     .single()
 
@@ -84,7 +84,7 @@ export async function updateService(
 
   const { error } = await supabase
     .from('services')
-    .update(data as any)
+    .update(data)
     .eq('id', serviceId)
 
   if (error) return { error: error.message }

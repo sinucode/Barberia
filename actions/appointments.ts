@@ -104,7 +104,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: App
 
   const { error } = await supabase
     .from('appointments')
-    .update({ status } as any)
+    .update({ status })
     .eq('id', appointmentId)
 
   if (error) {

@@ -66,7 +66,7 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
   // ── ESCRITURA CON CLIENTE AUTENTICADO (RLS via JWT, Capa 2) ───────────────
   // El cliente normal adjunta el JWT del usuario activo al request.
   // Postgres valida la política RLS "Super Admin can insert businesses" de forma nativa.
-  const { error } = await supabase.from('businesses').insert([newBusiness as any])
+  const { error } = await supabase.from('businesses').insert([newBusiness])
 
   if (error) {
     if (error.code === '23505') {

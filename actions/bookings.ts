@@ -55,8 +55,9 @@ export async function createBooking(bookingData: {
       service_id,
       staff_id: staff_id === 'any' ? null : staff_id,
       start_time,
-      status: 'scheduled'
-    } as any)
+      status: 'scheduled' as const,
+      notes: null,
+    })
     .select('id')
     .single()
 

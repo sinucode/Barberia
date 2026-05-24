@@ -284,6 +284,17 @@ export interface Database {
         }
         Returns: Json
       }
+      // RPC v2 — Agendamiento Tri-factorial (RF7): staff + workstation + intervalo del negocio
+      get_available_slots_v2: {
+        Args: {
+          p_business_id:      string
+          p_staff_id:         string | null
+          p_service_id:       string | null
+          p_date:             string
+          p_duration_minutes: number
+        }
+        Returns: Json
+      }
       // RPC de seguridad — inyecta el slug del tenant en app_metadata del JWT
       secure_set_user_context: {
         Args: { business_slug: string }

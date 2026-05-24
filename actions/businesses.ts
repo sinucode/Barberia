@@ -3,7 +3,7 @@
 import { createClient, createAdminClient }      from '@/lib/supabase/server'
 import { revalidatePath }    from 'next/cache'
 import { Database }          from '@/types/database.types'
-import type { BusinessInsert, BusinessFeatures, BrandConfig } from '@/types/database'
+import type { BusinessInsert, BusinessFeatures, BrandConfig, Json } from '@/types/database'
 
 // ── Regex estricta para colores hexadecimales (#RGB, #RRGGBB, #RRGGBBAA) ──────
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/
@@ -35,7 +35,8 @@ export async function getBusinesses() {
 export async function createBusiness(businessData: BusinessInsert) {
   const supabase = await createClient()
 
-  const { data, error } = await (supabase.from('businesses') as any)
+  const { data, error } = await supabase
+    .from('businesses')
     .insert([businessData])
     .select()
 
@@ -69,14 +70,15 @@ export async function toggleBusinessFeature(businessId: string, featureKey: stri
   if (fetchError || !biz) return { error: 'No se pudo obtener el estado del negocio.' }
 
   // Patch del JSONB
-  const updatedFeatures = {
-    ...(biz.features_enabled as any),
+  const currentFeatures = biz.features_enabled as unknown as BusinessFeatures
+  const updatedFeatures: BusinessFeatures = {
+    ...currentFeatures,
     [featureKey]: value
   }
 
   const { error: updateError } = await adminSupabase
     .from('businesses')
-    .update({ features_enabled: updatedFeatures } as any)
+    .update({ features_enabled: updatedFeatures as unknown as Json })
     .eq('id', businessId)
   
   if (updateError) return { error: updateError.message }
@@ -125,7 +127,7 @@ export async function updateBusinessTheme(businessId: string, config: BrandConfi
   // 4. Persistir en Supabase
   const { error: updateError } = await supabase
     .from('businesses')
-    .update({ brand_config: safeConfig } as any)
+    .update({ brand_config: safeConfig as unknown as Json })
     .eq('id', businessId)
 
   if (updateError) {

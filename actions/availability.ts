@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { OperatingHours } from '@/types/database'
+import type { OperatingHours, Json } from '@/types/database'
 
 export async function getAvailability(businessId: string) {
   const supabase = await createClient()
@@ -27,9 +27,9 @@ export async function updateAvailability(
   const { error } = await supabase
     .from('businesses')
     .update({
-      operating_hours: data.operating_hours,
-      workstations_count: data.workstations_count
-    } as any)
+      operating_hours:    data.operating_hours as unknown as Json,
+      workstations_count: data.workstations_count,
+    })
     .eq('id', businessId)
 
   if (error) return { error: error.message }

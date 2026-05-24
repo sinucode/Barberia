@@ -50,7 +50,7 @@ export async function createStaffMember(
       full_name:   data.full_name,
       specialty_role: data.specialty_role,
       is_active:   true,
-    } as any)
+    })
     .select()
     .single()
 
@@ -153,7 +153,7 @@ export async function upsertStaffSchedule(
         day_of_week: schedule.day_of_week,
         start_time:  schedule.start_time,
         end_time:    schedule.end_time,
-      } as any)
+      })
 
     if (error) return { error: error.message }
   }
@@ -229,33 +229,59 @@ export async function saveStaffSchedulesBatch(
 /**
  * getAvailableSlotsAction — Llama a la función RPC segura en PostgreSQL
  * para obtener los horarios disponibles.
+ *
+ * Si se pasa `serviceId`, invoca `get_available_slots_v2` (RF7 — Agendamiento Tri-factorial)
+ * que valida staff + workstation + intervalo del negocio.
+ * En caso contrario hace fallback a `get_available_slots` original.
  */
 export async function getAvailableSlotsAction(
   businessId: string,
   staffId: string | null,
   date: string, // Formato YYYY-MM-DD
-  durationMinutes: number = 30
+  durationMinutes: number = 30,
+  serviceId?: string        // RF7 — habilita validación de workstations
 ) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.rpc('get_available_slots', {
-    p_business_id: businessId,
-    p_staff_id: staffId,
-    p_date: date,
-    p_duration_minutes: durationMinutes
-  } as any)
+  let rawData: unknown
+  let rpcError: { message: string } | null = null
 
-  if (error) {
-    return { error: `Error al calcular espacios: ${error.message}`, slots: [] }
+  if (serviceId) {
+    // RF7: usar v2 con validación de workstations + buffer_time del servicio
+    const { data, error } = await supabase.rpc('get_available_slots_v2', {
+      p_business_id:      businessId,
+      p_staff_id:         staffId,
+      p_service_id:       serviceId,
+      p_date:             date,
+      p_duration_minutes: durationMinutes,
+    } as Parameters<typeof supabase.rpc>[1])
+
+    rawData  = data
+    rpcError = error
+  } else {
+    // Fallback: función original sin restricción de workstations
+    const { data, error } = await supabase.rpc('get_available_slots', {
+      p_business_id:      businessId,
+      p_staff_id:         staffId,
+      p_date:             date,
+      p_duration_minutes: durationMinutes,
+    } as Parameters<typeof supabase.rpc>[1])
+
+    rawData  = data
+    rpcError = error
+  }
+
+  if (rpcError) {
+    return { error: `Error al calcular espacios: ${rpcError.message}`, slots: [] }
   }
 
   // Normalizar el resultado. Supabase a veces devuelve [{ "get_available_slots": "09:00" }] en lugar de ["09:00"]
   let slotsArray: string[] = []
-  if (Array.isArray(data)) {
-    if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
-       slotsArray = data.map(obj => Object.values(obj)[0] as string)
+  if (Array.isArray(rawData)) {
+    if (rawData.length > 0 && typeof rawData[0] === 'object' && rawData[0] !== null) {
+       slotsArray = (rawData as Record<string, unknown>[]).map(obj => Object.values(obj)[0] as string)
     } else {
-       slotsArray = data as string[]
+       slotsArray = rawData as string[]
     }
   }
 
