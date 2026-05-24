@@ -44,7 +44,7 @@ export default async function AvailabilityPage({ params }: { params: Promise<{ s
         >
           <AvailabilityClient 
             businessId={business.id} 
-            initialOperatingHours={availability?.operating_hours as any}
+            initialOperatingHours={availability?.operating_hours as unknown as import('@/types/database').OperatingHours}
             initialWorkstationsCount={availability?.workstations_count}
           />
         </Suspense>

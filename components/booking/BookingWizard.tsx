@@ -155,7 +155,7 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
 
       const finalStaffId = state.staffId === 'any' ? null : state.staffId
 
-      const res = await getAvailableSlotsAction(businessId, finalStaffId as any, selectedDate, duration)
+      const res = await getAvailableSlotsAction(businessId, finalStaffId, selectedDate, duration)
       
       let finalSlots = res.slots || []
       

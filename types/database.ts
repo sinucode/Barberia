@@ -352,6 +352,59 @@ export interface Database {
         }
         Returns: Json
       }
+      // RPC Auditoría (RF19) — Inserta una entrada inmutable en audit_logs
+      log_action: {
+        Args: {
+          p_business_id:  string
+          p_actor_id:     string | null
+          p_actor_name:   string | null
+          p_action:       string
+          p_entity_type:  string
+          p_entity_id?:   string | null
+          p_old_value?:   Json | null
+          p_new_value?:   Json | null
+        }
+        Returns: string   // UUID del log insertado
+      }
+      // RPC Lealtad (RF17) — Otorga puntos al cliente tras un cobro
+      earn_loyalty_points: {
+        Args: {
+          p_business_id:           string
+          p_client_id:             string
+          p_sale_amount:           number
+          p_transaction_reference: string
+        }
+        Returns: Json
+      }
+      // RPC Lealtad (RF17) — Canjea puntos como descuento en COP
+      redeem_loyalty_points: {
+        Args: {
+          p_business_id:           string
+          p_client_id:             string
+          p_points_to_redeem:      number
+          p_transaction_reference: string
+        }
+        Returns: Json
+      }
+      // RPC Lealtad (RF17) — Retorna saldo activo de puntos de un cliente
+      get_client_loyalty_balance: {
+        Args: {
+          p_business_id: string
+          p_client_id:   string
+        }
+        Returns: Json
+      }
+      // RPC Staff Ledger (RF15) — Registra comisión y propina en el ledger
+      record_commission_to_ledger: {
+        Args: {
+          p_appointment_id:   string
+          p_business_id:      string
+          p_staff_id:         string
+          p_commission_amount: number
+          p_tip_amount:       number
+        }
+        Returns: void
+      }
     }
   }
 }

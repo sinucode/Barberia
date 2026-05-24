@@ -37,29 +37,36 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
     activeShiftDetails = await getActiveShiftDetails(businessId)
   }
 
-  // 4. Citas de HOY (join con barber_id = user si es barber, o todas si admin)
-  // Realizamos join relacional con customers y services para obtener datos actualizados
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date()
-  todayEnd.setHours(23, 59, 59, 999)
+  // 4. Citas de HOY filtradas por start_time (no created_at — una cita de hoy pudo
+  //    haberse creado hace días).
+  const todayStr = new Date().toISOString().split('T')[0] // 'YYYY-MM-DD'
 
   let query = supabase
     .from('appointments')
     .select('*, customers(full_name, phone), services(name, price_cop)')
     .eq('business_id', businessId)
     .not('status', 'in', '("cancelled","no_show")')
-    .gte('created_at', todayStart.toISOString())
-    .lte('created_at', todayEnd.toISOString())
+    .gte('start_time', `${todayStr}T00:00:00+00:00`)
+    .lte('start_time', `${todayStr}T23:59:59+00:00`)
     .order('start_time', { ascending: true })
 
-  // Si es barbero, solo sus citas
+  // Si es barbero, filtrar solo sus propias citas via staff.user_id
+  // barber_id no existe en el schema — se usa staff_id (FK a tabla staff)
   if (profile?.role === 'barber') {
-    query = query.eq('barber_id', user.id)
+    const { data: linkedStaff } = await supabase
+      .from('staff')
+      .select('id')
+      .eq('business_id', businessId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    // Si no tiene staff vinculado, retornar 0 citas (seguridad: nunca mostrar todo)
+    const staffId = linkedStaff?.id ?? 'no-linked-staff'
+    query = query.eq('staff_id', staffId)
   }
 
   const { data: todayAppointments } = await query
-  const appointments = (todayAppointments ?? []) as any[]
+  const appointments = (todayAppointments ?? []) as Record<string, unknown>[]
 
   // 5. Validar integridad de cierre: hay citas En Curso?
   const hasInProgressAppointments = appointments.some((a) => a.status === 'in_progress')
@@ -121,7 +128,7 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
             )}
           </h2>
           <a
-            href={`/${slug}/appointments`}
+            href={`/${slug}/dashboard/appointments`}
             id="link-view-all-appointments"
             className="text-xs text-xinuco-primary hover:underline transition-colors"
           >

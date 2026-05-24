@@ -43,7 +43,7 @@ export async function logAction(params: LogActionParams): Promise<void> {
     p_entity_id:   params.entityId   ?? null,
     p_old_value:   params.oldValue   ?? null,
     p_new_value:   params.newValue   ?? null,
-  } as Parameters<typeof supabase.rpc>[1])
+  })
 
   if (error) {
     // No lanzar — loggear silenciosamente para no romper la operación principal

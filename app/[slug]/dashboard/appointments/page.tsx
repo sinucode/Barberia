@@ -71,7 +71,7 @@ export default async function AppointmentsPage({ params }: AppointmentsPageProps
   }
 
   const { data: appointmentsData } = await query
-  const appointments = (appointmentsData ?? []) as any[]
+  const appointments = (appointmentsData ?? []) as Record<string, unknown>[]
 
   return (
     <div className="bg-xinuco-bg min-h-screen">
