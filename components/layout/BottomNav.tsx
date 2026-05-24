@@ -1,20 +1,17 @@
 'use client'
 
-import Link        from 'next/link'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  Users,
-  CalendarDays,
-  Scissors,
-  Wallet,
-  Settings,
-} from 'lucide-react'
+import { Users, CalendarDays, Scissors, Wallet, Settings, type LucideIcon } from 'lucide-react'
+import { useFeatures } from '@/lib/features/context'
+import type { BusinessFeatures } from '@/types/database'
 
 interface NavItem {
-  id:    string
-  href:  string
-  icon:  React.ElementType
-  label: string
+  id:      string
+  href:    string
+  icon:    LucideIcon
+  label:   string
+  feature: keyof BusinessFeatures | null  // null = always visible
 }
 
 interface BottomNavProps {
@@ -26,17 +23,23 @@ interface BottomNavProps {
  *
  * Los ítems son alcanzables con el pulgar en pantallas de hasta 6.7".
  * Detecta la ruta activa con usePathname y aplica el color del tenant.
+ * Solo muestra ítems cuya feature esté habilitada para el negocio.
  */
 export function BottomNav({ slug }: BottomNavProps) {
   const pathname = usePathname()
+  const features = useFeatures()
 
-  const navItems: NavItem[] = [
-    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda' },
-    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios' },
-    { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger' },
-    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff' },
-    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes' },
+  const allItems: NavItem[] = [
+    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',   feature: null },
+    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios', feature: null },
+    { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',    feature: 'staff_ledger' },
+    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',     feature: null },
+    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes',   feature: null },
   ]
+
+  const navItems = allItems.filter(
+    (item) => item.feature === null || features[item.feature] === true
+  )
 
   return (
     <nav

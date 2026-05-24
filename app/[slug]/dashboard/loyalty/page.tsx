@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getLoyaltySettings, getLoyaltyHistory } from '@/actions/loyalty'
 import { LoyaltyDashboard } from '@/components/dashboard/loyalty/LoyaltyDashboard'
+import type { BusinessFeatures } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Lealtad — Xinuco',
@@ -34,6 +35,15 @@ export default async function LoyaltyPage({
   if (!profile?.business_id) redirect(`/${slug}/login`)
 
   const businessId = profile.business_id
+
+  // Feature gate: check loyalty flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.loyalty) redirect(`/${slug}/dashboard`)
 
   // 3. Cargar datos en paralelo
   const [settings, history] = await Promise.all([

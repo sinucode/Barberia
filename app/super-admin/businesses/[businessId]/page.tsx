@@ -1,0 +1,55 @@
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { BusinessFeatureManager } from '@/components/super-admin/BusinessFeatureManager'
+import type { BusinessFeatures } from '@/types/database'
+
+interface PageProps {
+  params: Promise<{ businessId: string }>
+}
+
+/**
+ * super-admin/businesses/[businessId]/page.tsx — Server Component
+ * Shows the feature matrix for a specific business.
+ * Renders <BusinessFeatureManager> client component.
+ */
+export default async function BusinessFeaturePage({ params }: PageProps) {
+  const { businessId } = await params
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/')
+
+  const { data: biz, error } = await supabase
+    .from('businesses')
+    .select('id, name, slug, features_enabled')
+    .eq('id', businessId)
+    .single()
+
+  if (error || !biz) redirect('/super-admin/businesses')
+
+  const features = (biz.features_enabled ?? {}) as unknown as BusinessFeatures
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm" style={{ color: 'rgba(244,244,244,0.45)' }}>
+        <a href="/super-admin/businesses" style={{ color: '#C5A059' }}>Negocios</a>
+        <span>/</span>
+        <span>{biz.name}</span>
+      </div>
+
+      {/* Page header */}
+      <div>
+        <h1 className="text-xl font-bold" style={{ color: '#F4F4F4' }}>{biz.name}</h1>
+        <p className="text-sm mt-0.5" style={{ color: 'rgba(244,244,244,0.45)' }}>/{biz.slug}</p>
+      </div>
+
+      {/* Feature manager (client component) */}
+      <BusinessFeatureManager
+        businessId={biz.id}
+        businessName={biz.name}
+        initialFeatures={features}
+      />
+    </div>
+  )
+}

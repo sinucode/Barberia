@@ -1,58 +1,79 @@
 'use client'
 
-import { useState, createContext, useContext } from 'react'
+import { useState, createContext } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, Scissors, BarChart2, Settings, ChevronRight, Users, Store, Percent, Wallet, Receipt, Gift } from 'lucide-react'
-import type { Business } from '@/types/database'
+import {
+  CalendarDays, Scissors, BarChart2, Settings, ChevronRight,
+  Users, Store, Percent, Wallet, Receipt, Gift, LayoutGrid, Shield,
+  type LucideIcon,
+} from 'lucide-react'
+import type { Business, BusinessFeatures } from '@/types/database'
 import { useDateTime } from '@/lib/hooks/useDateTime'
+import { useFeatures } from '@/lib/features/context'
 
 export const SidebarContext = createContext<{ isCollapsed: boolean; setIsCollapsed: (val: boolean) => void }>({
   isCollapsed: false,
   setIsCollapsed: () => {}
 })
 
-export function DashboardSidebar({ 
-  slug, 
+interface NavLink {
+  href:    string
+  icon:    LucideIcon
+  label:   string
+  feature: keyof BusinessFeatures | null  // null = always visible
+}
+
+function buildLinks(slug: string, features: BusinessFeatures): NavLink[] {
+  const all: NavLink[] = [
+    { href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',         feature: null },
+    { href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios',      feature: null },
+    { href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',           feature: null },
+    { href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones',     feature: 'commissions' },
+    { href: `/${slug}/dashboard/expenses`,     icon: Receipt,      label: 'Gastos',          feature: 'expenses_pgl' },
+    { href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',          feature: 'staff_ledger' },
+    { href: `/${slug}/dashboard/loyalty`,      icon: Gift,         label: 'Lealtad',         feature: 'loyalty' },
+    { href: `/${slug}/dashboard/workstations`, icon: LayoutGrid,   label: 'Estaciones',      feature: 'workstations' },
+    { href: `/${slug}/dashboard/audit`,        icon: Shield,       label: 'Auditoría',       feature: 'audit_logs' },
+    { href: `/${slug}/dashboard/reports`,      icon: BarChart2,    label: 'Reportes',        feature: null },
+    { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración',   feature: null },
+  ]
+
+  return all.filter((link) => link.feature === null || features[link.feature] === true)
+}
+
+export function DashboardSidebar({
+  slug,
   business,
-  children 
-}: { 
-  slug: string
+  children
+}: {
+  slug:      string
   business?: Pick<Business, 'name' | 'branding'> | null
-  children: React.ReactNode 
+  children:  React.ReactNode
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
   const dateTime = useDateTime()
-
-  const links = [
-    { href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda' },
-    { href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios' },
-    { href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff' },
-    { href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones' },
-    { href: `/${slug}/dashboard/expenses`,     icon: Receipt,      label: 'Gastos' },
-    { href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger' },
-    { href: `/${slug}/dashboard/reports`,      icon: BarChart2,    label: 'Reportes' },
-    { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración' },
-  ]
+  const features = useFeatures()
+  const links    = buildLinks(slug, features)
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>
       <div className="flex min-h-screen bg-xinuco-bg">
       {/* Sidebar Desktop */}
-      <aside 
+      <aside
         className={`fixed inset-y-0 left-0 z-50 hidden md:flex flex-col transition-all duration-300 ease-in-out border-r border-zinc-850
           ${isCollapsed ? 'w-16' : 'w-64'}`}
         style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-color)' }}
       >
-        <div 
+        <div
           className={`relative flex transition-all duration-300 border-b overflow-hidden
-            ${isCollapsed ? 'h-[72px] items-center justify-center' : 'flex-col items-center justify-center py-10 px-4 gap-4'}`} 
+            ${isCollapsed ? 'h-[72px] items-center justify-center' : 'flex-col items-center justify-center py-10 px-4 gap-4'}`}
           style={{ borderColor: 'var(--border-color)' }}
         >
           {/* Botón Collapse (Esquina superior derecha cuando está expandido) */}
           {!isCollapsed && (
-            <button 
+            <button
               onClick={() => setIsCollapsed(true)}
               className="absolute top-4 right-4 p-1.5 rounded-lg text-xinuco-muted hover:text-xinuco-text hover:bg-white/[0.05] transition-colors"
               aria-label="Contraer menú"
@@ -62,12 +83,12 @@ export function DashboardSidebar({
           )}
 
           {isCollapsed ? (
-            <button 
-              onClick={() => setIsCollapsed(false)} 
+            <button
+              onClick={() => setIsCollapsed(false)}
               className="w-11 h-11 rounded-xl flex items-center justify-center border transition-all animate-fade-in shadow-sm hover:scale-105"
-              style={{ 
+              style={{
                 backgroundColor: 'color-mix(in srgb, var(--primary-color) 12%, transparent)',
-                borderColor: 'color-mix(in srgb, var(--primary-color) 25%, transparent)' 
+                borderColor: 'color-mix(in srgb, var(--primary-color) 25%, transparent)'
               }}
               title="Expandir menú"
             >
@@ -76,22 +97,20 @@ export function DashboardSidebar({
           ) : (
             <div className="flex flex-col items-center gap-4 animate-fade-in text-center mt-2 w-full">
               {/* Contenedor de Marca Premium */}
-              <div className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center border shadow-sm" 
-                style={{ 
+              <div className="w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center border shadow-sm"
+                style={{
                   backgroundColor: 'color-mix(in srgb, var(--primary-color) 12%, transparent)',
-                  borderColor: 'color-mix(in srgb, var(--primary-color) 25%, transparent)' 
+                  borderColor: 'color-mix(in srgb, var(--primary-color) 25%, transparent)'
                 }}
               >
                 <Store size={26} style={{ color: 'var(--primary-color)' }} />
               </div>
-              
+
               <div className="flex flex-col items-center">
-                <span 
-                  className="font-serif font-bold text-base text-xinuco-text tracking-wide whitespace-nowrap"
-                >
+                <span className="font-serif font-bold text-base text-xinuco-text tracking-wide whitespace-nowrap">
                   {business?.name || 'XINUCO'}
                 </span>
-                
+
                 {/* Reloj en Tiempo Real Independiente */}
                 <div className="h-4 flex items-center justify-center mt-1.5">
                   {dateTime ? (
@@ -107,7 +126,7 @@ export function DashboardSidebar({
           )}
         </div>
 
-        <nav className="flex-1 py-6 flex flex-col gap-2 px-3">
+        <nav className="flex-1 py-6 flex flex-col gap-2 px-3 overflow-y-auto">
           {links.map((link) => {
             const isActive = pathname.startsWith(link.href)
             return (
@@ -120,7 +139,7 @@ export function DashboardSidebar({
                 `}
                 title={isCollapsed ? link.label : undefined}
               >
-                <div 
+                <div
                   className={`flex items-center justify-center relative ${isActive ? 'text-[var(--primary-color)]' : ''}`}
                 >
                   {isActive && !isCollapsed && (
@@ -140,7 +159,7 @@ export function DashboardSidebar({
       </aside>
 
       {/* Main Content Wrapper */}
-      <div 
+      <div
         className={`flex-1 flex flex-col transition-all duration-300 ease-in-out md:min-h-screen w-full
           ${isCollapsed ? 'md:ml-16' : 'md:ml-64'}`}
       >

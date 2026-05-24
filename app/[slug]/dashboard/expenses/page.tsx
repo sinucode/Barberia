@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getExpenses, getProfitLoss } from '@/actions/expenses'
 import { ExpenseManager } from '@/components/dashboard/expenses/ExpenseManager'
+import type { BusinessFeatures } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Gastos — Xinuco',
@@ -48,6 +49,16 @@ export default async function ExpensesPage({
   if (!profile?.business_id) redirect(`/${slug}/login`)
 
   const businessId = profile.business_id
+
+  // Feature gate: check expenses_pgl flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.expenses_pgl) redirect(`/${slug}/dashboard`)
+
   const { dateFrom, dateTo } = getCurrentMonthRange()
 
   // 3. Cargar gastos y P&G del mes actual en paralelo

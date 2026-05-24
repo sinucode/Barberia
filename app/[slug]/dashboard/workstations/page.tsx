@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getWorkstations } from '@/actions/workstations'
 import { WorkstationManager } from '@/components/dashboard/workstations/WorkstationManager'
+import type { BusinessFeatures } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Estaciones — Xinuco',
@@ -26,6 +27,15 @@ export default async function WorkstationsPage({ params }: { params: Promise<{ s
     .single()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Feature gate: check workstations flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.workstations) redirect(`/${slug}/dashboard`)
 
   // 3. Obtener estaciones de trabajo del negocio
   const workstations = await getWorkstations(profile.business_id)

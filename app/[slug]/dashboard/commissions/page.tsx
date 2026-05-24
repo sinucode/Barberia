@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCommissionRules } from '@/actions/commissions'
 import { getServices } from '@/actions/services'
 import { CommissionManager } from '@/components/dashboard/commissions/CommissionManager'
-import type { Staff } from '@/types/database'
+import type { Staff, BusinessFeatures } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Comisiones — Xinuco',
@@ -36,6 +36,15 @@ export default async function CommissionsPage({
   if (!profile?.business_id) redirect(`/${slug}/login`)
 
   const businessId = profile.business_id
+
+  // Feature gate: check commissions flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.commissions) redirect(`/${slug}/dashboard`)
 
   // 3. Cargar datos en paralelo
   const [rules, services, staffResult] = await Promise.all([

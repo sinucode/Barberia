@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStaffBalances } from '@/actions/ledger'
 import { LedgerManager } from '@/components/dashboard/ledger/LedgerManager'
+import type { BusinessFeatures } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Billetera del Staff — Xinuco',
@@ -34,6 +35,15 @@ export default async function LedgerPage({
   if (!profile?.business_id) redirect(`/${slug}/login`)
 
   const businessId = profile.business_id
+
+  // Feature gate: check staff_ledger flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.staff_ledger) redirect(`/${slug}/dashboard`)
 
   // 3. Cargar saldos de todo el staff en paralelo
   const balances = await getStaffBalances(businessId)

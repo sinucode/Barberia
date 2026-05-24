@@ -33,9 +33,25 @@ export interface BrandConfig {
 
 // ---------- Feature Flags ----------
 export interface BusinessFeatures {
-  loyalty: boolean;
-  inventory: boolean;
-  advanced_reports: boolean;
+  // ── Comunicación ─────────────────────────────────────────────────
+  notifications_email:     boolean  // RF18 - Confirmaciones/recordatorios por correo (Resend)
+  notifications_whatsapp:  boolean  // RF18 - Notificaciones por WhatsApp Cloud API
+  // ── Finanzas ─────────────────────────────────────────────────────
+  commissions:             boolean  // RF14 - Motor de comisiones variables
+  staff_ledger:            boolean  // RF15 - Billetera digital del staff
+  expenses_pgl:            boolean  // RF16 - Gastos y estado de resultados P&G
+  retail_sales:            boolean  // RF20 - Ventas directas de productos (sin cita)
+  loyalty:                 boolean  // RF17 - Programa de puntos de lealtad
+  // ── Operaciones ──────────────────────────────────────────────────
+  workstations:            boolean  // RF5  - Gestión de puestos de trabajo
+  walk_ins:                boolean  // RF8  - Cola de walk-ins (próximo)
+  crm:                     boolean  // RF9  - Expediente del cliente (próximo)
+  // ── Compliance / Admin ───────────────────────────────────────────
+  audit_logs:              boolean  // RF19 - Logs de auditoría inmutables
+  fixed_assets:            boolean  // RF21 - Activos fijos (próximo)
+  // ── Legacy ───────────────────────────────────────────────────────
+  inventory:               boolean
+  advanced_reports:        boolean
 }
 
 // ---------- Operating Hours ----------

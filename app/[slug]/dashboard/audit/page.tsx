@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Shield } from 'lucide-react'
 import { getAuditLogs } from '@/actions/audit'
 import { AuditLogViewer } from '@/components/dashboard/audit/AuditLogViewer'
+import type { BusinessFeatures } from '@/types/database'
 
 interface AuditPageProps {
   params: Promise<{ slug: string }>
@@ -26,6 +27,15 @@ export default async function AuditPage({ params }: AuditPageProps) {
   if (!profile || profile.role !== 'admin') {
     redirect(`/${slug}/dashboard`)
   }
+
+  // Feature gate: check audit_logs flag server-side
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+  const featureFlags = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!featureFlags?.audit_logs) redirect(`/${slug}/dashboard`)
 
   const businessId = profile.business_id
 
