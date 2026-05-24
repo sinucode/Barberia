@@ -2,6 +2,15 @@
 // types/database.ts  —  "The Vault" — Tipos estrictos de Xinuco
 // ============================================================
 
+// ---------- Tipo base para columnas JSONB de PostgreSQL ----------
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json }
+  | Json[]
+
 // ---------- Branding del tenant ----------
 export interface BusinessBranding {
   primary_color:   string   // Ej: "#C5A059"
@@ -218,7 +227,12 @@ export interface Database {
       }
       cash_register_shifts: {
         Row:    CashRegisterShift
-        Insert: Omit<CashRegisterShift, 'id' | 'created_at'>
+        // closed_by, closed_at y actual_closing_balance son NULL al abrir turno → opcionales en Insert
+        Insert: Omit<CashRegisterShift, 'id' | 'created_at' | 'closed_by' | 'closed_at' | 'actual_closing_balance'> & {
+          closed_by?:               string | null
+          closed_at?:               string | null
+          actual_closing_balance?:  number | null
+        }
         Update: Partial<Omit<CashRegisterShift, 'id' | 'created_at'>>
       }
       sales: {
@@ -235,6 +249,36 @@ export interface Database {
         Row:    Payment
         Insert: Omit<Payment, 'id' | 'created_at'>
         Update: Partial<Omit<Payment, 'id' | 'created_at'>>
+      }
+    }
+    Functions: {
+      // RPC atómico de cobro — reemplaza 4 inserts separados con una transacción real
+      checkout_appointment: {
+        Args: {
+          p_appointment_id:  string
+          p_business_id:     string
+          p_shift_id:        string
+          p_payment_method:  string
+          p_tip_amount?:     number
+          p_discount_amount?: number
+          p_items?:          Json
+        }
+        Returns: Json
+      }
+      // RPC de disponibilidad de slots — calcula huecos libres en el calendario
+      get_available_slots: {
+        Args: {
+          p_business_id:      string
+          p_staff_id:         string | null
+          p_date:             string
+          p_duration_minutes: number
+        }
+        Returns: Json
+      }
+      // RPC de seguridad — inyecta el slug del tenant en app_metadata del JWT
+      secure_set_user_context: {
+        Args: { business_slug: string }
+        Returns: void
       }
     }
   }

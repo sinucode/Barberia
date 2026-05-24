@@ -94,13 +94,13 @@ export async function openShift(businessId: string, startingCash: number) {
   const { error } = await supabase
     .from('cash_register_shifts')
     .insert({
-      business_id: businessId,
-      opened_by: user.id,
-      opened_at: new Date().toISOString(),
-      status: 'open',
-      opening_balance: startingCash,
+      business_id:            businessId,
+      opened_by:              user.id,
+      opened_at:              new Date().toISOString(),
+      status:                 'open',
+      opening_balance:        startingCash,
       actual_closing_balance: null,
-    } as any)
+    })
 
   if (error) {
     console.error('Error opening shift:', error)
@@ -141,11 +141,11 @@ export async function closeShift(businessId: string, shiftId: string, actualClos
   const { error } = await supabase
     .from('cash_register_shifts')
     .update({
-      closed_by: user.id,
-      closed_at: new Date().toISOString(),
-      status: 'closed',
+      closed_by:              user.id,
+      closed_at:              new Date().toISOString(),
+      status:                 'closed',
       actual_closing_balance: actualClosingBalance,
-    } as any)
+    })
     .eq('id', shiftId)
 
   if (error) {
@@ -177,7 +177,16 @@ export interface CheckoutAppointmentParams {
 }
 
 /**
- * checkoutAppointment — Proceso transaccional para cobro y facturación de citas.
+ * checkoutAppointment — Proceso de cobro atómico via RPC de PostgreSQL.
+ *
+ * Reemplaza el flujo anterior de 4 operaciones secuenciales (INSERT sales →
+ * INSERT sale_items → INSERT payments → UPDATE appointments) por una única
+ * llamada al RPC `checkout_appointment` que ejecuta todo en una transacción.
+ *
+ * Garantía: si cualquier paso falla, PostgreSQL revierte la transacción
+ * completa. No existe riesgo de estado financiero parcial.
+ *
+ * Migración requerida: supabase/migrations/20260523_checkout_atomic_rpc.sql
  */
 export async function checkoutAppointment(params: CheckoutAppointmentParams) {
   const supabase = await createClient()
@@ -187,112 +196,55 @@ export async function checkoutAppointment(params: CheckoutAppointmentParams) {
     businessId,
     shiftId,
     paymentMethod,
-    receivedAmount,
     tipAmount,
     discountAmount,
     items,
   } = params
 
-  // 1. Validaciones financieras estrictas
+  // Validaciones de entrada en el servidor (antes del RPC)
   if (!paymentMethod) {
     return { error: 'validation_error', message: 'El método de pago es requerido.' }
   }
-
   if (items.length === 0) {
     return { error: 'validation_error', message: 'Debe haber al menos un ítem para cobrar.' }
   }
 
-  // 2. Consultar cita origen
-  const { data: appointment, error: apptError } = await supabase
-    .from('appointments')
-    .select('customer_id, staff_id')
-    .eq('id', appointmentId)
-    .single()
-
-  if (apptError || !appointment) {
-    console.error('Error fetching appointment for checkout:', apptError)
-    return { error: 'not_found', message: 'La cita especificada no fue encontrada.' }
-  }
-
-  // 3. Calcular totales
-  const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
-  const total = subtotal - discountAmount + tipAmount
-
-  if (total < 0) {
-    return { error: 'validation_error', message: 'El total a pagar no puede ser menor a cero.' }
-  }
-
-  // 4. Registrar la Venta (Sale)
-  const { data: sale, error: saleError } = await supabase
-    .from('sales')
-    .insert({
-      business_id: businessId,
-      shift_id: shiftId,
-      appointment_id: appointmentId,
-      customer_id: appointment.customer_id,
-      subtotal,
-      discount_amount: discountAmount,
-      tip_amount: tipAmount,
-      total_amount: total,
-      status: 'paid',
-    } as any)
-    .select('id')
-    .single()
-
-  if (saleError || !sale) {
-    console.error('Error inserting sale:', saleError)
-    return { error: 'db_error', message: `Error al registrar la venta: ${saleError?.message || 'ID no retornado'}` }
-  }
-
-  // 5. Registrar los Ítems de la Venta (SaleItems)
-  const saleItemsPayload = items.map((item) => ({
-    business_id: businessId,
-    sale_id: sale.id,
-    staff_id: item.staffId || appointment.staff_id || null,
-    item_type: item.itemType,
+  // Mapear camelCase → snake_case para el JSONB del RPC
+  const rpcItems = items.map((item) => ({
     description: item.description,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-    total_price: item.unitPrice * item.quantity,
+    quantity:    item.quantity,
+    unit_price:  item.unitPrice,
+    item_type:   item.itemType,
+    staff_id:    item.staffId ?? null,
   }))
 
-  const { error: itemsError } = await supabase
-    .from('sale_items')
-    .insert(saleItemsPayload as any)
+  // Una sola llamada — atomicidad garantizada por PostgreSQL
+  const { data, error } = await supabase.rpc('checkout_appointment', {
+    p_appointment_id:  appointmentId,
+    p_business_id:     businessId,
+    p_shift_id:        shiftId,
+    p_payment_method:  paymentMethod,
+    p_tip_amount:      tipAmount,
+    p_discount_amount: discountAmount,
+    p_items:           rpcItems,
+  })
 
-  if (itemsError) {
-    console.error('Error inserting sale items:', itemsError)
-    // Nota: en producción idealmente revertiríamos la venta o usaríamos RPC/transacción real.
-    return { error: 'db_error', message: `Error al registrar los ítems de venta: ${itemsError.message}` }
+  if (error) {
+    console.error('[checkout_appointment RPC]', error)
+    return { error: 'db_error', message: error.message }
   }
 
-  // 6. Registrar el Pago (Payment)
-  const { error: paymentError } = await supabase
-    .from('payments')
-    .insert({
-      business_id: businessId,
-      sale_id: sale.id,
-      shift_id: shiftId,
-      amount: total,
-      payment_method: paymentMethod,
-    } as any)
-
-  if (paymentError) {
-    console.error('Error inserting payment:', paymentError)
-    return { error: 'db_error', message: `Error al registrar el pago: ${paymentError.message}` }
+  const result = data as {
+    success?: boolean
+    sale_id?: string
+    error?:   string
+    message?: string
   }
 
-  // 7. Completar la cita (Actualizar status) — SOLO si los pasos anteriores fueron exitosos
-  const { error: apptUpdateError } = await supabase
-    .from('appointments')
-    .update({ status: 'completed' } as any)
-    .eq('id', appointmentId)
-
-  if (apptUpdateError) {
-    console.error('Error updating appointment to completed:', apptUpdateError)
-    return { error: 'db_error', message: `El pago se registró pero hubo un problema al completar la cita: ${apptUpdateError.message}` }
+  if (result?.error) {
+    return { error: result.error, message: result.message }
   }
 
   revalidatePath('/[slug]/dashboard', 'page')
-  return { success: true, saleId: sale.id }
+  return { success: true, saleId: result.sale_id }
 }
