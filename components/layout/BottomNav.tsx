@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Users, CalendarDays, Scissors, Wallet, Settings, type LucideIcon } from 'lucide-react'
+import { Users, CalendarDays, Scissors, Wallet, Settings, UserPlus, type LucideIcon } from 'lucide-react'
 import { useFeatures } from '@/lib/features/context'
 import type { BusinessFeatures } from '@/types/database'
 
@@ -30,7 +30,8 @@ export function BottomNav({ slug }: BottomNavProps) {
   const features = useFeatures()
 
   const allItems: NavItem[] = [
-    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',   feature: null },
+    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',    feature: null },
+    { id: 'nav-walk-ins',     href: `/${slug}/dashboard/walk-ins`,     icon: UserPlus,     label: 'Walk-ins',  feature: 'walk_ins' },
     { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios', feature: null },
     { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',    feature: 'staff_ledger' },
     { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',     feature: null },

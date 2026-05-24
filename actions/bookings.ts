@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { isValid, parseISO } from 'date-fns'
+import { sendBookingConfirmation } from '@/lib/email/notifications'
 
 export async function createBooking(bookingData: {
   full_name: string
@@ -64,6 +65,16 @@ export async function createBooking(bookingData: {
   if (appointmentError) {
     return { error: 'db_error', message: `Error al crear la cita: ${appointmentError.message}` }
   }
+
+  // ── Notificación de confirmación por correo (best-effort — nunca bloquea) ───
+  try {
+    await sendBookingConfirmation({
+      supabase,
+      businessId,
+      appointmentId: appointment.id,
+      customerId:    customer.id,
+    })
+  } catch { /* silenciar */ }
 
   return { success: true, appointment_id: appointment.id, customer_id: customer.id }
 }

@@ -107,13 +107,32 @@ export interface Profile {
 
 // ---------- Tabla: customers ----------
 export interface Customer {
-  id:          string
+  id:                 string
+  business_id:        string
+  full_name:          string
+  phone:              string
+  email:              string | null
+  preferred_staff_id: string | null  // RF9 — barbero preferido
+  created_at:         string
+  updated_at:         string
+}
+
+// ---------- RF9 — CRM: customer_notes ----------
+export interface CustomerNote {
+  id:             string
+  business_id:    string
+  customer_id:    string
+  staff_id:       string | null   // quién escribió la nota
+  appointment_id: string | null   // nota asociada a una cita (opcional)
+  content:        string
+  created_at:     string
+}
+
+// ---------- RF9 — CRM: customer_tags ----------
+export interface CustomerTag {
+  customer_id: string
   business_id: string
-  full_name:   string
-  phone:       string
-  email:       string | null
-  created_at:  string
-  updated_at:  string
+  tag:         string
 }
 
 // ---------- Tabla: appointments ----------
@@ -284,6 +303,11 @@ export interface Database {
         Row:    Expense
         Insert: Omit<Expense, 'id' | 'created_at'>
         Update: Partial<Omit<Expense, 'id' | 'created_at'>>
+      }
+      walk_ins: {
+        Row:    WalkIn
+        Insert: Omit<WalkIn, 'id' | 'created_at' | 'arrived_at'> & { arrived_at?: string }
+        Update: Partial<Omit<WalkIn, 'id' | 'created_at'>>
       }
     }
     Views: {
@@ -596,6 +620,27 @@ export interface ProfitLossResult {
   gross_profit: number
   commissions:  number
   net_profit:   number
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RF8 — Walk-ins (Cola de clientes sin cita)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export type WalkInStatus = 'waiting' | 'in_progress' | 'completed' | 'cancelled'
+
+export interface WalkIn {
+  id:             string
+  business_id:    string
+  customer_name:  string
+  customer_phone: string | null
+  service_id:     string | null
+  staff_id:       string | null
+  status:         WalkInStatus
+  notes:          string | null
+  position:       number          // INTEGER — posición en cola
+  arrived_at:     string          // TIMESTAMPTZ
+  served_at:      string | null   // TIMESTAMPTZ — cuando pasó a completed
+  created_at:     string
 }
 
 // ---------- Tabla: loyalty_ledgers (RF17) ----------

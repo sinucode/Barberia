@@ -1,0 +1,73 @@
+import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getWalkInQueue, getWalkInHistory } from '@/actions/walk-ins'
+import { WalkInQueue } from '@/components/dashboard/walk-ins/WalkInQueue'
+import type { BusinessFeatures, Staff, Service } from '@/types/database'
+
+export const metadata: Metadata = {
+  title: 'Walk-ins — Xinuco',
+  description: 'Cola de clientes sin cita previa',
+}
+
+export default async function WalkInsPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+
+  // 1. Auth guard
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect(`/${slug}/login`)
+
+  // 2. Obtener business_id
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('business_id')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // 3. Feature gate
+  const { data: biz } = await supabase
+    .from('businesses')
+    .select('features_enabled')
+    .eq('slug', slug)
+    .single()
+
+  const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
+  if (!features?.walk_ins) redirect(`/${slug}/dashboard`)
+
+  // 4. Carga paralela: cola activa + historial + staff + servicios
+  const [queue, history, staffRows, serviceRows] = await Promise.all([
+    getWalkInQueue(profile.business_id),
+    getWalkInHistory(profile.business_id, 10),
+    supabase
+      .from('staff')
+      .select('id, full_name')
+      .eq('business_id', profile.business_id)
+      .eq('is_active', true)
+      .order('full_name'),
+    supabase
+      .from('services')
+      .select('id, name, price_cop, duration_minutes')
+      .eq('business_id', profile.business_id)
+      .eq('is_active', true)
+      .order('name'),
+  ])
+
+  const staffList    = (staffRows.data ?? []) as Pick<Staff, 'id' | 'full_name'>[]
+  const serviceList  = (serviceRows.data ?? []) as Pick<Service, 'id' | 'name' | 'price_cop' | 'duration_minutes'>[]
+
+  return (
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-24 px-4 sm:px-6">
+      <WalkInQueue
+        initialQueue={queue}
+        initialHistory={history}
+        staffList={staffList}
+        serviceList={serviceList}
+        businessId={profile.business_id}
+        slug={slug}
+      />
+    </div>
+  )
+}

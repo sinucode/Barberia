@@ -5,6 +5,7 @@ import { addMinutes, format, parseISO, isBefore, isAfter, getDay } from 'date-fn
 import { revalidatePath } from 'next/cache'
 import type { AppointmentStatus, Json } from '@/types/database'
 import { logAction } from './audit'
+import { sendCancellationNotice } from '@/lib/email/notifications'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
@@ -141,6 +142,17 @@ export async function updateAppointmentStatus(appointmentId: string, status: App
     } catch {
       // Silenciar — el log nunca rompe la operación principal
     }
+  }
+
+  // ── Notificación de cancelación por correo (best-effort — nunca bloquea) ────
+  if (status === 'cancelled' && existing?.business_id) {
+    try {
+      await sendCancellationNotice({
+        supabase,
+        businessId:    existing.business_id,
+        appointmentId,
+      })
+    } catch { /* silenciar */ }
   }
 
   revalidatePath('/[slug]/dashboard', 'page')
