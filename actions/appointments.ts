@@ -8,19 +8,22 @@ import { logAction } from './audit'
 import { sendCancellationNotice } from '@/lib/email/notifications'
 
 // ════════════════════════════════════════════════════════════════════════════════
-// TAREA 1: EL MOTOR DE DISPONIBILIDAD (getAvailableSlots)
-// Basado en staff_schedules (turnos individuales) + detección de colisiones.
+// MOTOR DE DISPONIBILIDAD — motor client-side de respaldo
+//
+// El BookingWizard usa getAvailableSlotsAction (actions/staff.ts) → RPC
+// get_available_slots_v2. Esta función usa start_time (igual que bookings.ts).
+// FIX post-auditoría: reemplaza el filtro por time_range (TSTZRANGE) que
+// bookings.ts nunca popula, lo que generaba slots falsos-libres.
 // ════════════════════════════════════════════════════════════════════════════════
 
 export async function getAvailableSlots(
   businessId: string,
   serviceId: string,
-  date: string, // Formato YYYY-MM-DD
-  staffId?: string | null
+  date: string,
+  staffId?: string | null,
 ) {
   const supabase = await createClient()
 
-  // 1. Datos Base: Obtener la duración del servicio
   const { data: service, error: serviceError } = await supabase
     .from('services')
     .select('duration_minutes')
@@ -31,24 +34,23 @@ export async function getAvailableSlots(
 
   const duration = service.duration_minutes
 
-  // 2. Consulta de Colisiones: Obtener citas del día
-  const startOfDay = `${date} 00:00:00+00`
-  const endOfDay = `${date} 23:59:59+00`
+  const startOfDay = `${date}T00:00:00+00:00`
+  const endOfDay   = `${date}T23:59:59+00:00`
 
   let apptQuery = supabase
     .from('appointments')
-    .select('staff_id, time_range')
+    .select('staff_id, start_time')
     .eq('business_id', businessId)
-    .not('status', 'eq', 'cancelled')
-    .filter('time_range', 'ov', `[${startOfDay}, ${endOfDay}]`)
+    .not('status', 'in', '("cancelled","no_show")')
+    .gte('start_time', startOfDay)
+    .lte('start_time', endOfDay)
 
   if (staffId && staffId !== 'any') apptQuery = apptQuery.eq('staff_id', staffId)
 
   const { data: appointments } = await apptQuery
 
-  // 3. Horarios Hábiles: Obtener turnos de trabajo del staff
   const targetDate = parseISO(date)
-  const dayOfWeek = getDay(targetDate)
+  const dayOfWeek  = getDay(targetDate)
 
   let scheduleQuery = supabase
     .from('staff_schedules')
@@ -62,36 +64,31 @@ export async function getAvailableSlots(
 
   if (!schedules || schedules.length === 0) return { slots: [] }
 
-  // Parsear los rangos de citas (TSTZRANGE) a objetos Date nativos
-  const bookedIntervals = (appointments || []).map((app) => {
-    const match = app.time_range.match(/\["?([^",]+)"?,\s*"?([^",)]+)"?\)/)
-    if (!match) return null
-    return { staff_id: app.staff_id, start: new Date(match[1]), end: new Date(match[2]) }
-  }).filter(Boolean) as { staff_id: string; start: Date; end: Date }[]
+  const bookedIntervals = (appointments ?? [])
+    .filter((app) => app.start_time != null)
+    .map((app) => ({
+      staff_id: app.staff_id,
+      start:    new Date(app.start_time as string),
+      end:      addMinutes(new Date(app.start_time as string), duration),
+    }))
 
   const availableSlots = new Set<string>()
 
-  // 4. Generación de Intervalos y Filtro Core Logic
   for (const schedule of schedules) {
-    const shiftStart = parseISO(`${date}T${schedule.start_time}`)
-    const shiftEnd = parseISO(`${date}T${schedule.end_time}`)
+    const shiftStart    = parseISO(`${date}T${schedule.start_time}`)
+    const shiftEnd      = parseISO(`${date}T${schedule.end_time}`)
     const staffBookings = bookedIntervals.filter((b) => b.staff_id === schedule.staff_id)
+    let   currentSlot   = shiftStart
 
-    let currentSlotStart = shiftStart
+    while (isBefore(currentSlot, shiftEnd)) {
+      const slotEnd = addMinutes(currentSlot, duration)
+      if (isAfter(slotEnd, shiftEnd)) break
 
-    while (isBefore(currentSlotStart, shiftEnd)) {
-      const currentSlotEnd = addMinutes(currentSlotStart, duration)
-
-      // Edge Case: Descartar si la cita cruza la hora de salida
-      if (isAfter(currentSlotEnd, shiftEnd)) break
-
-      const hasOverlap = staffBookings.some((booking) => {
-        return currentSlotStart < booking.end && currentSlotEnd > booking.start
-      })
-
-      if (!hasOverlap) availableSlots.add(format(currentSlotStart, 'HH:mm'))
-
-      currentSlotStart = addMinutes(currentSlotStart, 30) // Incremento de 30 mins
+      const busy = staffBookings.some(
+        (b) => currentSlot < b.end && slotEnd > b.start,
+      )
+      if (!busy) availableSlots.add(format(currentSlot, 'HH:mm'))
+      currentSlot = addMinutes(currentSlot, 30)
     }
   }
 
