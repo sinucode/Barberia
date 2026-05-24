@@ -14,7 +14,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: 'nav-admin-tenants',  href: '/adminbarberia',          icon: Store,      label: 'Negocios' },
-  { id: 'nav-admin-billing',  href: '/adminbarberia/billing',  icon: CreditCard, label: 'Facturación SaaS', badge: 'Próx.' },
+  { id: 'nav-admin-billing',  href: '/adminbarberia/billing',  icon: CreditCard, label: 'Facturación SaaS' },
   { id: 'nav-admin-settings', href: '/adminbarberia/settings', icon: Settings,   label: 'Configuración' },
 ]
 

@@ -30,12 +30,13 @@ export async function getJournalEntries(
   }
 
   // Verify the caller belongs to this business
-  const { data: profile } = await supabase
+  const { data: profileRaw } = await supabase
     .from('profiles')
     .select('business_id')
     .eq('id', user.id)
     .single()
 
+  const profile = profileRaw as { business_id: string } | null
   if (!profile?.business_id || profile.business_id !== businessId) {
     return { data: null, error: 'Acceso denegado.' }
   }
@@ -91,17 +92,19 @@ export async function getAccountingSummary(
   }
 
   // Verify the caller belongs to this business
-  const { data: profile } = await supabase
+  const { data: profileRaw2 } = await supabase
     .from('profiles')
     .select('business_id')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.business_id || profile.business_id !== businessId) {
+  const profile2 = profileRaw2 as { business_id: string } | null
+  if (!profile2?.business_id || profile2.business_id !== businessId) {
     return { data: null, error: 'Acceso denegado.' }
   }
 
-  const { data, error } = await supabase.rpc('get_accounting_summary', {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc('get_accounting_summary', {
     p_business_id: businessId,
     p_date_from:   dateFrom,
     p_date_to:     dateTo,

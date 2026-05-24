@@ -77,7 +77,9 @@ export async function createTenant(formData: FormData): Promise<ActionResult> {
   // ── ESCRITURA CON CLIENTE AUTENTICADO (RLS via JWT, Capa 2) ───────────────
   // El cliente normal adjunta el JWT del usuario activo al request.
   // Postgres valida la política RLS "Super Admin can insert businesses" de forma nativa.
-  const { error } = await supabase.from('businesses').insert([newBusiness])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const { error } = await db.from('businesses').insert([newBusiness])
 
   if (error) {
     if (error.code === '23505') {
@@ -108,8 +110,9 @@ export async function toggleTenantStatus(
     return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para modificar inquilinos.' }
   }
 
-  // El cliente normal adjunta el JWT → Postgres valida la política RLS de UPDATE.
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db2 = supabase as any
+  const { error } = await db2
     .from('businesses')
     .update({ is_active: !currentStatus })
     .eq('id', id)
