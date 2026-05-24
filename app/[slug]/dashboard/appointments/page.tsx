@@ -38,6 +38,21 @@ export default async function AppointmentsPage({ params }: AppointmentsPageProps
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
 
+  // 4a. Si es barbero, obtener su staff.id vinculado al user.id
+  //     La relación es: auth.users.id → staff.user_id → staff.id → appointments.staff_id
+  //     NO usar barber_id (campo eliminado) ni user.id directo (no es staff.id)
+  let linkedStaffId: string | null = null
+  if (profile?.role === 'barber') {
+    const { data: staffRecord } = await supabase
+      .from('staff')
+      .select('id')
+      .eq('business_id', businessId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    linkedStaffId = staffRecord?.id ?? null
+  }
+
   let query = supabase
     .from('appointments')
     .select('*, customers(full_name, phone), services(name, price_cop)')
@@ -45,9 +60,14 @@ export default async function AppointmentsPage({ params }: AppointmentsPageProps
     .gte('created_at', todayStart.toISOString())
     .order('start_time', { ascending: true })
 
-  // Si es barbero, filtrar solo las suyas
+  // Aplicar filtro de barbero usando staff_id correcto
   if (profile?.role === 'barber') {
-    query = query.eq('barber_id', user.id)
+    if (linkedStaffId) {
+      query = query.eq('staff_id', linkedStaffId)
+    } else {
+      // Sin staff vinculado → devolver lista vacía por seguridad (no exponer citas ajenas)
+      query = query.eq('staff_id', 'no-linked-staff')
+    }
   }
 
   const { data: appointmentsData } = await query
