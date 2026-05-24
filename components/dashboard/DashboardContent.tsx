@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getActiveShiftDetails } from '@/actions/finance'
 import { CashShiftManager } from '@/components/finance/CashShiftManager'
+import { RetailSaleButton } from '@/components/finance/RetailSaleButton'
 import { InteractiveAgenda } from './InteractiveAgenda'
 
 interface DashboardContentProps {
@@ -88,6 +89,16 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
             initialShiftDetails={activeShiftDetails}
             businessId={businessId}
             hasInProgressAppointments={hasInProgressAppointments}
+          />
+        </section>
+      )}
+
+      {/* Acceso Rápido: Venta Retail (Solo para Administrador) */}
+      {isAdmin && (
+        <section aria-label="Venta Rápida de Productos">
+          <RetailSaleButton
+            businessId={businessId}
+            activeShiftId={activeShiftDetails?.shift.id ?? null}
           />
         </section>
       )}

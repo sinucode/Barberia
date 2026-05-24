@@ -6,7 +6,7 @@ import {
   Users,
   CalendarDays,
   Scissors,
-  BarChart2,
+  Percent,
   Settings,
 } from 'lucide-react'
 
@@ -31,11 +31,11 @@ export function BottomNav({ slug }: BottomNavProps) {
   const pathname = usePathname()
 
   const navItems: NavItem[] = [
-    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays,    label: 'Agenda' },
-    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,        label: 'Servicios' },
-    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,           label: 'Staff' },
-    { id: 'nav-reports',      href: `/${slug}/dashboard/reports`,      icon: BarChart2,       label: 'Reportes' },
-    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,        label: 'Ajustes' },
+    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda' },
+    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios' },
+    { id: 'nav-commissions',  href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones' },
+    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff' },
+    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes' },
   ]
 
   return (

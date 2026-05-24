@@ -295,6 +295,34 @@ export interface Database {
         }
         Returns: Json
       }
+      // RPC atómico de venta retail (sin cita asociada) — RF20
+      create_retail_sale: {
+        Args: {
+          p_business_id:     string
+          p_shift_id:        string
+          p_customer_id?:    string | null
+          p_payment_method:  string
+          p_tip_amount?:     number
+          p_discount_amount?: number
+          p_items?:          Json
+        }
+        Returns: Json
+      }
+      // RPC Motor de Comisiones (RF14) — calcula comisión para una cita individual
+      calculate_commission: {
+        Args: {
+          p_appointment_id: string
+          p_business_id:    string
+        }
+        Returns: Json
+      }
+      // RPC Motor de Comisiones (RF14) — procesa la cola completa de un negocio (cron job)
+      process_commission_queue: {
+        Args: {
+          p_business_id: string
+        }
+        Returns: Json
+      }
       // RPC de seguridad — inyecta el slug del tenant en app_metadata del JWT
       secure_set_user_context: {
         Args: { business_slug: string }
