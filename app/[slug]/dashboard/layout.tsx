@@ -5,7 +5,8 @@ import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { FeaturesProvider } from '@/lib/features/context'
-import type { Business, BusinessFeatures } from '@/types/database'
+import { RoleProvider } from '@/lib/features/role-context'
+import type { Business, BusinessFeatures, UserRole, Profile } from '@/types/database'
 
 export default async function DashboardLayout({
   children,
@@ -25,9 +26,9 @@ export default async function DashboardLayout({
   const [{ data: profile }, { data: business }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name')
+      .select('full_name, role')
       .eq('id', user.id)
-      .single(),
+      .single<Pick<Profile, 'full_name' | 'role'>>(),
     supabase
       .from('businesses')
       .select('id, name, branding, features_enabled')
@@ -39,7 +40,8 @@ export default async function DashboardLayout({
   const features = (business?.features_enabled ?? {}) as unknown as BusinessFeatures
 
   return (
-    <FeaturesProvider features={features}>
+    <RoleProvider role={(profile?.role ?? 'barber') as UserRole}>
+      <FeaturesProvider features={features}>
       <DashboardSidebar slug={slug} business={business}>
         <div className="flex flex-col min-h-screen">
           {/* Header en desktop y mobile */}
@@ -61,6 +63,7 @@ export default async function DashboardLayout({
           </div>
         </div>
       </DashboardSidebar>
-    </FeaturesProvider>
+      </FeaturesProvider>
+    </RoleProvider>
   )
 }

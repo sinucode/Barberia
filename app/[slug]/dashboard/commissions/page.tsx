@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCommissionRules } from '@/actions/commissions'
 import { getServices } from '@/actions/services'
 import { CommissionManager } from '@/components/dashboard/commissions/CommissionManager'
-import type { Staff, BusinessFeatures } from '@/types/database'
+import type { Staff, BusinessFeatures, Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Comisiones — Xinuco',
@@ -26,14 +26,19 @@ export default async function CommissionsPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // 2. Obtener business_id desde el perfil autenticado
+  // 2. Obtener perfil: business_id + role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_id')
+    .select('role, business_id')
     .eq('id', user.id)
-    .single()
+    .single<Pick<Profile, 'role' | 'business_id'>>()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const businessId = profile.business_id
 
@@ -42,7 +47,7 @@ export default async function CommissionsPage({
     .from('businesses')
     .select('features_enabled')
     .eq('slug', slug)
-    .single()
+    .single<{ features_enabled: unknown }>()
   const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
   if (!features?.commissions) redirect(`/${slug}/dashboard`)
 

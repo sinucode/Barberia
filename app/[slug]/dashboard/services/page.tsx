@@ -1,10 +1,13 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { getServices } from '@/actions/services'
 import { ServiceManager } from '@/components/dashboard/services/ServiceManager'
 import { Loader2 } from 'lucide-react'
 import { getBusinessBySlug } from '@/actions/businesses'
 import { notFound } from 'next/navigation'
+import type { Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Servicios — Xinuco',
@@ -13,7 +16,23 @@ export const metadata: Metadata = {
 
 export default async function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  
+
+  // Auth guard
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, business_id')
+    .eq('id', user.id)
+    .single<Pick<Profile, 'role' | 'business_id'>>()
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
+
   // 1. Obtener negocio por slug
   const business = await getBusinessBySlug(slug)
   if (!business) notFound()

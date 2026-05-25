@@ -12,6 +12,7 @@ import {
 import type { Business, BusinessFeatures } from '@/types/database'
 import { useDateTime } from '@/lib/hooks/useDateTime'
 import { useFeatures } from '@/lib/features/context'
+import { useIsAdmin } from '@/lib/features/role-context'
 
 export const SidebarContext = createContext<{ isCollapsed: boolean; setIsCollapsed: (val: boolean) => void }>({
   isCollapsed: false,
@@ -19,34 +20,38 @@ export const SidebarContext = createContext<{ isCollapsed: boolean; setIsCollaps
 })
 
 interface NavLink {
-  href:    string
-  icon:    LucideIcon
-  label:   string
-  feature: keyof BusinessFeatures | null  // null = always visible
+  href:      string
+  icon:      LucideIcon
+  label:     string
+  feature:   keyof BusinessFeatures | null  // null = always visible
+  adminOnly: boolean
 }
 
 function buildLinks(slug: string, features: BusinessFeatures): NavLink[] {
   const all: NavLink[] = [
-    { href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',         feature: null },
-    { href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios',      feature: null },
-    { href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',           feature: null },
-    { href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones',     feature: 'commissions' },
-    { href: `/${slug}/dashboard/expenses`,     icon: Receipt,      label: 'Gastos',          feature: 'expenses_pgl' },
-    { href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',          feature: 'staff_ledger' },
-    { href: `/${slug}/dashboard/loyalty`,      icon: Gift,         label: 'Lealtad',         feature: 'loyalty' },
-    { href: `/${slug}/dashboard/workstations`, icon: LayoutGrid,   label: 'Estaciones',      feature: 'workstations' },
-    { href: `/${slug}/dashboard/walk-ins`,    icon: UserPlus,     label: 'Walk-ins',         feature: 'walk_ins' },
-    { href: `/${slug}/dashboard/crm`,          icon: BookUser,     label: 'Clientes',         feature: 'crm' },
-    { href: `/${slug}/dashboard/retail`,       icon: ShoppingBag,  label: 'Punto de Venta',  feature: 'retail_sales' },
-    { href: `/${slug}/dashboard/inventory`,    icon: Archive,      label: 'Inventario',       feature: 'inventory' },
-    { href: `/${slug}/dashboard/audit`,        icon: Shield,       label: 'Auditoría',       feature: 'audit_logs' },
-    { href: `/${slug}/dashboard/fixed-assets`, icon: Package,      label: 'Activos Fijos',   feature: 'fixed_assets' },
-    { href: `/${slug}/dashboard/accounting`,   icon: BookOpen,     label: 'Contabilidad',    feature: 'advanced_reports' },
-    { href: `/${slug}/dashboard/reports`,      icon: BarChart2,    label: 'Reportes',        feature: null },
-    { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración',   feature: null },
+    { href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',         feature: null,               adminOnly: false },
+    { href: `/${slug}/dashboard/walk-ins`,     icon: UserPlus,     label: 'Walk-ins',        feature: 'walk_ins',         adminOnly: false },
+    { href: `/${slug}/dashboard/crm`,          icon: BookUser,     label: 'Clientes',        feature: 'crm',              adminOnly: false },
+    { href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios',      feature: null,               adminOnly: true },
+    { href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',           feature: null,               adminOnly: true },
+    { href: `/${slug}/dashboard/commissions`,  icon: Percent,      label: 'Comisiones',     feature: 'commissions',      adminOnly: true },
+    { href: `/${slug}/dashboard/expenses`,     icon: Receipt,      label: 'Gastos',          feature: 'expenses_pgl',     adminOnly: true },
+    { href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',          feature: 'staff_ledger',     adminOnly: true },
+    { href: `/${slug}/dashboard/loyalty`,      icon: Gift,         label: 'Lealtad',         feature: 'loyalty',          adminOnly: true },
+    { href: `/${slug}/dashboard/workstations`, icon: LayoutGrid,   label: 'Estaciones',      feature: 'workstations',     adminOnly: true },
+    { href: `/${slug}/dashboard/retail`,       icon: ShoppingBag,  label: 'Punto de Venta', feature: 'retail_sales',     adminOnly: true },
+    { href: `/${slug}/dashboard/inventory`,    icon: Archive,      label: 'Inventario',      feature: 'inventory',        adminOnly: true },
+    { href: `/${slug}/dashboard/audit`,        icon: Shield,       label: 'Auditoría',       feature: 'audit_logs',       adminOnly: true },
+    { href: `/${slug}/dashboard/fixed-assets`, icon: Package,      label: 'Activos Fijos',  feature: 'fixed_assets',     adminOnly: true },
+    { href: `/${slug}/dashboard/accounting`,   icon: BookOpen,     label: 'Contabilidad',   feature: 'advanced_reports', adminOnly: true },
+    { href: `/${slug}/dashboard/reports`,      icon: BarChart2,    label: 'Reportes',        feature: null,               adminOnly: true },
+    { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración',   feature: null,               adminOnly: true },
   ]
 
-  return all.filter((link) => link.feature === null || features[link.feature] === true)
+  return all.filter(
+    (link) =>
+      (link.feature === null || features[link.feature] === true)
+  )
 }
 
 export function DashboardSidebar({
@@ -62,7 +67,10 @@ export function DashboardSidebar({
   const pathname = usePathname()
   const dateTime = useDateTime()
   const features = useFeatures()
-  const links    = buildLinks(slug, features)
+  const isAdmin  = useIsAdmin()
+  const links    = buildLinks(slug, features).filter(
+    (link) => !link.adminOnly || isAdmin
+  )
 
   return (
     <SidebarContext.Provider value={{ isCollapsed, setIsCollapsed }}>

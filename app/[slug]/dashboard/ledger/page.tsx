@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getStaffBalances } from '@/actions/ledger'
 import { LedgerManager } from '@/components/dashboard/ledger/LedgerManager'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures, Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Billetera del Staff — Xinuco',
@@ -25,14 +25,19 @@ export default async function LedgerPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // 2. Obtener business_id desde el perfil autenticado
+  // 2. Obtener perfil: business_id + role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_id')
+    .select('role, business_id')
     .eq('id', user.id)
-    .single()
+    .single<Pick<Profile, 'role' | 'business_id'>>()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const businessId = profile.business_id
 
@@ -41,7 +46,7 @@ export default async function LedgerPage({
     .from('businesses')
     .select('features_enabled')
     .eq('slug', slug)
-    .single()
+    .single<{ features_enabled: unknown }>()
   const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
   if (!features?.staff_ledger) redirect(`/${slug}/dashboard`)
 

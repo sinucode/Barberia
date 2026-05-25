@@ -108,9 +108,9 @@ export default async function SettingsPage({
   const [{ data: profile }, { data: biz }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('full_name, business_id')
+      .select('full_name, role, business_id')
       .eq('id', user.id)
-      .single<Pick<Profile, 'full_name' | 'business_id'>>(),
+      .single<Pick<Profile, 'full_name' | 'role' | 'business_id'>>(),
     supabase
       .from('businesses')
       .select('id, name, slug, features_enabled, branding')
@@ -119,6 +119,11 @@ export default async function SettingsPage({
   ])
 
   if (!profile?.business_id || !biz) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const features    = (biz.features_enabled ?? {}) as unknown as BusinessFeatures
   const currentPlan = detectCurrentPlan(features)

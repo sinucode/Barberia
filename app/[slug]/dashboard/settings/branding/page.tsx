@@ -27,9 +27,9 @@ export default async function BrandingPage({
   const [{ data: profile }, { data: biz }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('business_id')
+      .select('role, business_id')
       .eq('id', user.id)
-      .single<Pick<Profile, 'business_id'>>(),
+      .single<Pick<Profile, 'role' | 'business_id'>>(),
     supabase
       .from('businesses')
       .select('id, name, slug, branding')
@@ -41,6 +41,11 @@ export default async function BrandingPage({
 
   // Security: ensure the authenticated user belongs to the requested business
   if (profile.business_id !== biz.id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl mx-auto pb-24">

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getFixedAssets, getAssetPortfolioSummary } from '@/actions/fixed-assets'
 import { FixedAssetsManager } from '@/components/dashboard/fixed-assets/FixedAssetsManager'
 import { FeatureGate } from '@/components/dashboard/FeatureGate'
+import type { Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Activos Fijos — Xinuco',
@@ -27,14 +28,19 @@ export default async function FixedAssetsPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // 2. Obtener business_id desde el perfil
+  // 2. Obtener perfil: business_id + role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_id')
+    .select('role, business_id')
     .eq('id', user.id)
-    .single()
+    .single<Pick<Profile, 'role' | 'business_id'>>()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const businessId = profile.business_id
 

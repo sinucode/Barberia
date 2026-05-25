@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ReportsManager } from '@/components/dashboard/reports/ReportsManager'
-import type { Business } from '@/types/database'
+import type { Business, Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Reportes — Xinuco',
@@ -93,14 +93,19 @@ export default async function ReportsPage({
   } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // 2. Obtener business
+  // 2. Obtener perfil: business_id + role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_id')
+    .select('role, business_id')
     .eq('id', user.id)
-    .single()
+    .single<Pick<Profile, 'role' | 'business_id'>>()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const businessId = profile.business_id
 

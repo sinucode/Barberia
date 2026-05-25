@@ -1,18 +1,17 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { BusinessFeatureManager } from '@/components/super-admin/BusinessFeatureManager'
-import type { BusinessFeatures } from '@/types/database'
+import { listBusinessUsers } from '@/actions/super-admin'
+import { UserManager } from '@/components/super-admin/UserManager'
 
 interface PageProps {
   params: Promise<{ businessId: string }>
 }
 
 /**
- * super-admin/businesses/[businessId]/page.tsx — Server Component
- * Shows the feature matrix for a specific business.
- * Renders <BusinessFeatureManager> client component.
+ * super-admin/businesses/[businessId]/users/page.tsx — Server Component
+ * Shows the user management panel for a specific business.
  */
-export default async function BusinessFeaturePage({ params }: PageProps) {
+export default async function BusinessUsersPage({ params }: PageProps) {
   const { businessId } = await params
   const supabase = await createClient()
 
@@ -21,13 +20,13 @@ export default async function BusinessFeaturePage({ params }: PageProps) {
 
   const { data: biz, error } = await supabase
     .from('businesses')
-    .select('id, name, slug, features_enabled')
+    .select('id, name, slug')
     .eq('id', businessId)
     .single()
 
   if (error || !biz) redirect('/super-admin/businesses')
 
-  const features = (biz.features_enabled ?? {}) as unknown as BusinessFeatures
+  const { data: users } = await listBusinessUsers(businessId)
 
   return (
     <div className="flex flex-col gap-6">
@@ -35,12 +34,18 @@ export default async function BusinessFeaturePage({ params }: PageProps) {
       <div className="flex items-center gap-2 text-sm" style={{ color: 'rgba(244,244,244,0.45)' }}>
         <a href="/super-admin/businesses" style={{ color: '#C5A059' }}>Negocios</a>
         <span>/</span>
-        <span>{biz.name}</span>
+        <a href={`/super-admin/businesses/${businessId}`} style={{ color: '#C5A059' }}>
+          {biz.name}
+        </a>
+        <span>/</span>
+        <span>Usuarios</span>
       </div>
 
       {/* Page header */}
       <div>
-        <h1 className="text-xl font-bold" style={{ color: '#F4F4F4' }}>{biz.name}</h1>
+        <h1 className="text-xl font-bold" style={{ color: '#F4F4F4' }}>
+          {biz.name} — Usuarios
+        </h1>
         <p className="text-sm mt-0.5" style={{ color: 'rgba(244,244,244,0.45)' }}>/{biz.slug}</p>
       </div>
 
@@ -52,24 +57,24 @@ export default async function BusinessFeaturePage({ params }: PageProps) {
         <a
           href={`/super-admin/businesses/${businessId}`}
           className="px-4 py-2 rounded-lg text-sm font-medium"
-          style={{ background: 'rgba(197,160,89,0.1)', color: '#C5A059' }}
+          style={{ color: 'rgba(244,244,244,0.45)' }}
         >
           Features
         </a>
         <a
           href={`/super-admin/businesses/${businessId}/users`}
           className="px-4 py-2 rounded-lg text-sm font-medium"
-          style={{ color: 'rgba(244,244,244,0.45)' }}
+          style={{ background: 'rgba(197,160,89,0.1)', color: '#C5A059' }}
         >
           Usuarios
         </a>
       </div>
 
-      {/* Feature manager (client component) */}
-      <BusinessFeatureManager
+      {/* User manager (client component) */}
+      <UserManager
         businessId={biz.id}
-        businessName={biz.name}
-        initialFeatures={features}
+        slug={biz.slug}
+        users={users ?? []}
       />
     </div>
   )

@@ -2,8 +2,10 @@
 // RF18 — Configuración de Notificaciones por Correo + Panel Cron
 
 import type { Metadata } from 'next'
-import { notFound }       from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { getBusinessBySlug }  from '@/actions/businesses'
+import type { Profile } from '@/types/database'
 import { getNotificationLog } from '@/actions/notifications'
 import { CronPanel }          from '@/components/dashboard/settings/CronPanel'
 import type { BusinessFeatures } from '@/types/database'
@@ -92,6 +94,22 @@ export default async function NotificationsSettingsPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+
+  // Auth guard
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, business_id')
+    .eq('id', user.id)
+    .single<Pick<Profile, 'role' | 'business_id'>>()
+
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   const business = await getBusinessBySlug(slug)
   if (!business) notFound()

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getWorkstations } from '@/actions/workstations'
 import { WorkstationManager } from '@/components/dashboard/workstations/WorkstationManager'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures, Profile } from '@/types/database'
 
 export const metadata: Metadata = {
   title: 'Estaciones — Xinuco',
@@ -19,21 +19,26 @@ export default async function WorkstationsPage({ params }: { params: Promise<{ s
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // 2. Obtener business_id desde el perfil del usuario autenticado
+  // 2. Obtener perfil: business_id + role
   const { data: profile } = await supabase
     .from('profiles')
-    .select('business_id')
+    .select('role, business_id')
     .eq('id', user.id)
-    .single()
+    .single<Pick<Profile, 'role' | 'business_id'>>()
 
   if (!profile?.business_id) redirect(`/${slug}/login`)
+
+  // Role guard: solo admin puede acceder
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'super_admin')) {
+    redirect(`/${slug}/dashboard`)
+  }
 
   // Feature gate: check workstations flag server-side
   const { data: biz } = await supabase
     .from('businesses')
     .select('features_enabled')
     .eq('slug', slug)
-    .single()
+    .single<{ features_enabled: unknown }>()
   const features = (biz?.features_enabled ?? {}) as unknown as BusinessFeatures
   if (!features?.workstations) redirect(`/${slug}/dashboard`)
 
