@@ -10,16 +10,17 @@ import Link from 'next/link'
 export default async function SuperAdminLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient()
 
+  // ── Auth guard — verifica sesión activa ──────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/adminbarberia/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single()
+  // ── Role guard — usa app_metadata (solo escritura del servidor) ──────────
+  // Los super_admin no tienen fila en profiles (no pertenecen a un tenant).
+  // Por eso verificamos el rol en app_metadata del JWT, no en la tabla profiles.
+  const role      = user.app_metadata?.role as string | undefined
+  const fullName  = (user.user_metadata?.full_name ?? user.email ?? 'Super Admin') as string
 
-  if (!profile || profile.role !== 'super_admin') redirect('/adminbarberia/login')
+  if (role !== 'super_admin') redirect('/adminbarberia/login')
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#080808', color: '#F4F4F4' }}>
@@ -58,7 +59,7 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
           </nav>
 
           <span className="text-xs" style={{ color: 'rgba(244,244,244,0.35)' }}>
-            {profile.full_name}
+            {fullName}
           </span>
         </div>
       </header>
