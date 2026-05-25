@@ -49,6 +49,10 @@ export interface BusinessFeatures {
   // ── Compliance / Admin ───────────────────────────────────────────
   audit_logs:              boolean  // RF19 - Logs de auditoría inmutables
   fixed_assets:            boolean  // RF21 - Activos fijos (próximo)
+  // ── MercadoPago (RF-MP) ──────────────────────────────────────────
+  mercadopago_pos?:        boolean  // POS en local: generar QR/link en dashboard
+  mercadopago_booking?:    boolean  // Pago online al reservar cita (BookingWizard)
+  mercadopago_saas?:       boolean  // Suscripción SaaS cobrada via MP
   // ── Legacy ───────────────────────────────────────────────────────
   inventory:               boolean
   advanced_reports:        boolean
@@ -136,11 +140,11 @@ export interface CustomerTag {
 }
 
 // ---------- Tabla: appointments ----------
-export type AppointmentStatus = 'scheduled' | 'in_progress' | 'ready_to_pay' | 'completed' | 'cancelled' | 'no_show';
+export type AppointmentStatus = 'payment_pending' | 'scheduled' | 'in_progress' | 'ready_to_pay' | 'completed' | 'cancelled' | 'no_show';
 export type ShiftStatus = 'open' | 'closed';
 export type SaleStatus = 'pending' | 'paid' | 'voided';
 export type ItemType = 'service' | 'product';
-export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'loyalty_points' | 'mixed';
+export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'loyalty_points' | 'mixed' | 'mercadopago';
 
 export interface Appointment {
   id:            string

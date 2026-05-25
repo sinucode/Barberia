@@ -31,6 +31,17 @@ export const FEATURE_CATALOG: Record<keyof BusinessFeatures, FeatureMeta> = {
   fixed_assets:           { label: 'Activos Fijos',          description: 'Inventario y depreciación de equipos',                   icon: 'Package',    category: 'compliance' },
   inventory:              { label: 'Inventario',             description: 'Control de stock de productos',                         icon: 'Archive',    category: 'operaciones' },
   advanced_reports:       { label: 'Reportes Avanzados',     description: 'Reportes financieros y de rendimiento',                 icon: 'BarChart2',  category: 'finanzas' },
+  mercadopago_pos:        { label: 'MP — POS',               description: 'Cobro con MercadoPago en caja presencial',              icon: 'QrCode',     category: 'finanzas' },
+  mercadopago_booking:    { label: 'MP — Reservas Online',   description: 'Pago anticipado con MercadoPago al reservar cita',     icon: 'CreditCard', category: 'finanzas' },
+  mercadopago_saas:       { label: 'MP — Suscripción SaaS',  description: 'Cobro del plan Xinuco vía MercadoPago PreApproval',    icon: 'Repeat',     category: 'finanzas' },
+}
+
+// ── Precios SaaS en COP (enteros, pagos mensuales vía MP PreApproval) ─────────
+
+export const PLAN_PRICES_COP: Record<'basico' | 'pro' | 'premium', number> = {
+  basico:  0,        // Gratis
+  pro:     99_000,   // ~$24 USD
+  premium: 199_000,  // ~$48 USD
 }
 
 // ── Bundles de plan predefinidos ──────────────────────────────────────────────
@@ -64,6 +75,9 @@ export const PLAN_BUNDLES: Record<PlanName, PlanBundle> = {
       fixed_assets:           false,
       inventory:              false,
       advanced_reports:       false,
+      mercadopago_pos:        false,
+      mercadopago_booking:    false,
+      mercadopago_saas:       false,
     },
   },
   pro: {
@@ -85,6 +99,9 @@ export const PLAN_BUNDLES: Record<PlanName, PlanBundle> = {
       fixed_assets:           false,
       inventory:              false,
       advanced_reports:       true,
+      mercadopago_pos:        true,
+      mercadopago_booking:    true,
+      mercadopago_saas:       false,
     },
   },
   premium: {
@@ -106,6 +123,9 @@ export const PLAN_BUNDLES: Record<PlanName, PlanBundle> = {
       fixed_assets:           true,
       inventory:              true,
       advanced_reports:       true,
+      mercadopago_pos:        true,
+      mercadopago_booking:    true,
+      mercadopago_saas:       true,
     },
   },
 }

@@ -3,11 +3,12 @@
 import { useReducer, useTransition, useState, useMemo, useEffect } from 'react'
 import {
   Check, ChevronLeft, AlertCircle, Loader2,
-  Calendar, Clock, Scissors, User, Sparkles, Phone,
+  Calendar, Clock, Scissors, User, Sparkles, Phone, QrCode,
 } from 'lucide-react'
 import type { Service, Staff } from '@/types/database'
 import { createBooking } from '@/actions/bookings'
 import { getAvailableSlotsAction } from '@/actions/staff'
+import { BookingPaymentStep } from '@/components/booking/BookingPaymentStep'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // ESTADO CENTRALIZADO (useReducer)
@@ -115,17 +116,20 @@ function getUpcomingDates(count: number, offsetDays: number = 0): { dateStr: str
 // ════════════════════════════════════════════════════════════════════════════════
 
 interface BookingWizardProps {
-  businessId: string
-  services: Service[]
-  staff: Staff[]
+  businessId:       string
+  services:         Service[]
+  staff:            Staff[]
+  mpBookingEnabled?: boolean
 }
 
-export function BookingWizard({ businessId, services, staff }: BookingWizardProps) {
+export function BookingWizard({ businessId, services, staff, mpBookingEnabled = false }: BookingWizardProps) {
   const [state, dispatch] = useReducer(wizardReducer, initialState)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [weekOffset, setWeekOffset] = useState(0)
+  // 'form' = mostrar formulario normal | 'mp_payment' = mostrar paso de pago MP
+  const [paymentStep, setPaymentStep] = useState<'form' | 'mp_payment'>('form')
 
   useEffect(() => {
     // Breve timeout para mostrar el esqueleto (Zero-Flicker UX effect)
@@ -210,6 +214,13 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
         setError('Error inesperado de red. Intenta de nuevo.')
       }
     })
+  }
+
+  // ── Iniciar flujo de pago online con MP ──────────────────────────────────
+  function handlePayWithMP() {
+    if (!state.userData.name.trim() || !state.userData.phone.trim()) return
+    setError(null)
+    setPaymentStep('mp_payment')
   }
 
   // ── Pantalla de confirmación exitosa ──────────────────────────────────────
@@ -527,98 +538,148 @@ export function BookingWizard({ businessId, services, staff }: BookingWizardProp
       </StepAccordion>
 
       {/* ────────────────────────────────────────────────────────────────────
-          PASO 4: Tus Datos
+          PASO 4: Tus Datos (+ Pago si MP está habilitado)
           ──────────────────────────────────────────────────────────────────── */}
       <StepAccordion
         step={4}
         currentStep={state.currentStep}
         title="Tus Datos"
         icon={<Phone size={14} />}
-        onGoBack={() => dispatch({ type: 'GOTO_STEP', payload: 4 })}
+        onGoBack={() => { setPaymentStep('form'); dispatch({ type: 'GOTO_STEP', payload: 4 }) }}
       >
-        <div className="flex flex-col gap-4 px-1 pb-2">
-          {/* Resumen de la cita */}
-          <div
-            className="flex flex-col gap-2 p-4 rounded-2xl text-xs"
-            style={{
-              background: 'color-mix(in srgb, var(--primary-color) 6%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)',
-            }}
-          >
-            <div className="flex justify-between">
-              <span className="text-xinuco-muted">Servicio</span>
-              <span className="font-semibold text-xinuco-text">{selectedService?.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xinuco-muted">Profesional</span>
-              <span className="font-semibold text-xinuco-text">{selectedStaff?.full_name || 'Cualquiera'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xinuco-muted">Fecha</span>
-              <span className="font-semibold text-xinuco-text">{state.date}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xinuco-muted">Hora</span>
-              <span className="font-semibold" style={{ color: 'var(--primary-color)' }}>{state.time}</span>
-            </div>
-            {selectedService && (
-              <div className="flex justify-between pt-1 mt-1" style={{ borderTop: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)' }}>
-                <span className="text-xinuco-muted">Total</span>
-                <span className="font-bold" style={{ color: 'var(--primary-color)' }}>{formatCOP(selectedService.price_cop)}</span>
+        {/* ── Sub-paso: pago online con MercadoPago ─────────────────────── */}
+        {paymentStep === 'mp_payment' && state.serviceId && state.date && state.time ? (
+          <div className="px-1 pb-2 animate-fade-in">
+            <BookingPaymentStep
+              businessId={businessId}
+              serviceId={state.serviceId}
+              serviceName={selectedService?.name ?? ''}
+              servicePriceCop={selectedService?.price_cop ?? 0}
+              staffId={state.staffId === 'any' ? null : state.staffId}
+              startTime={`${state.date}T${state.time}:00`}
+              userData={state.userData}
+              onPaymentApproved={() => dispatch({ type: 'CONFIRMED' })}
+              onBack={() => setPaymentStep('form')}
+            />
+          </div>
+        ) : (
+          /* ── Sub-paso: formulario de datos ─────────────────────────────── */
+          <div className="flex flex-col gap-4 px-1 pb-2">
+            {/* Resumen de la cita */}
+            <div
+              className="flex flex-col gap-2 p-4 rounded-2xl text-xs"
+              style={{
+                background: 'color-mix(in srgb, var(--primary-color) 6%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)',
+              }}
+            >
+              <div className="flex justify-between">
+                <span className="text-xinuco-muted">Servicio</span>
+                <span className="font-semibold text-xinuco-text">{selectedService?.name}</span>
               </div>
-            )}
-          </div>
+              <div className="flex justify-between">
+                <span className="text-xinuco-muted">Profesional</span>
+                <span className="font-semibold text-xinuco-text">{selectedStaff?.full_name || 'Cualquiera'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xinuco-muted">Fecha</span>
+                <span className="font-semibold text-xinuco-text">{state.date}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xinuco-muted">Hora</span>
+                <span className="font-semibold" style={{ color: 'var(--primary-color)' }}>{state.time}</span>
+              </div>
+              {selectedService && (
+                <div className="flex justify-between pt-1 mt-1" style={{ borderTop: '1px solid color-mix(in srgb, var(--primary-color) 15%, transparent)' }}>
+                  <span className="text-xinuco-muted">Total</span>
+                  <span className="font-bold" style={{ color: 'var(--primary-color)' }}>{formatCOP(selectedService.price_cop)}</span>
+                </div>
+              )}
+            </div>
 
-          {/* Formulario */}
-          <div className="flex flex-col gap-3">
-            <input
-              type="text"
-              placeholder="Tu nombre completo"
-              value={state.userData.name}
-              onChange={(e) => dispatch({ type: 'SET_USER_NAME', payload: e.target.value })}
-              className="input-base !py-4 !text-base"
-              autoComplete="name"
-            />
-            <input
-              type="tel"
-              placeholder="WhatsApp (ej: 300 123 4567)"
-              value={state.userData.phone}
-              onChange={(e) => dispatch({ type: 'SET_USER_PHONE', payload: e.target.value })}
-              className="input-base !py-4 !text-base"
-              inputMode="tel"
-              autoComplete="tel"
-            />
-            <input
-              type="email"
-              placeholder="Correo electrónico (Opcional)"
-              value={state.userData.email || ''}
-              onChange={(e) => dispatch({ type: 'SET_USER_EMAIL', payload: e.target.value })}
-              className="input-base !py-4 !text-base"
-              autoComplete="email"
-            />
-          </div>
+            {/* Formulario */}
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Tu nombre completo"
+                value={state.userData.name}
+                onChange={(e) => dispatch({ type: 'SET_USER_NAME', payload: e.target.value })}
+                className="input-base !py-4 !text-base"
+                autoComplete="name"
+              />
+              <input
+                type="tel"
+                placeholder="WhatsApp (ej: 300 123 4567)"
+                value={state.userData.phone}
+                onChange={(e) => dispatch({ type: 'SET_USER_PHONE', payload: e.target.value })}
+                className="input-base !py-4 !text-base"
+                inputMode="tel"
+                autoComplete="tel"
+              />
+              <input
+                type="email"
+                placeholder="Correo electrónico (Opcional)"
+                value={state.userData.email || ''}
+                onChange={(e) => dispatch({ type: 'SET_USER_EMAIL', payload: e.target.value })}
+                className="input-base !py-4 !text-base"
+                autoComplete="email"
+              />
+            </div>
 
-          {/* Botón Confirmar */}
-          <button
-            onClick={handleConfirm}
-            disabled={isPending || !state.userData.name.trim() || !state.userData.phone.trim()}
-            className="w-full py-4 rounded-2xl font-bold text-lg flex justify-center items-center gap-2.5 transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mt-2"
-            style={{
-              background: 'var(--primary-color)',
-              color: 'var(--bg-color)',
-              boxShadow: '0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent)',
-            }}
-          >
-            {isPending ? (
-              <>
-                <Loader2 size={20} className="animate-spin" />
-                Reservando…
-              </>
+            {/* ── CTAs de pago ──────────────────────────────────────────── */}
+            {mpBookingEnabled ? (
+              /* Dos opciones: pagar online o reservar y pagar en local */
+              <div className="flex flex-col gap-2.5 mt-2">
+                {/* Pagar ahora con MercadoPago */}
+                <button
+                  onClick={handlePayWithMP}
+                  disabled={!state.userData.name.trim() || !state.userData.phone.trim()}
+                  className="w-full py-4 rounded-2xl font-bold text-base flex justify-center items-center gap-2.5 transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    background: 'var(--primary-color)',
+                    color: 'var(--bg-color, #080808)',
+                    boxShadow: '0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent)',
+                  }}
+                >
+                  <QrCode size={20} />
+                  Pagar con MercadoPago
+                </button>
+
+                {/* Reservar y pagar en local */}
+                <button
+                  onClick={handleConfirm}
+                  disabled={isPending || !state.userData.name.trim() || !state.userData.phone.trim()}
+                  className="w-full py-3.5 rounded-2xl font-semibold text-sm flex justify-center items-center gap-2 transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed border"
+                  style={{ borderColor: 'var(--border-color)', color: 'var(--xinuco-text)' }}
+                >
+                  {isPending ? (
+                    <><Loader2 size={16} className="animate-spin" /> Reservando…</>
+                  ) : (
+                    'Reservar y pagar en local'
+                  )}
+                </button>
+              </div>
             ) : (
-              'Confirmar Reserva'
+              /* Solo opción de pagar en local (MP desactivado) */
+              <button
+                onClick={handleConfirm}
+                disabled={isPending || !state.userData.name.trim() || !state.userData.phone.trim()}
+                className="w-full py-4 rounded-2xl font-bold text-lg flex justify-center items-center gap-2.5 transition-all duration-200 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed mt-2"
+                style={{
+                  background: 'var(--primary-color)',
+                  color: 'var(--bg-color)',
+                  boxShadow: '0 0 30px color-mix(in srgb, var(--primary-color) 30%, transparent)',
+                }}
+              >
+                {isPending ? (
+                  <><Loader2 size={20} className="animate-spin" /> Reservando…</>
+                ) : (
+                  'Confirmar Reserva'
+                )}
+              </button>
             )}
-          </button>
-        </div>
+          </div>
+        )}
       </StepAccordion>
     </div>
   )

@@ -15,13 +15,17 @@ export default async function BookPage({ params }: BookPageProps) {
   // Fetch de control para inyectar la metadata y asegurar existencia del negocio
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, name')
+    .select('id, name, features_enabled')
     .eq('slug', slug)
     .single<Business>()
 
   if (!business) {
     notFound()
   }
+
+  // Leer feature flag de MP para booking online
+  const mpBookingEnabled =
+    (business.features_enabled as Record<string, boolean> | null)?.mercadopago_booking === true
 
   // Fetch de los servicios y el staff para el BookingWizard
   const [servicesRes, staffRes] = await Promise.all([
@@ -60,7 +64,12 @@ export default async function BookPage({ params }: BookPageProps) {
       <div className="w-full flex-1 flex flex-col">
         <Suspense fallback={<div className="h-96 w-full max-w-xl mx-auto border rounded-2xl animate-pulse" style={{ borderColor: 'var(--border-color)', background: 'var(--surface-color, rgba(255,255,255,0.02))' }} />}>
           {/* Instanciación del Wizard de Reservas del Cliente */}
-          <BookingWizard businessId={business.id} services={services} staff={staff} />
+          <BookingWizard
+            businessId={business.id}
+            services={services}
+            staff={staff}
+            mpBookingEnabled={mpBookingEnabled}
+          />
         </Suspense>
       </div>
     </main>

@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Plus, Trash, CreditCard, Banknote, Landmark, X, Loader2, DollarSign, Percent } from 'lucide-react'
+import { Plus, Trash, CreditCard, Banknote, Landmark, X, Loader2, DollarSign, Percent, QrCode } from 'lucide-react'
 import { checkoutAppointment, type CheckoutItemInput } from '@/actions/finance'
 import type { PaymentMethod } from '@/types/database'
+import { MPPaymentPanel } from '@/components/pos/MPPaymentPanel'
 
 interface CheckoutModalProps {
   appointment: {
@@ -309,13 +310,10 @@ export function CheckoutModal({
             <h3 className="text-xs font-bold uppercase tracking-wider text-xinuco-muted mb-2">
               Método de Pago
             </h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setPaymentMethod('cash')
-                  setValidationError(null)
-                }}
+                onClick={() => { setPaymentMethod('cash'); setValidationError(null) }}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-1.5
                   ${paymentMethod === 'cash'
                     ? 'border-[var(--primary-color)] bg-[var(--primary-color)]/[0.08] text-[var(--primary-color)]'
@@ -327,11 +325,7 @@ export function CheckoutModal({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setPaymentMethod('card')
-                  setValidationError(null)
-                  setReceivedAmount('')
-                }}
+                onClick={() => { setPaymentMethod('card'); setValidationError(null); setReceivedAmount('') }}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-1.5
                   ${paymentMethod === 'card'
                     ? 'border-[var(--primary-color)] bg-[var(--primary-color)]/[0.08] text-[var(--primary-color)]'
@@ -343,11 +337,7 @@ export function CheckoutModal({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setPaymentMethod('transfer')
-                  setValidationError(null)
-                  setReceivedAmount('')
-                }}
+                onClick={() => { setPaymentMethod('transfer'); setValidationError(null); setReceivedAmount('') }}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-1.5
                   ${paymentMethod === 'transfer'
                     ? 'border-[var(--primary-color)] bg-[var(--primary-color)]/[0.08] text-[var(--primary-color)]'
@@ -357,8 +347,60 @@ export function CheckoutModal({
                 <Landmark size={20} />
                 <span className="text-xs font-semibold">Transf.</span>
               </button>
+              <button
+                type="button"
+                onClick={() => { setPaymentMethod('mercadopago'); setValidationError(null); setReceivedAmount('') }}
+                className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-1.5
+                  ${paymentMethod === 'mercadopago'
+                    ? 'border-[var(--primary-color)] bg-[var(--primary-color)]/[0.08] text-[var(--primary-color)]'
+                    : 'border-zinc-900 bg-zinc-900/30 text-zinc-400 hover:text-zinc-200 hover:border-zinc-800'
+                  }`}
+              >
+                <QrCode size={20} />
+                <span className="text-xs font-semibold">MercadoPago</span>
+              </button>
             </div>
           </div>
+
+          {/* Panel MercadoPago — QR + fee preview + polling */}
+          {paymentMethod === 'mercadopago' && (
+            <div className="animate-fade-in">
+              <MPPaymentPanel
+                businessId={businessId}
+                appointmentId={appointment.id}
+                items={items.map((item) => ({
+                  title:         item.description,
+                  quantity:      item.quantity,
+                  unit_price_cop: item.unitPrice,
+                }))}
+                totalAmount={totalAmount}
+                externalRef={`appt_${appointment.id}`}
+                payerEmail={undefined}
+                onPaymentApproved={(_mpDbId) => {
+                  // Pago confirmado por MP → ejecutar checkout con paymentMethod mercadopago
+                  startTransition(async () => {
+                    const result = await checkoutAppointment({
+                      appointmentId: appointment.id,
+                      businessId,
+                      shiftId:       activeShiftId,
+                      paymentMethod: 'mercadopago',
+                      receivedAmount: totalAmount,
+                      tipAmount:     finalTip,
+                      discountAmount: finalDiscount,
+                      items,
+                    })
+                    if (result.error) {
+                      setValidationError(result.message || 'Error al finalizar el cobro.')
+                      setPaymentMethod(null)
+                    } else {
+                      onSuccess()
+                    }
+                  })
+                }}
+                onCancel={() => setPaymentMethod(null)}
+              />
+            </div>
+          )}
 
           {/* Monto Recibido y Cambio para Efectivo */}
           {paymentMethod === 'cash' && (
@@ -424,22 +466,24 @@ export function CheckoutModal({
             </div>
           </div>
 
-          <button
-            onClick={handleConfirmCheckout}
-            disabled={isPending}
-            className="btn-primary w-full flex items-center justify-center gap-2 h-11 text-sm font-bold shrink-0"
-          >
-            {isPending ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Procesando cobro...
-              </>
-            ) : (
-              <>
-                Confirmar Cobro
-              </>
-            )}
-          </button>
+          {paymentMethod !== 'mercadopago' && (
+            <button
+              onClick={handleConfirmCheckout}
+              disabled={isPending}
+              className="btn-primary w-full flex items-center justify-center gap-2 h-11 text-sm font-bold shrink-0"
+            >
+              {isPending ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Procesando cobro...
+                </>
+              ) : (
+                <>
+                  Confirmar Cobro
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

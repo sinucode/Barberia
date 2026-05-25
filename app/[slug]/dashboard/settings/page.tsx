@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Clock, Bell, Palette, Users, ChevronRight, type LucideIcon } from 'lucide-react'
+import { Clock, Bell, Palette, Users, CreditCard, ChevronRight, type LucideIcon } from 'lucide-react'
 import { detectCurrentPlan, PLAN_BUNDLES } from '@/lib/features/config'
 import type { Business, BusinessFeatures, Profile } from '@/types/database'
 
@@ -150,6 +150,12 @@ export default async function SettingsPage({
       description: 'Gestiona barberos y servicios',
       href:        '../staff',
       icon:        Users,
+    },
+    {
+      label:       'Facturación',
+      description: 'Plan Xinuco y suscripción MercadoPago',
+      href:        './billing',
+      icon:        CreditCard,
     },
   ]
 
