@@ -11,7 +11,7 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  if (!user) redirect('/adminbarberia/login')
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -19,7 +19,7 @@ export default async function SuperAdminLayout({ children }: { children: ReactNo
     .eq('id', user.id)
     .single()
 
-  if (!profile || profile.role !== 'super_admin') redirect('/')
+  if (!profile || profile.role !== 'super_admin') redirect('/adminbarberia/login')
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#080808', color: '#F4F4F4' }}>
