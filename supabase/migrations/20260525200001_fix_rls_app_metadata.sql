@@ -86,12 +86,12 @@ CREATE POLICY "tenant can manage appointments"
   WITH CHECK (business_id::TEXT = (auth.jwt() -> 'app_metadata' ->> 'business_id'));
 
 -- ══════════════════════════════════════════════════════════════════════════════
--- 7. shifts
+-- 7. cash_register_shifts  (was named "shifts" in error — correct table name)
 -- ══════════════════════════════════════════════════════════════════════════════
-DROP POLICY IF EXISTS "tenant can manage shifts" ON public.shifts;
+DROP POLICY IF EXISTS "tenant can manage shifts" ON public.cash_register_shifts;
 
 CREATE POLICY "tenant can manage shifts"
-  ON public.shifts FOR ALL
+  ON public.cash_register_shifts FOR ALL
   USING      (business_id::TEXT = (auth.jwt() -> 'app_metadata' ->> 'business_id'))
   WITH CHECK (business_id::TEXT = (auth.jwt() -> 'app_metadata' ->> 'business_id'));
 
