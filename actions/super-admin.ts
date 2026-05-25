@@ -16,6 +16,11 @@ export interface ActionResult {
 }
 
 // ── Auth guard helper ─────────────────────────────────────────────────────────
+//
+// [SEC] Usa app_metadata.role del JWT — NO la tabla profiles.
+// Los super_admin no tienen fila en profiles (no son tenant-specific).
+// app_metadata solo es escribible por el service role (servidor) — nunca
+// puede ser manipulado por el cliente. Es la fuente de verdad para roles.
 
 async function requireSuperAdmin() {
   const supabase = await createClient()
@@ -23,13 +28,7 @@ async function requireSuperAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado.', supabase: null, user: null }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || profile.role !== 'super_admin') {
+  if (user.app_metadata?.role !== 'super_admin') {
     return { error: 'Acceso denegado. Se requiere rol super_admin.', supabase: null, user: null }
   }
 
