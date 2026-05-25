@@ -114,12 +114,15 @@ export async function listBusinessUsers(businessId: string): Promise<{
   data: Array<{ id: string; full_name: string; role: string; created_at: string; email?: string }> | null
   error: string | null
 }> {
-  const { error: authError, supabase } = await requireSuperAdmin()
-  if (authError || !supabase) return { data: null, error: authError ?? 'Error' }
+  const { error: authError } = await requireSuperAdmin()
+  if (authError) return { data: null, error: authError }
 
+  // Usar adminClient (service role) para bypasear RLS —
+  // el super_admin no tiene business_id en su JWT, por lo que
+  // el cliente normal devuelve 0 filas silenciosamente.
   const adminClient = await createAdminClient()
 
-  const { data: profiles, error: profilesError } = await supabase
+  const { data: profiles, error: profilesError } = await adminClient
     .from('profiles')
     .select('id, full_name, role, created_at')
     .eq('business_id', businessId)
