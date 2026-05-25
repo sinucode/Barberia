@@ -1,0 +1,21 @@
+-- ============================================================
+-- 20260525200003_accounting_journal_security_invoker.sql
+--
+-- [SEC] Fix WARNING: View public.accounting_journal is defined with
+-- the SECURITY DEFINER property.
+--
+-- ROOT CAUSE:
+--   By default, Postgres evaluates RLS policies using the VIEW OWNER's
+--   permissions (postgres / service_role), which effectively bypasses
+--   row-level security. Any authenticated user could query the view
+--   and receive rows belonging to other tenants.
+--
+-- FIX:
+--   Set security_invoker = true so that RLS is evaluated using the
+--   JWT claims of the QUERYING USER. The business_id policies on
+--   sales, expenses, and staff_ledger will then filter automatically.
+--
+-- Supported on PostgreSQL 15+ (Supabase default).
+-- ============================================================
+
+ALTER VIEW public.accounting_journal SET (security_invoker = on);
