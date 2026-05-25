@@ -12,7 +12,9 @@ export default async function SuperAdminBusinessesPage() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/')
+  if (!user) redirect('/adminbarberia/login')
+
+  if (user.app_metadata?.role !== 'super_admin') redirect('/adminbarberia/login')
 
   const { data: businesses, error } = await supabase
     .from('businesses')
