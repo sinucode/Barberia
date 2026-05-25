@@ -84,6 +84,17 @@ export async function createMPPreference(
 ): Promise<{ data: MPPreferenceResponse } | { error: string }> {
   const { businessId, appointmentId, items, payerEmail, externalRef } = params
 
+  // ── [SEC H-4] Verificar autenticación y que businessId pertenece al usuario ──
+  const supabaseAuth = await createClient()
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) return { error: 'No autenticado.' }
+
+  const jwtBusinessId = user.app_metadata?.business_id as string | undefined
+  if (!jwtBusinessId || jwtBusinessId !== businessId) {
+    console.error(`[MP createPreference] SEGURIDAD: businessId del cliente (${businessId}) no coincide con JWT (${jwtBusinessId ?? 'none'}). user_id: ${user.id}`)
+    return { error: 'Acceso denegado.' }
+  }
+
   // ── Validar que MP está configurado ────────────────────────────────────────
   if (!process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN === 'APP_USR-...') {
     return { error: 'MercadoPago no está configurado. Agrega MP_ACCESS_TOKEN en las variables de entorno.' }
@@ -244,6 +255,17 @@ export async function createMPSaaSSubscription(params: {
 }): Promise<{ init_point: string; preapproval_id: string } | { error: string }> {
   const { businessId, planId, payerEmail, slug } = params
 
+  // ── [SEC H-4] Verificar autenticación y ownership del businessId ──────────
+  const supabaseAuth = await createClient()
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) return { error: 'No autenticado.' }
+
+  const jwtBusinessId = user.app_metadata?.business_id as string | undefined
+  if (!jwtBusinessId || jwtBusinessId !== businessId) {
+    console.error(`[MP createSaaSSubscription] SEGURIDAD: businessId del cliente (${businessId}) no coincide con JWT (${jwtBusinessId ?? 'none'}). user_id: ${user.id}`)
+    return { error: 'Acceso denegado.' }
+  }
+
   if (planId === 'basico') {
     return { error: 'El plan Básico es gratuito — no requiere suscripción.' }
   }
@@ -354,11 +376,22 @@ export async function getMPSubscriptionStatus(businessId: string): Promise<{
 export async function cancelMPSaaSSubscription(
   businessId: string,
 ): Promise<{ success: true } | { error: string }> {
+  // ── [SEC H-4 / L-2] Verificar auth y extraer businessId desde el JWT ──────
+  // No se confía en el businessId recibido del cliente — se valida contra
+  // app_metadata.business_id del JWT del usuario autenticado.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado.' }
+
+  const jwtBusinessId = user.app_metadata?.business_id as string | undefined
+  if (!jwtBusinessId || jwtBusinessId !== businessId) {
+    console.error(`[MP cancelSubscription] SEGURIDAD: businessId del cliente (${businessId}) no coincide con JWT (${jwtBusinessId ?? 'none'}). user_id: ${user.id}`)
+    return { error: 'Acceso denegado.' }
+  }
+
   if (!process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN === 'APP_USR-...') {
     return { error: 'MercadoPago no está configurado.' }
   }
-
-  const supabase = await createClient()
 
   // Obtener el preapproval_id guardado
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

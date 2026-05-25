@@ -63,6 +63,7 @@ CREATE OR REPLACE FUNCTION public.get_depreciation_schedule(
 RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public  -- [SEC M-3] Previene search_path injection
 AS $$
 DECLARE
   v_asset              RECORD;
@@ -164,6 +165,7 @@ CREATE OR REPLACE FUNCTION public.get_total_asset_value(
 RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public  -- [SEC M-3] Previene search_path injection
 AS $$
 DECLARE
   v_asset           RECORD;

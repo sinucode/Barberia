@@ -17,15 +17,13 @@ export interface ActionResult {
 export async function createTenant(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient()
 
-  // ── BARRERA DE SEGURIDAD RBAC (Zero-DB, Capa 1) ──────────────────────────
-  // Se valida identidad con doble clave: email gerencial O rol de sistema.
-  // Este chequeo ocurre en el servidor de Next.js, ANTES de cualquier query a BD.
+  // ── [SEC M-8] BARRERA DE SEGURIDAD RBAC — solo por rol, sin bypass de email ──
+  // app_metadata.role solo es escribible por el servidor via service role.
+  // Eliminar el bypass por email previene escalada de privilegios si esa
+  // cuenta es comprometida.
   const { data: { user } } = await supabase.auth.getUser()
-  if (
-    !user ||
-    (user.email !== 'gerencia@xinuco.com' && user.app_metadata?.role !== 'super_admin')
-  ) {
-    return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para crear inquilinos.' }
+  if (!user || user.app_metadata?.role !== 'super_admin') {
+    return { success: false, error: 'Acceso denegado. Se requieren privilegios de super_admin.' }
   }
 
   const name          = (formData.get('name')          as string).trim()
@@ -99,13 +97,10 @@ export async function toggleTenantStatus(
 ): Promise<ActionResult> {
   const supabase = await createClient()
 
-  // ── BARRERA DE SEGURIDAD RBAC (Zero-DB, doble clave) ─────────────────────
+  // ── [SEC M-8] Guard de rol — sin bypass de email ─────────────────────────
   const { data: { user } } = await supabase.auth.getUser()
-  if (
-    !user ||
-    (user.email !== 'gerencia@xinuco.com' && user.app_metadata?.role !== 'super_admin')
-  ) {
-    return { success: false, error: 'Acceso denegado. Se requieren privilegios de gerencia para modificar inquilinos.' }
+  if (!user || user.app_metadata?.role !== 'super_admin') {
+    return { success: false, error: 'Acceso denegado. Se requieren privilegios de super_admin.' }
   }
 
   const { error } = await supabase

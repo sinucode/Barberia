@@ -128,6 +128,7 @@ CREATE OR REPLACE FUNCTION public.record_inventory_movement(
 RETURNS JSON
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public  -- [SEC M-2] Previene search_path injection
 AS $$
 DECLARE
   v_item      RECORD;

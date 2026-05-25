@@ -4,14 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Users, CalendarDays, Scissors, Wallet, Settings, UserPlus, type LucideIcon } from 'lucide-react'
 import { useFeatures } from '@/lib/features/context'
+import { useIsAdmin } from '@/lib/features/role-context'
 import type { BusinessFeatures } from '@/types/database'
 
 interface NavItem {
-  id:      string
-  href:    string
-  icon:    LucideIcon
-  label:   string
-  feature: keyof BusinessFeatures | null  // null = always visible
+  id:        string
+  href:      string
+  icon:      LucideIcon
+  label:     string
+  feature:   keyof BusinessFeatures | null  // null = always visible
+  adminOnly: boolean
 }
 
 interface BottomNavProps {
@@ -23,23 +25,27 @@ interface BottomNavProps {
  *
  * Los ítems son alcanzables con el pulgar en pantallas de hasta 6.7".
  * Detecta la ruta activa con usePathname y aplica el color del tenant.
- * Solo muestra ítems cuya feature esté habilitada para el negocio.
+ * Solo muestra ítems cuya feature esté habilitada para el negocio
+ * y que el rol del usuario tenga permitido ver.
  */
 export function BottomNav({ slug }: BottomNavProps) {
   const pathname = usePathname()
   const features = useFeatures()
+  const isAdmin  = useIsAdmin()
 
   const allItems: NavItem[] = [
-    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',    feature: null },
-    { id: 'nav-walk-ins',     href: `/${slug}/dashboard/walk-ins`,     icon: UserPlus,     label: 'Walk-ins',  feature: 'walk_ins' },
-    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios', feature: null },
-    { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',    feature: 'staff_ledger' },
-    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',     feature: null },
-    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes',   feature: null },
+    { id: 'nav-appointments', href: `/${slug}/dashboard/appointments`, icon: CalendarDays, label: 'Agenda',    feature: null,             adminOnly: false },
+    { id: 'nav-walk-ins',     href: `/${slug}/dashboard/walk-ins`,     icon: UserPlus,     label: 'Walk-ins',  feature: 'walk_ins',       adminOnly: false },
+    { id: 'nav-services',     href: `/${slug}/dashboard/services`,     icon: Scissors,     label: 'Servicios', feature: null,             adminOnly: true  },
+    { id: 'nav-ledger',       href: `/${slug}/dashboard/ledger`,       icon: Wallet,       label: 'Ledger',    feature: 'staff_ledger',   adminOnly: true  },
+    { id: 'nav-staff',        href: `/${slug}/dashboard/staff`,        icon: Users,        label: 'Staff',     feature: null,             adminOnly: true  },
+    { id: 'nav-settings',     href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Ajustes',   feature: null,             adminOnly: true  },
   ]
 
   const navItems = allItems.filter(
-    (item) => item.feature === null || features[item.feature] === true
+    (item) =>
+      (item.feature === null || features[item.feature] === true) &&
+      (!item.adminOnly || isAdmin)
   )
 
   return (

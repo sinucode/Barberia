@@ -97,9 +97,14 @@ export async function getAvailableSlots(
 
 /**
  * updateAppointmentStatus — Actualiza el estado de una cita.
+ * [SEC H-3] Guarda de autenticación explícita antes de cualquier query.
  */
 export async function updateAppointmentStatus(appointmentId: string, status: AppointmentStatus) {
   const supabase = await createClient()
+
+  // ── [SEC H-3] Verificar sesión activa explícitamente ─────────────────────
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado.' }
 
   // Obtener el estado anterior y el business_id antes de actualizar
   const { data: existing } = await supabase
@@ -121,7 +126,7 @@ export async function updateAppointmentStatus(appointmentId: string, status: App
   // ── Audit log (nunca bloquea la operación principal) ─────────────────────────
   if (existing?.business_id) {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      // Reutilizar el user obtenido al inicio — no llamar auth.getUser() de nuevo
       const { data: profile } = user
         ? await supabase.from('profiles').select('full_name').eq('id', user.id).single()
         : { data: null }

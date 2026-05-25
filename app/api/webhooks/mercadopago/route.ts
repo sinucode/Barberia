@@ -2,18 +2,15 @@
 // ══════════════════════════════════════════════════════════════════════════════
 // Webhook handler de MercadoPago.
 //
-// MP envía notificaciones para eventos: payment.created, payment.updated.
-// Este handler:
-//  1. Verifica la firma HMAC-SHA256 (si MP_WEBHOOK_SECRET está configurado)
-//  2. Obtiene los detalles del pago via SDK de MP
-//  3. Actualiza el registro en `mp_payments` con el status y fee reales
+// MP envía notificaciones para eventos: payment.created, payment.updated,
+// preapproval (suscripciones SaaS).
 //
-// El UI hace polling a `getMPPaymentStatus` para detectar el approval.
-//
-// SEGURIDAD:
-//  - Usa servicio de Supabase (service role) — bypass RLS para actualizar
-//  - Valida firma antes de procesar cualquier dato
-//  - Guarda el payload completo en mp_payments.webhook_payload para auditoría
+// SEGURIDAD (fixes aplicados 2026-05-25):
+//  - MP_WEBHOOK_SECRET es OBLIGATORIO. El endpoint devuelve 500 al arrancar
+//    si la variable no está definida — nunca procesa sin firma verificada.
+//  - En handlePreapproval se cruza el preapprovalId con mp_subscriptions
+//    para evitar forgery via external_reference manipulado.
+//  - Usa service role de Supabase — bypass RLS solo en rutas verificadas.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -41,32 +38,39 @@ function mapMPMethod(typeId: string | undefined): MPPaymentMethod {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  // ── [SEC C-1] MP_WEBHOOK_SECRET es OBLIGATORIO ────────────────────────────
+  // Nunca se procesa un evento sin verificar la firma HMAC-SHA256.
+  // Si la variable no está configurada, el servicio responde 500 para que
+  // el operador lo detecte antes de llegar a producción.
+  const webhookSecret = process.env.MP_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    console.error('[MP webhook] CRÍTICO: MP_WEBHOOK_SECRET no está configurado. Endpoint deshabilitado.')
+    return NextResponse.json({ error: 'webhook_not_configured' }, { status: 500 })
+  }
+
   // ── 1. Leer body como texto para validación de firma ──────────────────────
   const body = await req.text()
 
-  // ── 2. Validar firma HMAC-SHA256 (si está configurado) ───────────────────
-  const webhookSecret = process.env.MP_WEBHOOK_SECRET
-  if (webhookSecret) {
-    try {
-      const xSignature = req.headers.get('x-signature') ?? ''
-      const xRequestId = req.headers.get('x-request-id') ?? ''
+  // ── 2. Validar firma HMAC-SHA256 (SIEMPRE requerida) ─────────────────────
+  try {
+    const xSignature = req.headers.get('x-signature') ?? ''
+    const xRequestId = req.headers.get('x-request-id') ?? ''
 
-      // El WebhookSignatureValidator de MP v3 requiere: signature, requestId, dataId
-      const payload = JSON.parse(body) as { data?: { id?: string } }
-      const dataId  = payload?.data?.id ?? ''
+    // El WebhookSignatureValidator de MP v3 requiere: signature, requestId, dataId
+    const payload = JSON.parse(body) as { data?: { id?: string } }
+    const dataId  = payload?.data?.id ?? ''
 
-      // validate() es estático en MP v3 — lanza InvalidWebhookSignatureError si falla
-      WebhookSignatureValidator.validate({
-        xSignature: xSignature,
-        xRequestId: xRequestId,
-        dataId,
-        secret:     webhookSecret,
-      })
-    } catch (err) {
-      // InvalidWebhookSignatureError o cualquier otro error de validación
-      console.warn('[MP webhook] Firma inválida:', err instanceof Error ? err.message : err)
-      return NextResponse.json({ error: 'invalid_signature' }, { status: 401 })
-    }
+    // validate() es estático en MP v3 — lanza InvalidWebhookSignatureError si falla
+    WebhookSignatureValidator.validate({
+      xSignature: xSignature,
+      xRequestId: xRequestId,
+      dataId,
+      secret:     webhookSecret,
+    })
+  } catch (err) {
+    // InvalidWebhookSignatureError o cualquier otro error de validación
+    console.warn('[MP webhook] Firma inválida — request rechazado:', err instanceof Error ? err.message : err)
+    return NextResponse.json({ error: 'invalid_signature' }, { status: 401 })
   }
 
   // ── 3. Parsear evento ─────────────────────────────────────────────────────
@@ -215,6 +219,33 @@ async function handlePreapproval(preapprovalId: string): Promise<NextResponse> {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { persistSession: false } },
     )
+
+    // ── [SEC C-2] Verificar ownership: el preapprovalId debe estar registrado
+    // en mp_subscriptions vinculado a este businessId.
+    // Esto previene que un atacante forje el external_reference con el UUID de
+    // otro negocio para subirle el plan sin pago real.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingSub } = await (supabase as any)
+      .from('mp_subscriptions')
+      .select('business_id, mp_subscription_id')
+      .eq('mp_subscription_id', preapprovalId)
+      .maybeSingle() as { data: { business_id: string; mp_subscription_id: string } | null }
+
+    if (!existingSub) {
+      // El preapproval no fue iniciado desde nuestra plataforma → ignorar
+      console.warn(`[MP webhook preapproval] preapprovalId ${preapprovalId} no encontrado en mp_subscriptions — ignorado`)
+      return NextResponse.json({ status: 'ignored', reason: 'unknown_preapproval' })
+    }
+
+    if (existingSub.business_id !== businessId) {
+      // Mismatch: el external_reference fue manipulado
+      console.error(
+        `[MP webhook preapproval] SEGURIDAD: businessId en external_reference (${businessId}) ` +
+        `no coincide con el business_id en mp_subscriptions (${existingSub.business_id}). ` +
+        `preapprovalId: ${preapprovalId} — request bloqueado.`
+      )
+      return NextResponse.json({ status: 'rejected', reason: 'ownership_mismatch' }, { status: 403 })
+    }
 
     // Calcular próxima fecha de cobro (next month)
     const nextBilling = new Date()

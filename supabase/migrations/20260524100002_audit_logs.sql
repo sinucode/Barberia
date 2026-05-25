@@ -58,6 +58,7 @@ CREATE OR REPLACE FUNCTION public.log_action(
 RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public  -- [SEC M-4] Previene search_path injection
 AS $$
 DECLARE
   v_id UUID;

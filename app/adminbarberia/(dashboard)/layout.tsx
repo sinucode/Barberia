@@ -10,15 +10,23 @@ interface AdminLayoutProps {
  * AdminLayout — Layout global del panel de administración SaaS.
  *
  * Sidebar lateral fijo + área de contenido.
- * Protección básica: verifica sesión activa.
- * TODO: verificar rol 'super-admin' cuando implementemos RBAC.
+ * [SEC H-1] Doble guarda: sesión activa + rol super_admin en app_metadata.
+ * app_metadata solo es escribible desde el servidor (service role) — no
+ * puede ser manipulado por el cliente.
  */
 export default async function AdminLayout({ children }: AdminLayoutProps) {
   const supabase = await createClient()
 
-  // Guard de sesión
+  // ── Guard de sesión ───────────────────────────────────────────────────────
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/adminbarberia/login')
+
+  // ── [SEC H-1] Guard de rol: solo super_admin puede acceder ───────────────
+  // Se lee de app_metadata (solo modificable por service role en servidor).
+  // Cualquier otro rol — incluyendo admin de tenant — es redirigido a login.
+  if (user.app_metadata?.role !== 'super_admin') {
+    redirect('/adminbarberia/login')
+  }
 
   return (
     <div className="flex min-h-screen bg-xinuco-bg">

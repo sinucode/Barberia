@@ -96,7 +96,9 @@ export async function updateSession(request: NextRequest) {
 
   if (isLoginRoute && user) {
     if (user.app_metadata?.role === 'super_admin') {
-      url.pathname = '/admin'
+      // [SEC L-1] Corregido: redirigir a /super-admin/businesses, no a /admin
+      // que es un slug reservado que crea un loop de redirect.
+      url.pathname = '/super-admin/businesses'
     } else {
       url.pathname = `/${slug}/dashboard`
     }
@@ -109,7 +111,8 @@ export async function updateSession(request: NextRequest) {
   if (user && isProtectedRoute) {
     // Si es super_admin, no tiene tenant. Lo mandamos a su panel global.
     if (user.app_metadata?.role === 'super_admin') {
-      url.pathname = '/admin'
+      // [SEC L-1] Corregido: redirigir a /super-admin/businesses
+      url.pathname = '/super-admin/businesses'
       return NextResponse.redirect(url)
     }
 
