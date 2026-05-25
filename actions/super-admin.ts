@@ -160,14 +160,20 @@ export async function createBusinessUser(params: {
   const adminClient = await createAdminClient()
 
   // Step 1: Create auth user
+  // [SEC] business_id and slug go in app_metadata (server-only, NOT editable by client).
+  //       full_name is display data only — user_metadata is fine for it.
+  //       NEVER put security-relevant claims in user_metadata (client can overwrite via
+  //       supabase.auth.updateUser({ data: { business_id: 'attacker-id' } })).
   const { data: createData, error: createError } = await adminClient.auth.admin.createUser({
     email: params.email,
     password: params.password,
     email_confirm: true,
-    user_metadata: {
-      full_name: params.fullName,
+    app_metadata: {
       business_id: params.businessId,
       slug: params.slug,
+    },
+    user_metadata: {
+      full_name: params.fullName,
     },
   })
 
