@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   Scissors,
   ArrowRight,
@@ -26,24 +27,20 @@ const BLUE  = '#1261FF'
 const NAVY  = '#0B132B'
 const NAVY2 = '#0D1635'
 
-// ─── Xinuco SVG Logo mark ─────────────────────────────────────────────────────
+// ─── Xinuco Logo mark (imagen real) ──────────────────────────────────────────
+// mix-blend-mode: screen hace que el fondo negro del PNG desaparezca
+// sobre cualquier fondo oscuro, mostrando solo el isotipo de color.
 function XinucoMark({ size = 56 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Top-left arc — cyan */}
-      <path
-        d="M 50 8 A 42 42 0 0 0 8 50"
-        stroke={CYAN} strokeWidth="9" strokeLinecap="round" fill="none"
-      />
-      {/* Bottom-right arc — blue */}
-      <path
-        d="M 50 92 A 42 42 0 0 0 92 50"
-        stroke={BLUE} strokeWidth="9" strokeLinecap="round" fill="none"
-      />
-      {/* X — white, two lines */}
-      <line x1="30" y1="28" x2="72" y2="72" stroke="white" strokeWidth="11" strokeLinecap="round"/>
-      <line x1="72" y1="28" x2="30" y2="72" stroke="white" strokeWidth="11" strokeLinecap="round"/>
-    </svg>
+    <Image
+      src="/xinuco-isotipo.png"
+      alt="Xinuco"
+      width={size}
+      height={size}
+      className="object-contain"
+      style={{ mixBlendMode: 'screen' }}
+      priority
+    />
   )
 }
 
@@ -191,8 +188,26 @@ function Hero() {
           Software de gestión para negocios LATAM
         </div>
 
-        {/* Logo */}
-        <XinucoMark size={88} />
+        {/* Logo — glow ring + imagen real */}
+        <div className="relative flex items-center justify-center">
+          {/* Glow aura detrás del logo */}
+          <div
+            className="absolute w-40 h-40 rounded-full blur-2xl opacity-40 pointer-events-none"
+            style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 50%, transparent 80%)` }}
+          />
+          {/* La imagen sobre fondo exacto del hero para eliminar el borde */}
+          <div style={{ background: NAVY, borderRadius: '50%', padding: 4 }}>
+            <Image
+              src="/xinuco-isotipo.png"
+              alt="Xinuco"
+              width={108}
+              height={108}
+              className="object-contain rounded-full"
+              style={{ mixBlendMode: 'screen' }}
+              priority
+            />
+          </div>
+        </div>
 
         {/* Wordmark */}
         <div>
@@ -628,16 +643,22 @@ function Nosotros() {
         {/* Right — visual */}
         <div className="flex justify-center">
           <div
-            className="w-72 h-72 rounded-3xl flex items-center justify-center relative"
+            className="w-72 h-72 rounded-3xl flex items-center justify-center relative overflow-hidden"
             style={{ background: `linear-gradient(145deg, ${NAVY2}, #0a0f1e)`, border: '1px solid rgba(255,255,255,0.08)' }}
           >
-            <XinucoMark size={140} />
-            {/* Orbiting dots */}
+            {/* Glow behind logo */}
             <div
-              className="absolute inset-0 rounded-3xl"
-              style={{
-                background: `radial-gradient(circle at 50% 50%, ${CYAN}12, transparent 70%)`,
-              }}
+              className="absolute inset-0"
+              style={{ background: `radial-gradient(circle at 50% 50%, ${CYAN}18, transparent 65%)` }}
+            />
+            <Image
+              src="/xinuco-isotipo.png"
+              alt="Xinuco"
+              width={200}
+              height={200}
+              className="object-contain relative z-10"
+              style={{ mixBlendMode: 'screen' }}
+              priority
             />
           </div>
         </div>
