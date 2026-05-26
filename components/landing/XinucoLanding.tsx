@@ -604,7 +604,7 @@ function Features() {
 // ─── Portal de Aliados ────────────────────────────────────────────────────────
 type BusinessItem = { id: string; name: string; slug: string; branding: { primary_color?: string } | null }
 
-function Aliados({ businesses }: { businesses: BusinessItem[] }) {
+function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
   const router = useRouter()
   const [mode, setMode]           = useState<'dashboard' | 'book'>('dashboard')
   const [selected, setSelected]   = useState<BusinessItem | null>(null)
@@ -949,7 +949,7 @@ function Footer() {
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────
-export default function XinucoLanding({ businesses }: { businesses: BusinessItem[] }) {
+export default function XinucoLanding({ businesses = [] }: { businesses: BusinessItem[] }) {
   return (
     <div className="antialiased" style={{ background: NAVY, color: 'white' }}>
       <Navbar />
