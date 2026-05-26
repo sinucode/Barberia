@@ -106,7 +106,7 @@ function XinucoMark({ size = 56 }: { size?: number }) {
 
   return (
     <Image
-      src="/xinuco-isotipo.png"
+      src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-isotipo.png"
       alt="Xinuco"
       width={size}
       height={size}
@@ -358,7 +358,7 @@ function Hero() {
               />
               {/* Splash image como pantalla */}
               <Image
-                src="/xinuco-splash.png"
+                src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-splash.png"
                 alt="Xinuco App"
                 fill
                 className="object-cover"
@@ -770,7 +770,7 @@ function Nosotros() {
               style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 55%, transparent 75%)` }}
             />
             <Image
-              src="/xinuco-app-icon.png"
+              src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-app-icon.png"
               alt="Xinuco App"
               width={260}
               height={260}
