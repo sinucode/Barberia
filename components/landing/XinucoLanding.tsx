@@ -27,20 +27,51 @@ const BLUE  = '#1261FF'
 const NAVY  = '#0B132B'
 const NAVY2 = '#0D1635'
 
-// ─── Xinuco Logo mark (imagen real) ──────────────────────────────────────────
-// mix-blend-mode: screen hace que el fondo negro del PNG desaparezca
-// sobre cualquier fondo oscuro, mostrando solo el isotipo de color.
+// ─── Xinuco SVG Isotipo — reconstruido geométricamente ──────────────────────
+// Dos arcos (cyan arriba-izquierda, azul abajo-derecha) + X blanca.
+// Usa compass angles 0°=12 o'clock. Gaps en 45° (1:30) y 225° (7:30).
+// Sin PNG, sin blend mode, sin fondos visibles.
 function XinucoMark({ size = 56 }: { size?: number }) {
+  // Gap points on the ring (r=38, center=50)
+  // 45°  → (77.9, 23.1)
+  // 225° → (22.1, 76.9)
+  const r  = 38
+  const cx = 50
+  const cy = 50
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const gx1 = cx + r * Math.sin(toRad(45))   // ~76.9
+  const gy1 = cy - r * Math.cos(toRad(45))   // ~23.1
+  const gx2 = cx + r * Math.sin(toRad(225))  // ~23.1
+  const gy2 = cy - r * Math.cos(toRad(225))  // ~76.9
+
   return (
-    <Image
-      src="/xinuco-isotipo.png"
-      alt="Xinuco"
+    <svg
       width={size}
       height={size}
-      className="object-contain"
-      style={{ mixBlendMode: 'screen' }}
-      priority
-    />
+      viewBox="0 0 100 100"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Cyan arc — top-left (counterclockwise from gap2 to gap1, large arc) */}
+      <path
+        d={`M ${gx2.toFixed(1)} ${gy2.toFixed(1)} A ${r} ${r} 0 1 0 ${gx1.toFixed(1)} ${gy1.toFixed(1)}`}
+        stroke={CYAN}
+        strokeWidth="8.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* Blue arc — bottom-right (clockwise from gap1 to gap2, large arc) */}
+      <path
+        d={`M ${gx1.toFixed(1)} ${gy1.toFixed(1)} A ${r} ${r} 0 1 1 ${gx2.toFixed(1)} ${gy2.toFixed(1)}`}
+        stroke={BLUE}
+        strokeWidth="8.5"
+        strokeLinecap="round"
+        fill="none"
+      />
+      {/* X — dos trazos blancos cruzados */}
+      <line x1="27" y1="27" x2="73" y2="73" stroke="white" strokeWidth="9.5" strokeLinecap="round"/>
+      <line x1="73" y1="27" x2="27" y2="73" stroke="white" strokeWidth="9.5" strokeLinecap="round"/>
+    </svg>
   )
 }
 
@@ -191,15 +222,25 @@ function Hero() {
             Software de gestión para negocios LATAM
           </div>
 
-          {/* Wordmark */}
-          <div>
+          {/* Logo: isotipo + wordmark + tagline — centrado como unidad */}
+          <div className="flex flex-col items-center md:items-center gap-3">
+            {/* Isotipo mark — SVG limpio, sin fondo */}
+            <div className="relative flex items-center justify-center" style={{ width: 100, height: 100 }}>
+              <div
+                className="absolute inset-0 rounded-full blur-2xl opacity-50 pointer-events-none scale-150"
+                style={{ background: `radial-gradient(circle, ${CYAN}70 0%, ${BLUE}50 55%, transparent 80%)` }}
+              />
+              <XinucoMark size={100} />
+            </div>
+            {/* Wordmark — todo blanco, sin N en color */}
             <h1
-              className="text-5xl lg:text-7xl font-bold tracking-tight text-white"
-              style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '-0.02em' }}
+              className="text-5xl lg:text-7xl font-bold tracking-tight text-white text-center"
+              style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '0.04em' }}
             >
-              Xi<span style={{ color: CYAN }}>N</span>UCO
+              XINUCO
             </h1>
-            <p className="mt-3 text-sm tracking-[0.35em] uppercase text-white/40">
+            {/* Tagline centrada junto al wordmark */}
+            <p className="text-xs tracking-[0.35em] uppercase text-white/45 text-center">
               Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
             </p>
           </div>
