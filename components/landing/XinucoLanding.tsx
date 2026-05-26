@@ -265,127 +265,76 @@ function Hero() {
         </svg>
       </div>
 
-      {/* Two-column layout */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
+      {/* ── Contenido centrado: logo → tagline → CTAs → stats ── */}
+      <div className="relative z-10 max-w-5xl mx-auto w-full flex flex-col items-center text-center gap-10">
 
-        {/* ── Columna izquierda: texto + CTAs ── */}
-        <div className="flex flex-col gap-7 text-center md:text-left">
-          {/* Badge */}
-          <div className="inline-flex md:inline-flex items-center justify-center md:justify-start gap-2 px-4 py-1.5 rounded-full text-xs font-medium border self-center md:self-start"
-            style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
-          >
-            <Sparkles size={12} />
-            Software de gestión para negocios LATAM
-          </div>
-
-          {/* Logo corporativo oficial */}
-          <div className="relative flex items-center justify-center md:justify-start self-center md:self-start">
-            {/* Aura de brillo detrás del logo */}
-            <div
-              className="absolute w-96 h-96 rounded-full blur-3xl opacity-25 pointer-events-none"
-              style={{ background: `radial-gradient(circle, ${CYAN}60 0%, ${BLUE}40 55%, transparent 80%)` }}
-            />
-            <Image
-              src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-logo-nobg.png"
-              alt="Xinuco — Tecnología · Inteligencia · Impacto"
-              width={300}
-              height={648}
-              className="relative z-10 drop-shadow-2xl"
-              style={{ width: '100%', maxWidth: 300, height: 'auto' }}
-              priority
-            />
-          </div>
-
-          {/* Tagline */}
-          <p className="text-lg text-white/60 leading-relaxed max-w-lg">
-            Transformamos negocios con software inteligente. Desde la primera cita
-            hasta el cierre de caja —{' '}
-            <GradientText>todo en un solo sistema.</GradientText>
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
-            <a
-              href="#aliados"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}40` }}
-            >
-              Portal de Aliados
-              <ArrowRight size={16} />
-            </a>
-            <a
-              href="#verticales"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
-            >
-              Ver verticales
-              <ChevronRight size={16} />
-            </a>
-          </div>
-
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center md:justify-start gap-8 pt-6 border-t border-white/10">
-            {[
-              { value: '1',    label: 'Vertical activa' },
-              { value: '∞',    label: 'Negocios posibles' },
-              { value: '100%', label: 'Cloud & seguro' },
-            ].map(s => (
-              <div key={s.label} className="text-center md:text-left">
-                <p className="text-2xl font-bold" style={{ color: CYAN }}>{s.value}</p>
-                <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+        {/* Badge */}
+        <div
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border"
+          style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
+        >
+          <Sparkles size={12} />
+          Software de gestión para negocios LATAM
         </div>
 
-        {/* ── Columna derecha: mockup de celular con splash ── */}
-        <div className="flex justify-center md:justify-end">
-          <div className="relative">
-            {/* Glow detrás del teléfono */}
-            <div
-              className="absolute inset-0 -m-8 rounded-full blur-3xl opacity-30 pointer-events-none"
-              style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 50%, transparent 75%)` }}
-            />
+        {/* Logo — imagen recortada, fondo transparente */}
+        <div className="relative flex items-center justify-center">
+          <div
+            className="absolute rounded-full blur-3xl opacity-30 pointer-events-none"
+            style={{
+              width: 520, height: 320,
+              background: `radial-gradient(ellipse, ${CYAN}70 0%, ${BLUE}50 50%, transparent 80%)`,
+            }}
+          />
+          <Image
+            src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-logo-nobg.png"
+            alt="Xinuco — Tecnología · Inteligencia · Impacto"
+            width={582}
+            height={400}
+            className="relative z-10 drop-shadow-2xl"
+            style={{ width: '100%', maxWidth: 580, height: 'auto' }}
+            priority
+          />
+        </div>
 
-            {/* Marco del teléfono */}
-            <div
-              className="relative rounded-[3rem] overflow-hidden shadow-2xl"
-              style={{
-                width: 260,
-                height: 540,
-                border: '6px solid rgba(255,255,255,0.12)',
-                boxShadow: `0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.04)`,
-              }}
-            >
-              {/* Notch */}
-              <div
-                className="absolute top-3 left-1/2 -translate-x-1/2 z-10 rounded-full"
-                style={{ width: 80, height: 20, background: '#000', opacity: 0.7 }}
-              />
-              {/* Splash image como pantalla */}
-              <Image
-                src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-splash.png"
-                alt="Xinuco App"
-                fill
-                sizes="260px"
-                className="object-cover"
-                priority
-              />
+        {/* Descripción */}
+        <p className="text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed -mt-2">
+          Transformamos negocios con software inteligente. Desde la primera cita
+          hasta el cierre de caja —{' '}
+          <GradientText>todo en un solo sistema.</GradientText>
+        </p>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <a
+            href="#aliados"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 40px ${CYAN}40` }}
+          >
+            Portal de Aliados
+            <ArrowRight size={16} />
+          </a>
+          <a
+            href="#verticales"
+            className="flex items-center gap-2 px-8 py-4 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+          >
+            Ver verticales
+            <ChevronRight size={16} />
+          </a>
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-wrap justify-center gap-12 pt-8 border-t border-white/10 w-full max-w-lg">
+          {[
+            { value: '1',    label: 'Vertical activa' },
+            { value: '∞',    label: 'Negocios posibles' },
+            { value: '100%', label: 'Cloud & seguro' },
+          ].map(s => (
+            <div key={s.label} className="text-center">
+              <p className="text-3xl font-bold" style={{ color: CYAN }}>{s.value}</p>
+              <p className="text-xs text-white/40 mt-1">{s.label}</p>
             </div>
-
-            {/* Botón lateral decorativo */}
-            <div
-              className="absolute top-20 -right-2 rounded-full"
-              style={{ width: 4, height: 48, background: 'rgba(255,255,255,0.15)' }}
-            />
-            <div
-              className="absolute top-36 -left-2 rounded-full"
-              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
-            />
-            <div
-              className="absolute top-44 -left-2 rounded-full"
-              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
-            />
-          </div>
+          ))}
         </div>
       </div>
 
