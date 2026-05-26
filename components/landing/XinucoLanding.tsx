@@ -22,10 +22,73 @@ import {
 } from 'lucide-react'
 
 // ─── Brand colors ────────────────────────────────────────────────────────────
-const CYAN  = '#00CFCF'
-const BLUE  = '#1261FF'
-const NAVY  = '#0B132B'
-const NAVY2 = '#0D1635'
+const CYAN     = '#00CFCF'
+const BLUE     = '#1261FF'
+const I_DOT    = '#0262E2'   // Color oficial del puntico de la 'i' del wordmark
+const NAVY     = '#0B132B'
+const NAVY2    = '#0D1635'
+
+// ─── Xinuco Wordmark — Sora SemiBold + puntico custom ────────────────────────
+// Renderiza "X[I]NUCO" con uppercase I sin punto, y un cuadradito de color
+// posicionado encima como el puntico oficial del logo.
+// `size` controla el font-size en px del wordmark.
+function XinucoWordmark({
+  size = 56,
+  className = '',
+  taglineSize,
+  showTagline = false,
+}: {
+  size?: number
+  className?: string
+  taglineSize?: number
+  showTagline?: boolean
+}) {
+  return (
+    <div className={`flex flex-col items-center gap-2 ${className}`}>
+      <div
+        className="text-white leading-none flex items-baseline justify-center"
+        style={{
+          fontFamily: 'var(--font-sora), Sora, sans-serif',
+          fontWeight: 600,
+          fontSize: `${size}px`,
+          letterSpacing: '0.05em',
+        }}
+      >
+        <span>X</span>
+        {/* "I" con puntico custom #0262E2 encima */}
+        <span style={{ position: 'relative', display: 'inline-block' }}>
+          I
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              bottom: '0.92em',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: '0.14em',
+              height: '0.14em',
+              background: I_DOT,
+              borderRadius: '0.02em',
+            }}
+          />
+        </span>
+        <span>NUCO</span>
+      </div>
+      {showTagline && (
+        <p
+          className="uppercase text-white/55"
+          style={{
+            fontFamily: 'var(--font-sora), Sora, sans-serif',
+            fontSize: `${taglineSize ?? Math.max(10, size * 0.16)}px`,
+            letterSpacing: '0.32em',
+          }}
+        >
+          Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
+        </p>
+      )}
+    </div>
+  )
+}
 
 // ─── Xinuco Mark — imagen oficial del isotipo ─────────────────────────────────
 // CSS mask radial: el centro (logo mark) es opaco, los bordes del PNG
@@ -82,9 +145,7 @@ function Navbar() {
       {/* Logo */}
       <a href="#hero" className="flex items-center gap-3">
         <XinucoMark size={36} />
-        <span className="text-white font-bold text-xl tracking-tight" style={{ fontFamily: 'Sora, sans-serif' }}>
-          x<span style={{ color: CYAN }}>i</span>NUCO
-        </span>
+        <XinucoWordmark size={20} />
       </a>
 
       {/* Desktop nav */}
@@ -198,28 +259,18 @@ function Hero() {
             Software de gestión para negocios LATAM
           </div>
 
-          {/* Logo: isotipo + wordmark + tagline — centrado como unidad */}
-          <div className="flex flex-col items-center md:items-center gap-3">
-            {/* Isotipo — imagen corporativa oficial */}
-            <div className="relative flex items-center justify-center" style={{ width: 130, height: 130 }}>
-              {/* Aura de brillo detrás */}
+          {/* Logo corporativo: isotipo + wordmark + tagline — unidad centrada */}
+          <div className="flex flex-col items-center gap-4">
+            {/* Isotipo — imagen oficial */}
+            <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
               <div
                 className="absolute inset-0 rounded-full blur-3xl opacity-45 pointer-events-none scale-125"
                 style={{ background: `radial-gradient(circle, ${CYAN}80 0%, ${BLUE}60 55%, transparent 80%)` }}
               />
-              <XinucoMark size={130} />
+              <XinucoMark size={120} />
             </div>
-            {/* Wordmark corporativo: x minúscula, i con punto, NUCO mayúscula */}
-            <h1
-              className="text-5xl lg:text-7xl font-bold tracking-tight text-white text-center"
-              style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '0.04em' }}
-            >
-              x<span style={{ color: CYAN }}>i</span>NUCO
-            </h1>
-            {/* Tagline centrada */}
-            <p className="text-xs tracking-[0.35em] uppercase text-white/45 text-center">
-              Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
-            </p>
+            {/* Wordmark "XINUCO" Sora SemiBold + tagline — alineados verticalmente */}
+            <XinucoWordmark size={68} showTagline />
           </div>
 
           {/* Tagline */}
@@ -726,8 +777,8 @@ function Footer() {
         <div className="flex items-center gap-3">
           <XinucoMark size={28} />
           <div>
-            <p className="text-white font-bold text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>x<span style={{ color: CYAN }}>i</span>NUCO</p>
-            <p className="text-white/30 text-xs">Tecnología · Inteligencia · Impacto</p>
+            <XinucoWordmark size={15} />
+            <p className="text-white/30 text-xs mt-1">Tecnología · Inteligencia · Impacto</p>
           </div>
         </div>
 
