@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -602,28 +602,54 @@ function Features() {
 }
 
 // ─── Portal de Aliados ────────────────────────────────────────────────────────
-function Aliados() {
-  const router = useRouter()
-  const [slug, setSlug]       = useState('')
-  const [mode, setMode]       = useState<'dashboard' | 'book'>('dashboard')
-  const [error, setError]     = useState('')
-  const inputRef              = useRef<HTMLInputElement>(null)
+type BusinessItem = { id: string; name: string; slug: string; branding: { primary_color?: string } | null }
 
-  function handleAccess(e: React.FormEvent) {
-    e.preventDefault()
-    const clean = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
-    if (!clean) {
-      setError('Ingresa el nombre de tu negocio.')
-      inputRef.current?.focus()
-      return
+function Aliados({ businesses }: { businesses: BusinessItem[] }) {
+  const router = useRouter()
+  const [mode, setMode]           = useState<'dashboard' | 'book'>('dashboard')
+  const [selected, setSelected]   = useState<BusinessItem | null>(null)
+  const [open, setOpen]           = useState(false)
+  const [search, setSearch]       = useState('')
+  const [error, setError]         = useState('')
+  const dropdownRef               = useRef<HTMLDivElement>(null)
+  const searchRef                 = useRef<HTMLInputElement>(null)
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    function onClickOut(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setSearch('')
+      }
     }
+    document.addEventListener('mousedown', onClickOut)
+    return () => document.removeEventListener('mousedown', onClickOut)
+  }, [])
+
+  // Focus en buscador al abrir
+  useEffect(() => {
+    if (open) setTimeout(() => searchRef.current?.focus(), 50)
+  }, [open])
+
+  const filtered = businesses.filter(b =>
+    b.name.toLowerCase().includes(search.toLowerCase()) ||
+    b.slug.toLowerCase().includes(search.toLowerCase())
+  )
+
+  function handleSelect(b: BusinessItem) {
+    setSelected(b)
+    setOpen(false)
+    setSearch('')
     setError('')
-    if (mode === 'dashboard') {
-      router.push(`/${clean}/login`)
-    } else {
-      router.push(`/${clean}/book`)
-    }
   }
+
+  function handleAccess() {
+    if (!selected) { setError('Selecciona tu negocio de la lista.'); return }
+    setError('')
+    router.push(mode === 'dashboard' ? `/${selected.slug}/login` : `/${selected.slug}/book`)
+  }
+
+  const dotColor = (b: BusinessItem) => b.branding?.primary_color ?? CYAN
 
   return (
     <section
@@ -631,18 +657,14 @@ function Aliados() {
       className="py-24 px-6 relative overflow-hidden"
       style={{ background: `linear-gradient(180deg, ${NAVY2} 0%, ${NAVY} 100%)` }}
     >
-      {/* Glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse 60% 50% at 50% 100%, ${BLUE}20, transparent)`,
-        }}
+      {/* Glow de fondo */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: `radial-gradient(ellipse 60% 50% at 50% 100%, ${BLUE}20, transparent)` }}
       />
 
       <div className="max-w-2xl mx-auto relative z-10 text-center">
-        {/* Header */}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8"
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8"
           style={{ background: `${BLUE}18`, border: `1px solid ${BLUE}40`, color: '#7EB3FF' }}
         >
           <Lock size={14} />
@@ -653,109 +675,183 @@ function Aliados() {
           Accede a tu <GradientText>negocio</GradientText>
         </h2>
         <p className="text-white/50 mb-12 text-lg">
-          Ingresa el nombre de tu barbería para acceder al panel de gestión
+          Selecciona tu negocio para acceder al panel de gestión
           o para que tus clientes agenden una cita.
         </p>
 
         {/* Card */}
-        <div
-          className="rounded-2xl p-8 text-left"
-          style={{
-            background: '#0D1635',
-            border: '1px solid rgba(255,255,255,0.08)',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
-          }}
+        <div className="rounded-2xl p-8 text-left"
+          style={{ background: '#0D1635', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}
         >
-          {/* Mode tabs */}
-          <div
-            className="flex rounded-lg p-1 mb-6"
-            style={{ background: 'rgba(255,255,255,0.04)' }}
-          >
+          {/* Tabs modo */}
+          <div className="flex rounded-lg p-1 mb-6" style={{ background: 'rgba(255,255,255,0.04)' }}>
             {[
               { key: 'dashboard', label: 'Panel de gestión', icon: <BarChart3 size={14} /> },
               { key: 'book',      label: 'Agendar cita',     icon: <Calendar size={14} /> },
             ].map(tab => (
-              <button
-                key={tab.key}
+              <button key={tab.key}
                 onClick={() => setMode(tab.key as 'dashboard' | 'book')}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-md transition-all"
-                style={
-                  mode === tab.key
-                    ? { background: `linear-gradient(135deg, ${CYAN}30, ${BLUE}30)`, color: 'white', border: `1px solid ${CYAN}40` }
-                    : { color: 'rgba(255,255,255,0.4)' }
-                }
+                style={mode === tab.key
+                  ? { background: `linear-gradient(135deg, ${CYAN}30, ${BLUE}30)`, color: 'white', border: `1px solid ${CYAN}40` }
+                  : { color: 'rgba(255,255,255,0.4)' }}
               >
-                {tab.icon}
-                {tab.label}
+                {tab.icon}{tab.label}
               </button>
             ))}
           </div>
 
-          {/* Input */}
-          <form onSubmit={handleAccess} className="flex flex-col gap-4">
+          {/* Dropdown selector */}
+          <div className="flex flex-col gap-4">
             <div>
               <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2 block">
-                Nombre de tu negocio
+                Selecciona tu negocio
               </label>
-              <div
-                className="flex items-center rounded-xl overflow-hidden transition-all focus-within:ring-2"
-                style={{
-                  background: '#111827',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  // @ts-expect-error -- CSS custom prop
-                  '--tw-ring-color': CYAN,
-                }}
-              >
-                <span className="pl-4 pr-1 text-white/25 text-sm select-none">xinuco.com/</span>
-                <input
-                  ref={inputRef}
-                  value={slug}
-                  onChange={e => { setSlug(e.target.value); setError('') }}
-                  placeholder="mi-barberia"
-                  className="flex-1 py-3.5 pr-4 bg-transparent text-white text-sm outline-none placeholder-white/20"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
+
+              <div ref={dropdownRef} className="relative">
+                {/* Trigger */}
+                <button
+                  type="button"
+                  onClick={() => setOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-sm text-left transition-all"
+                  style={{
+                    background: '#111827',
+                    border: `1px solid ${open ? CYAN + '60' : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: open ? `0 0 0 3px ${CYAN}15` : 'none',
+                  }}
+                >
+                  <span className="flex items-center gap-3">
+                    {selected ? (
+                      <>
+                        {/* Dot con color del negocio */}
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ background: dotColor(selected), boxShadow: `0 0 6px ${dotColor(selected)}80` }}
+                        />
+                        <span className="text-white font-medium">{selected.name}</span>
+                        <span className="text-white/30 text-xs">/{selected.slug}</span>
+                      </>
+                    ) : (
+                      <span className="text-white/30">— Elige tu negocio —</span>
+                    )}
+                  </span>
+                  <ChevronRight
+                    size={16}
+                    className="text-white/30 flex-shrink-0 transition-transform duration-200"
+                    style={{ transform: open ? 'rotate(90deg)' : 'rotate(0deg)' }}
+                  />
+                </button>
+
+                {/* Panel desplegable */}
+                {open && (
+                  <div
+                    className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50"
+                    style={{
+                      background: '#0a0f1e',
+                      border: '1px solid rgba(255,255,255,0.10)',
+                      boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px ${CYAN}15`,
+                    }}
+                  >
+                    {/* Buscador */}
+                    <div className="p-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/30 flex-shrink-0">
+                          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input
+                          ref={searchRef}
+                          value={search}
+                          onChange={e => setSearch(e.target.value)}
+                          placeholder="Buscar negocio..."
+                          className="flex-1 bg-transparent text-white text-sm outline-none placeholder-white/25"
+                        />
+                        {search && (
+                          <button onClick={() => setSearch('')} className="text-white/30 hover:text-white/60">
+                            <X size={12} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Lista */}
+                    <div className="max-h-56 overflow-y-auto">
+                      {filtered.length === 0 ? (
+                        <div className="px-4 py-6 text-center text-white/30 text-sm">
+                          {businesses.length === 0
+                            ? 'Aún no hay negocios registrados.'
+                            : 'No se encontró ningún negocio.'}
+                        </div>
+                      ) : (
+                        filtered.map((b, i) => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={() => handleSelect(b)}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all group"
+                            style={{
+                              borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                              background: selected?.id === b.id ? `${CYAN}10` : 'transparent',
+                            }}
+                            onMouseEnter={e => (e.currentTarget.style.background = `${CYAN}08`)}
+                            onMouseLeave={e => (e.currentTarget.style.background = selected?.id === b.id ? `${CYAN}10` : 'transparent')}
+                          >
+                            {/* Color dot */}
+                            <span
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all"
+                              style={{ background: dotColor(b), boxShadow: `0 0 8px ${dotColor(b)}60` }}
+                            />
+                            {/* Info */}
+                            <span className="flex-1 min-w-0">
+                              <span className="text-white text-sm font-medium block truncate">{b.name}</span>
+                              <span className="text-white/30 text-xs">xinuco.com/{b.slug}</span>
+                            </span>
+                            {/* Check si seleccionado */}
+                            {selected?.id === b.id && (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={CYAN} strokeWidth="2.5">
+                                <polyline points="20 6 9 17 4 12"/>
+                              </svg>
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Footer del panel */}
+                    <div className="px-4 py-2.5 border-t text-center" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                      <span className="text-[11px] text-white/20">
+                        {filtered.length} negocio{filtered.length !== 1 ? 's' : ''} disponible{filtered.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-              {error && (
-                <p className="text-xs text-red-400 mt-2">{error}</p>
-              )}
+
+              {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
             </div>
 
+            {/* Botón acción */}
             <button
-              type="submit"
-              className="w-full py-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}30` }}
+              type="button"
+              onClick={handleAccess}
+              disabled={!selected}
+              className="w-full py-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={selected
+                ? { background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}35` }
+                : { background: 'rgba(255,255,255,0.06)' }
+              }
             >
-              {mode === 'dashboard' ? (
-                <><BarChart3 size={16} /> Ir al panel de gestión</>
-              ) : (
-                <><Calendar size={16} /> Agendar mi cita</>
-              )}
+              {mode === 'dashboard'
+                ? <><BarChart3 size={16} /> Ir al panel de gestión</>
+                : <><Calendar size={16} /> Agendar mi cita</>}
             </button>
-          </form>
+          </div>
 
-          {/* Info */}
+          {/* Info contacto */}
           <p className="text-xs text-white/25 text-center mt-5">
-            ¿No tienes una cuenta? Contáctanos en{' '}
+            ¿Tu negocio no aparece? Escríbenos a{' '}
             <a href="mailto:hola@xinuco.com" className="underline" style={{ color: `${CYAN}90` }}>
               hola@xinuco.com
             </a>
           </p>
-        </div>
-
-        {/* Example slugs */}
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <span className="text-xs text-white/25">Ejemplo:</span>
-          {['classic-cuts', 'barberia-elite', 'la-navaja'].map(s => (
-            <button
-              key={s}
-              onClick={() => setSlug(s)}
-              className="text-xs px-3 py-1 rounded-full border border-white/10 text-white/30 hover:text-white/60 hover:border-white/20 transition-all"
-            >
-              {s}
-            </button>
-          ))}
         </div>
       </div>
     </section>
@@ -853,14 +949,14 @@ function Footer() {
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────
-export default function XinucoLanding() {
+export default function XinucoLanding({ businesses }: { businesses: BusinessItem[] }) {
   return (
     <div className="antialiased" style={{ background: NAVY, color: 'white' }}>
       <Navbar />
       <Hero />
       <Verticales />
       <Features />
-      <Aliados />
+      <Aliados businesses={businesses} />
       <Nosotros />
       <Footer />
     </div>
