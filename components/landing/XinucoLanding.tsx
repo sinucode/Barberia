@@ -266,125 +266,158 @@ function Hero() {
       </div>
 
       {/* Two-column layout */}
-      <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
+      <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-16 items-center">
 
-        {/* ── Columna izquierda: texto + CTAs ── */}
-        <div className="flex flex-col gap-7 text-center md:text-left">
+        {/* ══ Columna izquierda ══ */}
+        <div className="flex flex-col items-center gap-8 text-center">
+
           {/* Badge */}
-          <div className="inline-flex md:inline-flex items-center justify-center md:justify-start gap-2 px-4 py-1.5 rounded-full text-xs font-medium border self-center md:self-start"
-            style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border"
+            style={{ borderColor: `${CYAN}50`, background: `${CYAN}10`, color: CYAN }}
           >
-            <Sparkles size={12} />
+            <Sparkles size={11} />
             Software de gestión para negocios LATAM
           </div>
 
-          {/* Logo corporativo oficial */}
-          <div className="relative flex items-center justify-center md:justify-start self-center md:self-start">
-            {/* Aura de brillo detrás del logo */}
+          {/* Logo — ocupa todo el ancho de su columna */}
+          <div className="relative w-full flex justify-center">
+            {/* Halo de brillo */}
             <div
-              className="absolute w-96 h-96 rounded-full blur-3xl opacity-25 pointer-events-none"
-              style={{ background: `radial-gradient(circle, ${CYAN}60 0%, ${BLUE}40 55%, transparent 80%)` }}
+              className="absolute pointer-events-none"
+              style={{
+                width: '120%', height: '140%',
+                top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: `radial-gradient(ellipse at center, ${CYAN}35 0%, ${BLUE}20 45%, transparent 72%)`,
+                filter: 'blur(32px)',
+              }}
             />
             <Image
               src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-logo-nobg.png"
               alt="Xinuco — Tecnología · Inteligencia · Impacto"
-              width={440}
-              height={302}
-              className="relative z-10 drop-shadow-2xl"
-              style={{ width: '100%', maxWidth: 440, height: 'auto' }}
+              width={582}
+              height={400}
+              className="relative z-10 w-full h-auto"
+              style={{ filter: 'drop-shadow(0 0 24px rgba(0,207,207,0.25))' }}
               priority
             />
           </div>
 
-          {/* Tagline */}
-          <p className="text-lg text-white/60 leading-relaxed max-w-lg">
-            Transformamos negocios con software inteligente. Desde la primera cita
-            hasta el cierre de caja —{' '}
+          {/* Descripción */}
+          <p className="text-base md:text-lg text-white/55 leading-relaxed max-w-sm">
+            Desde la primera cita hasta el cierre de caja —{' '}
             <GradientText>todo en un solo sistema.</GradientText>
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <a
               href="#aliados"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}40` }}
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white w-full sm:w-auto transition-all hover:scale-105 active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
+                boxShadow: `0 0 32px ${CYAN}45, 0 4px 16px rgba(0,0,0,0.4)`,
+              }}
             >
-              Portal de Aliados
-              <ArrowRight size={16} />
+              Portal de Aliados <ArrowRight size={15} />
             </a>
             <a
               href="#verticales"
-              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white w-full sm:w-auto border border-white/10 hover:border-white/25 transition-all"
             >
-              Ver verticales
-              <ChevronRight size={16} />
+              Ver verticales <ChevronRight size={15} />
             </a>
           </div>
 
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center md:justify-start gap-8 pt-6 border-t border-white/10">
+          {/* Stats — fila horizontal con separadores */}
+          <div className="flex items-center gap-0 pt-4 border-t border-white/8 w-full justify-center">
             {[
               { value: '1',    label: 'Vertical activa' },
               { value: '∞',    label: 'Negocios posibles' },
               { value: '100%', label: 'Cloud & seguro' },
-            ].map(s => (
-              <div key={s.label} className="text-center md:text-left">
-                <p className="text-2xl font-bold" style={{ color: CYAN }}>{s.value}</p>
-                <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
+            ].map((s, i) => (
+              <div key={s.label} className="flex items-center">
+                {i > 0 && <div className="w-px h-8 bg-white/10 mx-6" />}
+                <div className="text-center">
+                  <p className="text-xl font-bold leading-none" style={{ color: CYAN }}>{s.value}</p>
+                  <p className="text-[10px] text-white/35 mt-1 uppercase tracking-wide">{s.label}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* ── Columna derecha: mockup de celular con splash ── */}
-        <div className="flex justify-center md:justify-end">
+        {/* ══ Columna derecha: celular ══ */}
+        <div className="flex justify-center items-center">
           <div className="relative">
-            {/* Glow detrás del teléfono */}
+            {/* Halo detrás del teléfono */}
             <div
-              className="absolute inset-0 -m-8 rounded-full blur-3xl opacity-30 pointer-events-none"
-              style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 50%, transparent 75%)` }}
+              className="absolute pointer-events-none"
+              style={{
+                width: 360, height: 500,
+                top: '50%', left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: `radial-gradient(ellipse at center, ${BLUE}55 0%, ${CYAN}30 40%, transparent 70%)`,
+                filter: 'blur(48px)',
+                opacity: 0.5,
+              }}
+            />
+
+            {/* Reflejo sutil en el suelo */}
+            <div
+              className="absolute -bottom-8 left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{
+                width: 200, height: 40,
+                background: `radial-gradient(ellipse, ${CYAN}40, transparent 70%)`,
+                filter: 'blur(16px)',
+              }}
             />
 
             {/* Marco del teléfono */}
             <div
-              className="relative rounded-[3rem] overflow-hidden shadow-2xl"
+              className="relative rounded-[2.8rem] overflow-hidden"
               style={{
-                width: 260,
-                height: 540,
-                border: '6px solid rgba(255,255,255,0.12)',
-                boxShadow: `0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.04)`,
+                width: 285,
+                height: 616,
+                background: '#080d1a',
+                border: '1.5px solid rgba(255,255,255,0.18)',
+                boxShadow: [
+                  '0 48px 96px rgba(0,0,0,0.7)',
+                  '0 0 0 1px rgba(255,255,255,0.06)',
+                  'inset 0 1px 0 rgba(255,255,255,0.12)',
+                  `0 0 60px ${BLUE}30`,
+                ].join(', '),
               }}
             >
-              {/* Notch */}
+              {/* Dynamic Island */}
               <div
-                className="absolute top-3 left-1/2 -translate-x-1/2 z-10 rounded-full"
-                style={{ width: 80, height: 20, background: '#000', opacity: 0.7 }}
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-full"
+                style={{ width: 96, height: 28, background: '#000' }}
               />
-              {/* Splash image como pantalla */}
+              {/* Pantalla — splash */}
               <Image
                 src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-splash.png"
                 alt="Xinuco App"
                 fill
-                sizes="260px"
+                sizes="285px"
                 className="object-cover"
                 priority
               />
+              {/* Brillo de pantalla (reflejo superior) */}
+              <div
+                className="absolute top-0 left-0 right-0 h-40 pointer-events-none z-10"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)',
+                  borderRadius: '2.8rem 2.8rem 0 0',
+                }}
+              />
             </div>
 
-            {/* Botón lateral decorativo */}
-            <div
-              className="absolute top-20 -right-2 rounded-full"
-              style={{ width: 4, height: 48, background: 'rgba(255,255,255,0.15)' }}
-            />
-            <div
-              className="absolute top-36 -left-2 rounded-full"
-              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
-            />
-            <div
-              className="absolute top-44 -left-2 rounded-full"
-              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
-            />
+            {/* Botones laterales */}
+            <div className="absolute top-24 -right-[3px] rounded-full" style={{ width: 3, height: 56, background: 'rgba(255,255,255,0.2)' }} />
+            <div className="absolute top-32 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
+            <div className="absolute top-44 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
           </div>
         </div>
       </div>
