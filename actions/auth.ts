@@ -58,9 +58,11 @@ export async function signUp(formData: FormData) {
  * mediante RPC para aislar el contexto Zero-DB.
  */
 export async function loginWithPassword(formData: FormData) {
-  const email    = formData.get('email')    as string
-  const password = formData.get('password') as string
-  const slug     = formData.get('slug')     as string
+  const email         = formData.get('email')         as string
+  const password      = formData.get('password')      as string
+  const slug          = formData.get('slug')          as string
+  // Token generado por hCaptcha en el cliente. Se omite en modo desarrollo.
+  const captchaToken  = (formData.get('captcha_token') as string | null) || undefined
 
   if (!email || !password || !slug) {
     return { error: 'Por favor ingresa tu correo y contraseña.' }
@@ -71,6 +73,7 @@ export async function loginWithPassword(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    options: captchaToken ? { captchaToken } : undefined,
   })
 
   if (error) {

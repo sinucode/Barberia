@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useEffect, useTransition, use, Suspense } from 'react'
+import { useState, useRef, useEffect, useTransition, use, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Scissors, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { loginWithPassword, logout as signOut, signInWithGoogle } from '@/actions/auth'
+
+const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? ''
 
 function LoginErrorAlert() {
   const searchParams = useSearchParams()
@@ -38,6 +41,10 @@ export default function LoginPage({ params }: LoginPageProps) {
   const [sessionState, setSessionState] = useState<SessionState>('loading')
   const [userSlug, setUserSlug]         = useState<string | null>(null)
 
+  // hCaptcha
+  const captchaRef                      = useRef<HCaptcha>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+
   useEffect(() => {
     async function checkSession() {
       const supabase = createClient()
@@ -70,9 +77,25 @@ export default function LoginPage({ params }: LoginPageProps) {
 
   async function handleSubmit(formData: FormData) {
     setError(null)
+
+    // En producción (SITE_KEY configurado) requerimos el token
+    if (HCAPTCHA_SITE_KEY && !captchaToken) {
+      setError('Por favor completa la verificación de seguridad.')
+      return
+    }
+
+    if (captchaToken) {
+      formData.set('captcha_token', captchaToken)
+    }
+
     startTransition(async () => {
       const result = await loginWithPassword(formData)
-      if (result?.error) setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+        // Resetear captcha para que el usuario deba resolver de nuevo
+        captchaRef.current?.resetCaptcha()
+        setCaptchaToken(null)
+      }
     })
   }
 
@@ -241,6 +264,19 @@ export default function LoginPage({ params }: LoginPageProps) {
                 </div>
               </div>
 
+              {/* hCaptcha — solo visible si SITE_KEY está configurado */}
+              {HCAPTCHA_SITE_KEY && (
+                <div className="flex justify-center">
+                  <HCaptcha
+                    ref={captchaRef}
+                    sitekey={HCAPTCHA_SITE_KEY}
+                    theme="dark"
+                    onVerify={(token) => setCaptchaToken(token)}
+                    onExpire={() => setCaptchaToken(null)}
+                  />
+                </div>
+              )}
+
               {/* Error */}
               {error && (
                 <p role="alert" className="text-xs text-red-400 text-center px-2 animate-fade-in">
@@ -251,7 +287,7 @@ export default function LoginPage({ params }: LoginPageProps) {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={isPending || isGooglePending}
+                disabled={isPending || isGooglePending || (!!HCAPTCHA_SITE_KEY && !captchaToken)}
                 id="btn-login"
                 className="btn-primary mt-2 !py-6"
               >

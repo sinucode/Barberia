@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useRef, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
 import { loginWithPassword } from '@/actions/auth'
+
+const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY ?? ''
 
 /**
  * AdminBarberiaLoginPage — Login dedicado del Super Admin (Vertical Barbería).
@@ -18,11 +21,31 @@ export default function AdminBarberiaLoginPage() {
   const [error, setError]               = useState<string | null>(null)
   const [isPending, startTransition]    = useTransition()
 
+  // hCaptcha
+  const captchaRef                      = useRef<HCaptcha>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+
   async function handleSubmit(formData: FormData) {
     setError(null)
+
+    // En producción (SITE_KEY configurado) requerimos el token
+    if (HCAPTCHA_SITE_KEY && !captchaToken) {
+      setError('Por favor completa la verificación de seguridad.')
+      return
+    }
+
+    if (captchaToken) {
+      formData.set('captcha_token', captchaToken)
+    }
+
     startTransition(async () => {
       const result = await loginWithPassword(formData)
-      if (result?.error) setError(result.error)
+      if (result?.error) {
+        setError(result.error)
+        // Resetear captcha para que el usuario deba resolver de nuevo
+        captchaRef.current?.resetCaptcha()
+        setCaptchaToken(null)
+      }
     })
   }
 
@@ -131,6 +154,19 @@ export default function AdminBarberiaLoginPage() {
               </div>
             </div>
 
+            {/* hCaptcha — solo visible si SITE_KEY está configurado */}
+            {HCAPTCHA_SITE_KEY && (
+              <div className="flex justify-center">
+                <HCaptcha
+                  ref={captchaRef}
+                  sitekey={HCAPTCHA_SITE_KEY}
+                  theme="dark"
+                  onVerify={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                />
+              </div>
+            )}
+
             {/* Error */}
             {error && (
               <p role="alert" className="text-xs text-red-400 text-center px-2 animate-fade-in">
@@ -141,7 +177,7 @@ export default function AdminBarberiaLoginPage() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={isPending}
+              disabled={isPending || (!!HCAPTCHA_SITE_KEY && !captchaToken)}
               id="btn-admin-login"
               className="w-full mt-2 py-3 rounded-lg text-sm font-semibold transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{ 
