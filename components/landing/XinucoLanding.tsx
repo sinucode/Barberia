@@ -44,7 +44,8 @@ function XinucoWordmark({
   showTagline?: boolean
 }) {
   return (
-    <div className={`flex flex-col items-center gap-2 ${className}`}>
+    <div className={`inline-flex flex-col items-stretch gap-2 ${className}`}>
+      {/* Wordmark — define el ancho del bloque */}
       <div
         className="text-white leading-none flex items-baseline justify-center"
         style={{
@@ -74,16 +75,21 @@ function XinucoWordmark({
         </span>
         <span>NUCO</span>
       </div>
+      {/* Tagline — width:100% del wordmark + justify para alinearlo de X a O */}
       {showTagline && (
         <p
-          className="uppercase text-white/55"
+          className="uppercase text-white/55 w-full"
           style={{
             fontFamily: 'var(--font-sora), Sora, sans-serif',
-            fontSize: `${taglineSize ?? Math.max(10, size * 0.16)}px`,
-            letterSpacing: '0.32em',
+            fontSize: `${taglineSize ?? Math.max(9, size * 0.15)}px`,
+            letterSpacing: '0.18em',
+            textAlign: 'justify',
+            textAlignLast: 'justify',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ...(({ '-moz-text-align-last': 'justify' } as any)),
           }}
         >
-          Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
+          Tecnología · Inteligencia · Impacto
         </p>
       )}
     </div>
