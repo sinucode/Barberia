@@ -27,51 +27,27 @@ const BLUE  = '#1261FF'
 const NAVY  = '#0B132B'
 const NAVY2 = '#0D1635'
 
-// ─── Xinuco SVG Isotipo — reconstruido geométricamente ──────────────────────
-// Dos arcos (cyan arriba-izquierda, azul abajo-derecha) + X blanca.
-// Usa compass angles 0°=12 o'clock. Gaps en 45° (1:30) y 225° (7:30).
-// Sin PNG, sin blend mode, sin fondos visibles.
+// ─── Xinuco Mark — imagen oficial del isotipo ─────────────────────────────────
+// CSS mask radial: el centro (logo mark) es opaco, los bordes del PNG
+// se disuelven suavemente → el fondo oscuro del PNG desaparece sin blending.
 function XinucoMark({ size = 56 }: { size?: number }) {
-  // Gap points on the ring (r=38, center=50)
-  // 45°  → (77.9, 23.1)
-  // 225° → (22.1, 76.9)
-  const r  = 38
-  const cx = 50
-  const cy = 50
-  const toRad = (deg: number) => (deg * Math.PI) / 180
-  const gx1 = cx + r * Math.sin(toRad(45))   // ~76.9
-  const gy1 = cy - r * Math.cos(toRad(45))   // ~23.1
-  const gx2 = cx + r * Math.sin(toRad(225))  // ~23.1
-  const gy2 = cy - r * Math.cos(toRad(225))  // ~76.9
+  // El isotipo ocupa ~75% del área del PNG; la máscara cubre ese radio
+  const fadeStart = Math.round(size * 0.44)  // inicio de fade (~44% del size)
+  const fadeEnd   = Math.round(size * 0.54)  // borde totalmente transparente
 
   return (
-    <svg
+    <Image
+      src="/xinuco-isotipo.png"
+      alt="Xinuco"
       width={size}
       height={size}
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Cyan arc — top-left (counterclockwise from gap2 to gap1, large arc) */}
-      <path
-        d={`M ${gx2.toFixed(1)} ${gy2.toFixed(1)} A ${r} ${r} 0 1 0 ${gx1.toFixed(1)} ${gy1.toFixed(1)}`}
-        stroke={CYAN}
-        strokeWidth="8.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* Blue arc — bottom-right (clockwise from gap1 to gap2, large arc) */}
-      <path
-        d={`M ${gx1.toFixed(1)} ${gy1.toFixed(1)} A ${r} ${r} 0 1 1 ${gx2.toFixed(1)} ${gy2.toFixed(1)}`}
-        stroke={BLUE}
-        strokeWidth="8.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      {/* X — dos trazos blancos cruzados */}
-      <line x1="27" y1="27" x2="73" y2="73" stroke="white" strokeWidth="9.5" strokeLinecap="round"/>
-      <line x1="73" y1="27" x2="27" y2="73" stroke="white" strokeWidth="9.5" strokeLinecap="round"/>
-    </svg>
+      className="object-contain"
+      style={{
+        maskImage: `radial-gradient(circle ${fadeStart}px at center, black 60%, transparent 100%)`,
+        WebkitMaskImage: `radial-gradient(circle ${fadeEnd}px at center, black 60%, transparent 100%)`,
+      }}
+      priority
+    />
   )
 }
 
@@ -107,7 +83,7 @@ function Navbar() {
       <a href="#hero" className="flex items-center gap-3">
         <XinucoMark size={36} />
         <span className="text-white font-bold text-xl tracking-tight" style={{ fontFamily: 'Sora, sans-serif' }}>
-          XiNUCO
+          x<span style={{ color: CYAN }}>i</span>NUCO
         </span>
       </a>
 
@@ -224,22 +200,23 @@ function Hero() {
 
           {/* Logo: isotipo + wordmark + tagline — centrado como unidad */}
           <div className="flex flex-col items-center md:items-center gap-3">
-            {/* Isotipo mark — SVG limpio, sin fondo */}
-            <div className="relative flex items-center justify-center" style={{ width: 100, height: 100 }}>
+            {/* Isotipo — imagen corporativa oficial */}
+            <div className="relative flex items-center justify-center" style={{ width: 130, height: 130 }}>
+              {/* Aura de brillo detrás */}
               <div
-                className="absolute inset-0 rounded-full blur-2xl opacity-50 pointer-events-none scale-150"
-                style={{ background: `radial-gradient(circle, ${CYAN}70 0%, ${BLUE}50 55%, transparent 80%)` }}
+                className="absolute inset-0 rounded-full blur-3xl opacity-45 pointer-events-none scale-125"
+                style={{ background: `radial-gradient(circle, ${CYAN}80 0%, ${BLUE}60 55%, transparent 80%)` }}
               />
-              <XinucoMark size={100} />
+              <XinucoMark size={130} />
             </div>
-            {/* Wordmark — todo blanco, sin N en color */}
+            {/* Wordmark corporativo: x minúscula, i con punto, NUCO mayúscula */}
             <h1
               className="text-5xl lg:text-7xl font-bold tracking-tight text-white text-center"
               style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '0.04em' }}
             >
-              XINUCO
+              x<span style={{ color: CYAN }}>i</span>NUCO
             </h1>
-            {/* Tagline centrada junto al wordmark */}
+            {/* Tagline centrada */}
             <p className="text-xs tracking-[0.35em] uppercase text-white/45 text-center">
               Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
             </p>
@@ -749,7 +726,7 @@ function Footer() {
         <div className="flex items-center gap-3">
           <XinucoMark size={28} />
           <div>
-            <p className="text-white font-bold text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>XiNUCO</p>
+            <p className="text-white font-bold text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>x<span style={{ color: CYAN }}>i</span>NUCO</p>
             <p className="text-white/30 text-xs">Tecnología · Inteligencia · Impacto</p>
           </div>
         </div>
