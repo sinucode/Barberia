@@ -1,0 +1,691 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Scissors,
+  ArrowRight,
+  Building2,
+  Zap,
+  Shield,
+  BarChart3,
+  Calendar,
+  Package,
+  ChevronRight,
+  Menu,
+  X,
+  Sparkles,
+  Users,
+  Globe,
+  Lock,
+} from 'lucide-react'
+
+// ─── Brand colors ────────────────────────────────────────────────────────────
+const CYAN  = '#00CFCF'
+const BLUE  = '#1261FF'
+const NAVY  = '#0B132B'
+const NAVY2 = '#0D1635'
+
+// ─── Xinuco SVG Logo mark ─────────────────────────────────────────────────────
+function XinucoMark({ size = 56 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Top-left arc — cyan */}
+      <path
+        d="M 50 8 A 42 42 0 0 0 8 50"
+        stroke={CYAN} strokeWidth="9" strokeLinecap="round" fill="none"
+      />
+      {/* Bottom-right arc — blue */}
+      <path
+        d="M 50 92 A 42 42 0 0 0 92 50"
+        stroke={BLUE} strokeWidth="9" strokeLinecap="round" fill="none"
+      />
+      {/* X — white, two lines */}
+      <line x1="30" y1="28" x2="72" y2="72" stroke="white" strokeWidth="11" strokeLinecap="round"/>
+      <line x1="72" y1="28" x2="30" y2="72" stroke="white" strokeWidth="11" strokeLinecap="round"/>
+    </svg>
+  )
+}
+
+// ─── Gradient text helper ─────────────────────────────────────────────────────
+function GradientText({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <span
+      className={className}
+      style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+    >
+      {children}
+    </span>
+  )
+}
+
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+function Navbar() {
+  const [open, setOpen] = useState(false)
+
+  const links = [
+    { label: 'Inicio',      href: '#hero' },
+    { label: 'Verticales',  href: '#verticales' },
+    { label: 'Aliados',     href: '#aliados' },
+    { label: 'Nosotros',    href: '#nosotros' },
+  ]
+
+  return (
+    <header
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
+      style={{ background: `${NAVY}cc`, backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+    >
+      {/* Logo */}
+      <a href="#hero" className="flex items-center gap-3">
+        <XinucoMark size={36} />
+        <span className="text-white font-bold text-xl tracking-tight" style={{ fontFamily: 'Sora, sans-serif' }}>
+          XiNUCO
+        </span>
+      </a>
+
+      {/* Desktop nav */}
+      <nav className="hidden md:flex items-center gap-8">
+        {links.map(l => (
+          <a
+            key={l.href}
+            href={l.href}
+            className="text-sm text-white/60 hover:text-white transition-colors"
+          >
+            {l.label}
+          </a>
+        ))}
+      </nav>
+
+      {/* CTA */}
+      <div className="hidden md:flex items-center gap-3">
+        <a
+          href="#aliados"
+          className="px-4 py-2 text-sm rounded-lg text-white/80 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+        >
+          Portal Aliados
+        </a>
+        <a
+          href="/adminbarberia/login"
+          className="px-4 py-2 text-sm rounded-lg font-semibold text-white transition-all"
+          style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})` }}
+        >
+          Admin
+        </a>
+      </div>
+
+      {/* Mobile hamburger */}
+      <button
+        className="md:hidden text-white"
+        onClick={() => setOpen(o => !o)}
+        aria-label="Menú"
+      >
+        {open ? <X size={22} /> : <Menu size={22} />}
+      </button>
+
+      {/* Mobile menu */}
+      {open && (
+        <div
+          className="absolute top-full left-0 right-0 py-4 px-6 flex flex-col gap-4 md:hidden"
+          style={{ background: NAVY2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          {links.map(l => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-white/80 text-sm py-1"
+              onClick={() => setOpen(false)}
+            >
+              {l.label}
+            </a>
+          ))}
+          <a
+            href="#aliados"
+            className="text-center py-2 rounded-lg text-sm font-semibold text-white"
+            style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})` }}
+            onClick={() => setOpen(false)}
+          >
+            Portal Aliados
+          </a>
+        </div>
+      )}
+    </header>
+  )
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function Hero() {
+  return (
+    <section
+      id="hero"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden"
+      style={{ background: NAVY }}
+    >
+      {/* Background glows */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-20 blur-3xl"
+          style={{ background: `radial-gradient(ellipse, ${CYAN}, transparent 70%)` }}
+        />
+        <div
+          className="absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full opacity-15 blur-3xl"
+          style={{ background: `radial-gradient(ellipse, ${BLUE}, transparent 70%)` }}
+        />
+        {/* Dot grid */}
+        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1.5" fill="white"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#dots)"/>
+        </svg>
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl mx-auto">
+        {/* Badge */}
+        <div
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border"
+          style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
+        >
+          <Sparkles size={12} />
+          Software de gestión para negocios LATAM
+        </div>
+
+        {/* Logo */}
+        <XinucoMark size={88} />
+
+        {/* Wordmark */}
+        <div>
+          <h1
+            className="text-6xl md:text-8xl font-bold tracking-tight text-white"
+            style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '-0.02em' }}
+          >
+            Xi<span style={{ color: CYAN }}>N</span>UCO
+          </h1>
+          <p className="mt-3 text-sm tracking-[0.35em] uppercase text-white/40">
+            Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
+          </p>
+        </div>
+
+        {/* Tagline */}
+        <p className="text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed">
+          Transformamos negocios con software inteligente. Desde la primera cita
+          hasta el cierre de caja — <GradientText>todo en un solo sistema.</GradientText>
+        </p>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
+          <a
+            href="#aliados"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}40` }}
+          >
+            Portal de Aliados
+            <ArrowRight size={16} />
+          </a>
+          <a
+            href="#verticales"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+          >
+            Ver verticales
+            <ChevronRight size={16} />
+          </a>
+        </div>
+
+        {/* Stats */}
+        <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-white/10 w-full max-w-lg">
+          {[
+            { value: '1',    label: 'Vertical activa' },
+            { value: '∞',    label: 'Negocios posibles' },
+            { value: '100%', label: 'Cloud & seguro' },
+          ].map(s => (
+            <div key={s.label} className="text-center">
+              <p className="text-2xl font-bold" style={{ color: CYAN }}>{s.value}</p>
+              <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/20 animate-bounce">
+        <span className="text-xs tracking-widest uppercase">Scroll</span>
+        <ChevronRight size={14} className="rotate-90" />
+      </div>
+    </section>
+  )
+}
+
+// ─── Verticales ───────────────────────────────────────────────────────────────
+const VERTICALES = [
+  {
+    icon: <Scissors size={28} />,
+    name: 'Barbería',
+    slug: 'barberia',
+    description: 'Agenda, caja, inventario, comisiones y lealtad para barberías modernas.',
+    status: 'active' as const,
+    features: ['Agenda online', 'Caja registradora', 'Control de inventario', 'Comisiones', 'Programa de lealtad'],
+    color: '#C5A059',
+  },
+  {
+    icon: <Building2 size={28} />,
+    name: 'Lavandería',
+    slug: 'lavanderia',
+    description: 'Control de órdenes, seguimiento y facturación para lavanderías.',
+    status: 'soon' as const,
+    features: ['Órdenes digitales', 'Seguimiento en tiempo real', 'Facturación automática'],
+    color: CYAN,
+  },
+  {
+    icon: <Zap size={28} />,
+    name: 'Fumigación',
+    slug: 'fumigacion',
+    description: 'Gestión de visitas, rutas y reportes para empresas de control de plagas.',
+    status: 'soon' as const,
+    features: ['Programación de visitas', 'Rutas optimizadas', 'Reportes PDF'],
+    color: BLUE,
+  },
+]
+
+function Verticales() {
+  return (
+    <section
+      id="verticales"
+      className="py-24 px-6"
+      style={{ background: `linear-gradient(180deg, ${NAVY} 0%, ${NAVY2} 100%)` }}
+    >
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: CYAN }}>
+            Nuestras Verticales
+          </p>
+          <h2 className="text-3xl md:text-5xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>
+            Un sistema, <GradientText>múltiples industrias</GradientText>
+          </h2>
+          <p className="mt-4 text-white/50 text-lg max-w-2xl mx-auto">
+            El mismo núcleo tecnológico adaptado a cada tipo de negocio. Escala con tu empresa.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
+          {VERTICALES.map(v => (
+            <div
+              key={v.slug}
+              className="relative rounded-2xl p-6 border transition-all duration-300 hover:-translate-y-1"
+              style={{
+                background: v.status === 'active'
+                  ? `linear-gradient(145deg, ${NAVY2}, #111827)`
+                  : `${NAVY2}`,
+                borderColor: v.status === 'active' ? `${v.color}40` : 'rgba(255,255,255,0.06)',
+                boxShadow: v.status === 'active' ? `0 0 40px ${v.color}18` : 'none',
+              }}
+            >
+              {/* Badge */}
+              {v.status === 'active' ? (
+                <span
+                  className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: `${v.color}22`, color: v.color }}
+                >
+                  Activo
+                </span>
+              ) : (
+                <span className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full font-semibold bg-white/5 text-white/30">
+                  Pronto
+                </span>
+              )}
+
+              {/* Icon */}
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center mb-5"
+                style={{
+                  background: `${v.color}18`,
+                  color: v.color,
+                  border: `1px solid ${v.color}30`,
+                }}
+              >
+                {v.icon}
+              </div>
+
+              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Sora, sans-serif' }}>
+                {v.name}
+              </h3>
+              <p className="text-white/50 text-sm leading-relaxed mb-5">{v.description}</p>
+
+              {/* Features */}
+              <ul className="flex flex-col gap-2">
+                {v.features.map(f => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-white/60">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: v.color }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA */}
+              {v.status === 'active' && (
+                <a
+                  href="#aliados"
+                  className="mt-6 flex items-center gap-2 text-sm font-semibold transition-colors"
+                  style={{ color: v.color }}
+                >
+                  Acceder como aliado <ArrowRight size={14} />
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Features ─────────────────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: <Calendar size={22} />,  title: 'Agenda Inteligente',   desc: 'Reservas online 24/7 con detección de conflictos en tiempo real.' },
+  { icon: <BarChart3 size={22} />, title: 'Reportes Financieros',  desc: 'P&G, flujo de caja y depreciación de activos en un clic.' },
+  { icon: <Package size={22} />,   title: 'Inventario',            desc: 'Control de stock, movimientos y alertas de mínimos.' },
+  { icon: <Users size={22} />,     title: 'Multi-Sucursal',        desc: 'Cada negocio aislado. Un panel para gobernarlos todos.' },
+  { icon: <Shield size={22} />,    title: 'Seguridad RLS',         desc: 'Row-Level Security en cada tabla. Sin fugas de datos entre tenants.' },
+  { icon: <Globe size={22} />,     title: 'SaaS LATAM',            desc: 'Pagos en COP, MercadoPago integrado y soporte en español.' },
+]
+
+function Features() {
+  return (
+    <section className="py-24 px-6" style={{ background: NAVY2 }}>
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-14">
+          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: BLUE }}>
+            Tecnología
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>
+            Todo lo que necesita <GradientText>tu negocio</GradientText>
+          </h2>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FEATURES.map(f => (
+            <div
+              key={f.title}
+              className="p-5 rounded-xl border border-white/5 hover:border-white/10 transition-all bg-white/[0.02] hover:bg-white/[0.04]"
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                style={{ background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}22)`, color: CYAN }}
+              >
+                {f.icon}
+              </div>
+              <h4 className="text-white font-semibold mb-1.5">{f.title}</h4>
+              <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
+        </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Portal de Aliados ────────────────────────────────────────────────────────
+function Aliados() {
+  const router = useRouter()
+  const [slug, setSlug]       = useState('')
+  const [mode, setMode]       = useState<'dashboard' | 'book'>('dashboard')
+  const [error, setError]     = useState('')
+  const inputRef              = useRef<HTMLInputElement>(null)
+
+  function handleAccess(e: React.FormEvent) {
+    e.preventDefault()
+    const clean = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '')
+    if (!clean) {
+      setError('Ingresa el nombre de tu negocio.')
+      inputRef.current?.focus()
+      return
+    }
+    setError('')
+    if (mode === 'dashboard') {
+      router.push(`/${clean}/login`)
+    } else {
+      router.push(`/${clean}/book`)
+    }
+  }
+
+  return (
+    <section
+      id="aliados"
+      className="py-24 px-6 relative overflow-hidden"
+      style={{ background: `linear-gradient(180deg, ${NAVY2} 0%, ${NAVY} 100%)` }}
+    >
+      {/* Glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse 60% 50% at 50% 100%, ${BLUE}20, transparent)`,
+        }}
+      />
+
+      <div className="max-w-2xl mx-auto relative z-10 text-center">
+        {/* Header */}
+        <div
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold mb-8"
+          style={{ background: `${BLUE}18`, border: `1px solid ${BLUE}40`, color: '#7EB3FF' }}
+        >
+          <Lock size={14} />
+          Portal exclusivo para aliados
+        </div>
+
+        <h2 className="text-3xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Sora, sans-serif' }}>
+          Accede a tu <GradientText>negocio</GradientText>
+        </h2>
+        <p className="text-white/50 mb-12 text-lg">
+          Ingresa el nombre de tu barbería para acceder al panel de gestión
+          o para que tus clientes agenden una cita.
+        </p>
+
+        {/* Card */}
+        <div
+          className="rounded-2xl p-8 text-left"
+          style={{
+            background: '#0D1635',
+            border: '1px solid rgba(255,255,255,0.08)',
+            boxShadow: '0 24px 80px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* Mode tabs */}
+          <div
+            className="flex rounded-lg p-1 mb-6"
+            style={{ background: 'rgba(255,255,255,0.04)' }}
+          >
+            {[
+              { key: 'dashboard', label: 'Panel de gestión', icon: <BarChart3 size={14} /> },
+              { key: 'book',      label: 'Agendar cita',     icon: <Calendar size={14} /> },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setMode(tab.key as 'dashboard' | 'book')}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-md transition-all"
+                style={
+                  mode === tab.key
+                    ? { background: `linear-gradient(135deg, ${CYAN}30, ${BLUE}30)`, color: 'white', border: `1px solid ${CYAN}40` }
+                    : { color: 'rgba(255,255,255,0.4)' }
+                }
+              >
+                {tab.icon}
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Input */}
+          <form onSubmit={handleAccess} className="flex flex-col gap-4">
+            <div>
+              <label className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2 block">
+                Nombre de tu negocio
+              </label>
+              <div
+                className="flex items-center rounded-xl overflow-hidden transition-all focus-within:ring-2"
+                style={{
+                  background: '#111827',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  // @ts-expect-error -- CSS custom prop
+                  '--tw-ring-color': CYAN,
+                }}
+              >
+                <span className="pl-4 pr-1 text-white/25 text-sm select-none">xinuco.com/</span>
+                <input
+                  ref={inputRef}
+                  value={slug}
+                  onChange={e => { setSlug(e.target.value); setError('') }}
+                  placeholder="mi-barberia"
+                  className="flex-1 py-3.5 pr-4 bg-transparent text-white text-sm outline-none placeholder-white/20"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+              </div>
+              {error && (
+                <p className="text-xs text-red-400 mt-2">{error}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98]"
+              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}30` }}
+            >
+              {mode === 'dashboard' ? (
+                <><BarChart3 size={16} /> Ir al panel de gestión</>
+              ) : (
+                <><Calendar size={16} /> Agendar mi cita</>
+              )}
+            </button>
+          </form>
+
+          {/* Info */}
+          <p className="text-xs text-white/25 text-center mt-5">
+            ¿No tienes una cuenta? Contáctanos en{' '}
+            <a href="mailto:hola@xinuco.com" className="underline" style={{ color: `${CYAN}90` }}>
+              hola@xinuco.com
+            </a>
+          </p>
+        </div>
+
+        {/* Example slugs */}
+        <div className="mt-8 flex flex-wrap justify-center gap-2">
+          <span className="text-xs text-white/25">Ejemplo:</span>
+          {['classic-cuts', 'barberia-elite', 'la-navaja'].map(s => (
+            <button
+              key={s}
+              onClick={() => setSlug(s)}
+              className="text-xs px-3 py-1 rounded-full border border-white/10 text-white/30 hover:text-white/60 hover:border-white/20 transition-all"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Nosotros ─────────────────────────────────────────────────────────────────
+function Nosotros() {
+  return (
+    <section
+      id="nosotros"
+      className="py-24 px-6"
+      style={{ background: NAVY }}
+    >
+      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        {/* Left */}
+        <div>
+          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-4" style={{ color: CYAN }}>
+            Quiénes somos
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-6" style={{ fontFamily: 'Sora, sans-serif' }}>
+            Innovamos para <GradientText>impulsar el futuro</GradientText> de los negocios LATAM
+          </h2>
+          <p className="text-white/50 leading-relaxed mb-8">
+            Xinuco nació para democratizar la tecnología empresarial en Latinoamérica.
+            Creemos que cada pequeño negocio merece las mismas herramientas que usan
+            las grandes corporaciones — sin la complejidad ni el costo.
+          </p>
+
+          <div className="grid grid-cols-2 gap-6">
+            {[
+              { title: 'Innovamos',   desc: 'Impulsando el futuro con tecnología que realmente funciona.' },
+              { title: 'Conectamos',  desc: 'Tecnología, negocios y personas en un ecosistema.' },
+              { title: 'Inteligencia', desc: 'Datos que se transforman en decisiones más inteligentes.' },
+              { title: 'Impacto Real', desc: 'Resultados medibles desde el primer día de uso.' },
+            ].map(i => (
+              <div key={i.title}>
+                <h4 className="font-bold text-white text-sm mb-1" style={{ color: CYAN }}>{i.title}</h4>
+                <p className="text-white/40 text-xs leading-relaxed">{i.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right — visual */}
+        <div className="flex justify-center">
+          <div
+            className="w-72 h-72 rounded-3xl flex items-center justify-center relative"
+            style={{ background: `linear-gradient(145deg, ${NAVY2}, #0a0f1e)`, border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <XinucoMark size={140} />
+            {/* Orbiting dots */}
+            <div
+              className="absolute inset-0 rounded-3xl"
+              style={{
+                background: `radial-gradient(circle at 50% 50%, ${CYAN}12, transparent 70%)`,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer
+      className="py-10 px-6 border-t"
+      style={{ background: NAVY2, borderColor: 'rgba(255,255,255,0.06)' }}
+    >
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-3">
+          <XinucoMark size={28} />
+          <div>
+            <p className="text-white font-bold text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>XiNUCO</p>
+            <p className="text-white/30 text-xs">Tecnología · Inteligencia · Impacto</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6 text-xs text-white/30">
+          <a href="#verticales" className="hover:text-white/60 transition-colors">Verticales</a>
+          <a href="#aliados"    className="hover:text-white/60 transition-colors">Aliados</a>
+          <a href="mailto:hola@xinuco.com" className="hover:text-white/60 transition-colors">Contacto</a>
+          <a href="/adminbarberia/login" className="hover:text-white/60 transition-colors">Admin</a>
+        </div>
+
+        <p className="text-white/20 text-xs">© {new Date().getFullYear()} Xinuco. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+  )
+}
+
+// ─── Main export ─────────────────────────────────────────────────────────────
+export default function XinucoLanding() {
+  return (
+    <div className="antialiased" style={{ background: NAVY, color: 'white' }}>
+      <Navbar />
+      <Hero />
+      <Verticales />
+      <Features />
+      <Aliados />
+      <Nosotros />
+      <Footer />
+    </div>
+  )
+}

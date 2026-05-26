@@ -1,9 +1,17 @@
 import type { Metadata } from 'next'
+import { Sora } from 'next/font/google'
 import './globals.css'
 
+const sora = Sora({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-sora',
+  display: 'swap',
+})
+
 export const metadata: Metadata = {
-  title: 'Xinuco — Gestión Inteligente para Barberías',
-  description: 'SaaS multi-tenant para barberías. Agenda, inventario y control en un solo lugar.',
+  title: 'Xinuco — Tecnología · Inteligencia · Impacto',
+  description: 'Software de gestión inteligente para negocios LATAM. Barberías, lavanderías y más.',
 }
 
 export default function RootLayout({
@@ -12,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={sora.variable}>
       <body suppressHydrationWarning>{children}</body>
     </html>
   )

@@ -1,9 +1,20 @@
-import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
+import XinucoLanding from '@/components/landing/XinucoLanding'
 
-/**
- * Ruta raíz — redirige al portal de administración.
- * Los tenants acceden por /{slug}/book o /{slug}/dashboard.
- */
+export const metadata: Metadata = {
+  title: 'Xinuco — Tecnología · Inteligencia · Impacto',
+  description:
+    'Software de gestión inteligente para negocios. Barberías, lavanderías, fumigaciones y más. Agenda, inventario, finanzas y control en un solo lugar.',
+  openGraph: {
+    title: 'Xinuco — Tecnología · Inteligencia · Impacto',
+    description: 'Software de gestión inteligente para negocios LATAM.',
+    url: 'https://xinuco.com',
+    siteName: 'Xinuco',
+    locale: 'es_CO',
+    type: 'website',
+  },
+}
+
 export default function RootPage() {
-  redirect('/adminbarberia/login')
+  return <XinucoLanding />
 }
