@@ -142,10 +142,22 @@ function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
       style={{ background: `${NAVY}cc`, backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
     >
-      {/* Logo */}
-      <a href="#hero" className="flex items-center gap-3">
-        <XinucoMark size={36} />
-        <XinucoWordmark size={20} />
+      {/* Logo horizontal corporativo: isotipo + (XINUCO + tagline) */}
+      <a href="#hero" className="flex items-center gap-3 leading-none">
+        <XinucoMark size={42} />
+        <div className="flex flex-col items-start gap-1">
+          <XinucoWordmark size={20} />
+          <p
+            className="uppercase text-white/45"
+            style={{
+              fontFamily: 'var(--font-sora), Sora, sans-serif',
+              fontSize: '7px',
+              letterSpacing: '0.28em',
+            }}
+          >
+            Tecnología · Inteligencia · Impacto
+          </p>
+        </div>
       </a>
 
       {/* Desktop nav */}
