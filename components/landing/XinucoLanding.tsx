@@ -278,17 +278,22 @@ function Hero() {
             Software de gestión para negocios LATAM
           </div>
 
-          {/* Logo corporativo — isotipo oficial + wordmark + tagline */}
-          <div className="relative flex flex-col items-center md:items-start gap-5 self-center md:self-start py-4">
+          {/* Logo corporativo oficial */}
+          <div className="relative flex items-center justify-center md:justify-start self-center md:self-start">
             {/* Aura de brillo detrás del logo */}
             <div
-              className="absolute w-80 h-80 rounded-full blur-3xl opacity-30 pointer-events-none"
+              className="absolute w-96 h-96 rounded-full blur-3xl opacity-25 pointer-events-none"
               style={{ background: `radial-gradient(circle, ${CYAN}60 0%, ${BLUE}40 55%, transparent 80%)` }}
             />
-            <div className="relative z-10 flex items-center gap-5">
-              <XinucoMark size={96} />
-              <XinucoWordmark size={40} showTagline taglineSize={11} />
-            </div>
+            <Image
+              src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-logo-nobg.png"
+              alt="Xinuco — Tecnología · Inteligencia · Impacto"
+              width={300}
+              height={648}
+              className="relative z-10 drop-shadow-2xl"
+              style={{ width: '100%', maxWidth: 300, height: 'auto' }}
+              priority
+            />
           </div>
 
           {/* Tagline */}
@@ -361,6 +366,7 @@ function Hero() {
                 src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-splash.png"
                 alt="Xinuco App"
                 fill
+                sizes="260px"
                 className="object-cover"
                 priority
               />
