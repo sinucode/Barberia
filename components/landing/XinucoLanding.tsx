@@ -154,21 +154,21 @@ function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-24 pb-16 overflow-hidden"
+      className="relative min-h-screen flex items-center px-6 pt-24 pb-16 overflow-hidden"
       style={{ background: NAVY }}
     >
       {/* Background glows */}
       <div className="absolute inset-0 pointer-events-none">
         <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] rounded-full opacity-20 blur-3xl"
-          style={{ background: `radial-gradient(ellipse, ${CYAN}, transparent 70%)` }}
+          className="absolute top-0 right-0 w-[700px] h-[600px] rounded-full opacity-15 blur-3xl"
+          style={{ background: `radial-gradient(ellipse, ${CYAN}, transparent 65%)` }}
         />
         <div
-          className="absolute bottom-0 right-0 w-[600px] h-[400px] rounded-full opacity-15 blur-3xl"
-          style={{ background: `radial-gradient(ellipse, ${BLUE}, transparent 70%)` }}
+          className="absolute bottom-0 left-0 w-[500px] h-[400px] rounded-full opacity-12 blur-3xl"
+          style={{ background: `radial-gradient(ellipse, ${BLUE}, transparent 65%)` }}
         />
         {/* Dot grid */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full opacity-[0.035]" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="dots" width="32" height="32" patternUnits="userSpaceOnUse">
               <circle cx="2" cy="2" r="1.5" fill="white"/>
@@ -178,87 +178,121 @@ function Hero() {
         </svg>
       </div>
 
-      <div className="relative z-10 flex flex-col items-center gap-8 max-w-4xl mx-auto">
-        {/* Badge */}
-        <div
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border"
-          style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
-        >
-          <Sparkles size={12} />
-          Software de gestión para negocios LATAM
-        </div>
+      {/* Two-column layout */}
+      <div className="relative z-10 max-w-6xl mx-auto w-full grid md:grid-cols-2 gap-12 items-center">
 
-        {/* Logo — glow ring + imagen real */}
-        <div className="relative flex items-center justify-center">
-          {/* Glow aura detrás del logo */}
-          <div
-            className="absolute w-40 h-40 rounded-full blur-2xl opacity-40 pointer-events-none"
-            style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 50%, transparent 80%)` }}
-          />
-          {/* La imagen sobre fondo exacto del hero para eliminar el borde */}
-          <div style={{ background: NAVY, borderRadius: '50%', padding: 4 }}>
-            <Image
-              src="/xinuco-isotipo.png"
-              alt="Xinuco"
-              width={108}
-              height={108}
-              className="object-contain rounded-full"
-              style={{ mixBlendMode: 'screen' }}
-              priority
-            />
+        {/* ── Columna izquierda: texto + CTAs ── */}
+        <div className="flex flex-col gap-7 text-center md:text-left">
+          {/* Badge */}
+          <div className="inline-flex md:inline-flex items-center justify-center md:justify-start gap-2 px-4 py-1.5 rounded-full text-xs font-medium border self-center md:self-start"
+            style={{ borderColor: `${CYAN}40`, background: `${CYAN}12`, color: CYAN }}
+          >
+            <Sparkles size={12} />
+            Software de gestión para negocios LATAM
+          </div>
+
+          {/* Wordmark */}
+          <div>
+            <h1
+              className="text-5xl lg:text-7xl font-bold tracking-tight text-white"
+              style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '-0.02em' }}
+            >
+              Xi<span style={{ color: CYAN }}>N</span>UCO
+            </h1>
+            <p className="mt-3 text-sm tracking-[0.35em] uppercase text-white/40">
+              Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
+            </p>
+          </div>
+
+          {/* Tagline */}
+          <p className="text-lg text-white/60 leading-relaxed max-w-lg">
+            Transformamos negocios con software inteligente. Desde la primera cita
+            hasta el cierre de caja —{' '}
+            <GradientText>todo en un solo sistema.</GradientText>
+          </p>
+
+          {/* CTAs */}
+          <div className="flex flex-col sm:flex-row items-center md:items-start gap-4">
+            <a
+              href="#aliados"
+              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
+              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}40` }}
+            >
+              Portal de Aliados
+              <ArrowRight size={16} />
+            </a>
+            <a
+              href="#verticales"
+              className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+            >
+              Ver verticales
+              <ChevronRight size={16} />
+            </a>
+          </div>
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-8 pt-6 border-t border-white/10">
+            {[
+              { value: '1',    label: 'Vertical activa' },
+              { value: '∞',    label: 'Negocios posibles' },
+              { value: '100%', label: 'Cloud & seguro' },
+            ].map(s => (
+              <div key={s.label} className="text-center md:text-left">
+                <p className="text-2xl font-bold" style={{ color: CYAN }}>{s.value}</p>
+                <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Wordmark */}
-        <div>
-          <h1
-            className="text-6xl md:text-8xl font-bold tracking-tight text-white"
-            style={{ fontFamily: 'Sora, sans-serif', letterSpacing: '-0.02em' }}
-          >
-            Xi<span style={{ color: CYAN }}>N</span>UCO
-          </h1>
-          <p className="mt-3 text-sm tracking-[0.35em] uppercase text-white/40">
-            Tecnología &nbsp;·&nbsp; Inteligencia &nbsp;·&nbsp; Impacto
-          </p>
-        </div>
+        {/* ── Columna derecha: mockup de celular con splash ── */}
+        <div className="flex justify-center md:justify-end">
+          <div className="relative">
+            {/* Glow detrás del teléfono */}
+            <div
+              className="absolute inset-0 -m-8 rounded-full blur-3xl opacity-30 pointer-events-none"
+              style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 50%, transparent 75%)` }}
+            />
 
-        {/* Tagline */}
-        <p className="text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed">
-          Transformamos negocios con software inteligente. Desde la primera cita
-          hasta el cierre de caja — <GradientText>todo en un solo sistema.</GradientText>
-        </p>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-2">
-          <a
-            href="#aliados"
-            className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
-            style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, boxShadow: `0 0 30px ${CYAN}40` }}
-          >
-            Portal de Aliados
-            <ArrowRight size={16} />
-          </a>
-          <a
-            href="#verticales"
-            className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-semibold text-white/70 hover:text-white border border-white/10 hover:border-white/20 transition-all"
-          >
-            Ver verticales
-            <ChevronRight size={16} />
-          </a>
-        </div>
-
-        {/* Stats */}
-        <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-white/10 w-full max-w-lg">
-          {[
-            { value: '1',    label: 'Vertical activa' },
-            { value: '∞',    label: 'Negocios posibles' },
-            { value: '100%', label: 'Cloud & seguro' },
-          ].map(s => (
-            <div key={s.label} className="text-center">
-              <p className="text-2xl font-bold" style={{ color: CYAN }}>{s.value}</p>
-              <p className="text-xs text-white/40 mt-0.5">{s.label}</p>
+            {/* Marco del teléfono */}
+            <div
+              className="relative rounded-[3rem] overflow-hidden shadow-2xl"
+              style={{
+                width: 260,
+                height: 540,
+                border: '6px solid rgba(255,255,255,0.12)',
+                boxShadow: `0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06), inset 0 0 0 1px rgba(255,255,255,0.04)`,
+              }}
+            >
+              {/* Notch */}
+              <div
+                className="absolute top-3 left-1/2 -translate-x-1/2 z-10 rounded-full"
+                style={{ width: 80, height: 20, background: '#000', opacity: 0.7 }}
+              />
+              {/* Splash image como pantalla */}
+              <Image
+                src="/xinuco-splash.png"
+                alt="Xinuco App"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-          ))}
+
+            {/* Botón lateral decorativo */}
+            <div
+              className="absolute top-20 -right-2 rounded-full"
+              style={{ width: 4, height: 48, background: 'rgba(255,255,255,0.15)' }}
+            />
+            <div
+              className="absolute top-36 -left-2 rounded-full"
+              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
+            />
+            <div
+              className="absolute top-44 -left-2 rounded-full"
+              style={{ width: 4, height: 32, background: 'rgba(255,255,255,0.15)' }}
+            />
+          </div>
         </div>
       </div>
 
@@ -640,25 +674,21 @@ function Nosotros() {
           </div>
         </div>
 
-        {/* Right — visual */}
+        {/* Right — app icon */}
         <div className="flex justify-center">
-          <div
-            className="w-72 h-72 rounded-3xl flex items-center justify-center relative overflow-hidden"
-            style={{ background: `linear-gradient(145deg, ${NAVY2}, #0a0f1e)`, border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            {/* Glow behind logo */}
+          <div className="relative">
+            {/* Glow detrás */}
             <div
-              className="absolute inset-0"
-              style={{ background: `radial-gradient(circle at 50% 50%, ${CYAN}18, transparent 65%)` }}
+              className="absolute inset-0 -m-6 rounded-full blur-2xl opacity-35 pointer-events-none"
+              style={{ background: `radial-gradient(circle, ${CYAN} 0%, ${BLUE} 55%, transparent 75%)` }}
             />
             <Image
-              src="/xinuco-isotipo.png"
-              alt="Xinuco"
-              width={200}
-              height={200}
-              className="object-contain relative z-10"
-              style={{ mixBlendMode: 'screen' }}
-              priority
+              src="/xinuco-app-icon.png"
+              alt="Xinuco App"
+              width={260}
+              height={260}
+              className="relative z-10 rounded-[3rem] shadow-2xl"
+              style={{ boxShadow: `0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)` }}
             />
           </div>
         </div>
