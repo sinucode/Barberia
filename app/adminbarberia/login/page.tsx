@@ -112,7 +112,7 @@ export default function AdminBarberiaLoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="gerencia@xinuco.com"
+                placeholder="Administrador@tunegocio.com"
                 className="w-full px-4 py-3 rounded-lg text-sm text-[#F4F4F4] placeholder-[#444] outline-none transition-all focus:ring-2 focus:ring-[#C5A059]/40"
                 style={{ 
                   backgroundColor: '#141414', 
