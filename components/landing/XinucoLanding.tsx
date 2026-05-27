@@ -309,7 +309,7 @@ function Hero() {
 
           {/* Descripción */}
           <p className="text-base md:text-lg text-white/55 leading-relaxed max-w-sm">
-            Negocios inteligentes corren con <GradientText>AI.</GradientText>{' '}
+            Negocios inteligentes corren con <GradientText>IA.</GradientText>{' '}
             Desde la primera cita hasta el cierre de caja — todo en un sistema que{' '}
             <GradientText>piensa contigo y crece contigo.</GradientText>
           </p>
