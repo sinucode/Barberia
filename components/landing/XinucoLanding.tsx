@@ -86,8 +86,7 @@ function XinucoWordmark({
             letterSpacing: '0.18em',
             textAlign: 'justify',
             textAlignLast: 'justify',
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ...(({ '-moz-text-align-last': 'justify' } as any)),
+            MozTextAlignLast: 'justify',
           }}
         >
           Tecnología · Inteligencia · Impacto
@@ -280,27 +279,31 @@ function Hero() {
             Software de gestión para negocios LATAM
           </div>
 
-          {/* Logo — ocupa todo el ancho de su columna */}
-          <div className="relative w-full flex justify-center">
-            {/* Halo de brillo */}
+          {/* Logo — componentes nítidos (vector/font) en lugar de PNG raster */}
+          <div className="relative flex flex-col items-center gap-5 py-4">
+            {/* Halo de brillo radial detrás */}
             <div
               className="absolute pointer-events-none"
               style={{
-                width: '120%', height: '140%',
+                width: '110%', height: '130%',
                 top: '50%', left: '50%',
                 transform: 'translate(-50%, -50%)',
-                background: `radial-gradient(ellipse at center, ${CYAN}35 0%, ${BLUE}20 45%, transparent 72%)`,
-                filter: 'blur(32px)',
+                background: `radial-gradient(ellipse at center, ${CYAN}28 0%, ${BLUE}18 42%, transparent 70%)`,
+                filter: 'blur(48px)',
               }}
             />
-            <Image
-              src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-logo-nobg.png"
-              alt="Xinuco — Tecnología · Inteligencia · Impacto"
-              width={582}
-              height={400}
-              className="relative z-10 w-full h-auto"
-              style={{ filter: 'drop-shadow(0 0 24px rgba(0,207,207,0.25))' }}
-              priority
+
+            {/* Isotipo — PNG separado, mucho más pequeño → no pixela */}
+            <div className="relative z-10">
+              <XinucoMark size={172} />
+            </div>
+
+            {/* Wordmark — 100% CSS / Michroma font → infinitamente nítido */}
+            <XinucoWordmark
+              size={58}
+              showTagline
+              taglineSize={10}
+              className="relative z-10"
             />
           </div>
 

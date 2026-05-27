@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" suppressHydrationWarning className={`${sora.variable} ${michroma.variable}`}>
+    <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth" className={`${sora.variable} ${michroma.variable}`}>
       <body suppressHydrationWarning>{children}</body>
     </html>
   )
