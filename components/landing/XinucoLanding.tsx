@@ -309,8 +309,9 @@ function Hero() {
 
           {/* Descripción */}
           <p className="text-base md:text-lg text-white/55 leading-relaxed max-w-sm">
-            Desde la primera cita hasta el cierre de caja —{' '}
-            <GradientText>todo en un solo sistema.</GradientText>
+            Negocios inteligentes corren con <GradientText>AI.</GradientText>{' '}
+            Desde la primera cita hasta el cierre de caja — todo en un sistema que{' '}
+            <GradientText>piensa contigo y crece contigo.</GradientText>
           </p>
 
           {/* CTAs */}
