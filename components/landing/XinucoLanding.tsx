@@ -137,98 +137,128 @@ function Navbar() {
   const [open, setOpen] = useState(false)
 
   const links = [
-    { label: 'Inicio',      href: '#hero' },
-    { label: 'Verticales',  href: '#verticales' },
-    { label: 'Aliados',     href: '#aliados' },
-    { label: 'Nosotros',    href: '#nosotros' },
+    { label: 'Inicio',     href: '#hero' },
+    { label: 'Verticales', href: '#verticales' },
+    { label: 'Aliados',    href: '#aliados' },
+    { label: 'Nosotros',   href: '#nosotros' },
   ]
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4"
-      style={{ background: `${NAVY}cc`, backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+      className="fixed top-0 left-0 right-0 z-50"
+      style={{
+        background: `rgba(11,19,43,0.82)`,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        boxShadow: '0 1px 32px rgba(0,0,0,0.35)',
+      }}
     >
-      {/* Logo horizontal corporativo: isotipo + (XINUCO + tagline) */}
-      <a href="#hero" className="flex items-center gap-3 leading-none">
-        <XinucoMark size={42} />
-        <div className="flex flex-col items-start gap-1">
-          <XinucoWordmark size={20} />
-          <p
-            className="uppercase text-white/45"
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5">
+
+        {/* ── Logo ── */}
+        <a href="#hero" className="flex items-center gap-2.5 leading-none group">
+          <XinucoMark size={36} />
+          <XinucoWordmark size={17} />
+        </a>
+
+        {/* ── Desktop nav ── */}
+        <nav className="hidden md:flex items-center gap-1">
+          {links.map(l => (
+            <a
+              key={l.href}
+              href={l.href}
+              className="relative px-4 py-2 text-[13px] font-medium text-white/50 hover:text-white/90 rounded-lg transition-all duration-200 hover:bg-white/[0.04]"
+            >
+              {l.label}
+            </a>
+          ))}
+        </nav>
+
+        {/* ── CTAs ── */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Portal Aliados — ghost pill */}
+          <a
+            href="#aliados"
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium rounded-xl transition-all duration-200"
             style={{
-              fontFamily: 'var(--font-sora), Sora, sans-serif',
-              fontSize: '7px',
-              letterSpacing: '0.28em',
+              color: CYAN,
+              border: `1px solid ${CYAN}30`,
+              background: `${CYAN}08`,
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = `${CYAN}14`
+              ;(e.currentTarget as HTMLAnchorElement).style.borderColor = `${CYAN}55`
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.background = `${CYAN}08`
+              ;(e.currentTarget as HTMLAnchorElement).style.borderColor = `${CYAN}30`
             }}
           >
-            Tecnología · Inteligencia · Impacto
-          </p>
-        </div>
-      </a>
-
-      {/* Desktop nav */}
-      <nav className="hidden md:flex items-center gap-8">
-        {links.map(l => (
-          <a
-            key={l.href}
-            href={l.href}
-            className="text-sm text-white/60 hover:text-white transition-colors"
-          >
-            {l.label}
+            <Lock size={11} />
+            Portal Aliados
           </a>
-        ))}
-      </nav>
 
-      {/* CTA */}
-      <div className="hidden md:flex items-center gap-3">
-        <a
-          href="#aliados"
-          className="px-4 py-2 text-sm rounded-lg text-white/80 hover:text-white border border-white/10 hover:border-white/20 transition-all"
+          {/* Admin — gradient pill */}
+          <a
+            href="/adminbarberia/login"
+            className="flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-white rounded-xl transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+            style={{
+              background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
+              boxShadow: `0 0 18px ${CYAN}30, 0 2px 8px rgba(0,0,0,0.3)`,
+            }}
+          >
+            Admin
+          </a>
+        </div>
+
+        {/* ── Mobile hamburger ── */}
+        <button
+          className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
+          onClick={() => setOpen(o => !o)}
+          aria-label="Menú"
         >
-          Portal Aliados
-        </a>
-        <a
-          href="/adminbarberia/login"
-          className="px-4 py-2 text-sm rounded-lg font-semibold text-white transition-all"
-          style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})` }}
-        >
-          Admin
-        </a>
+          {open ? <X size={18} /> : <Menu size={18} />}
+        </button>
       </div>
 
-      {/* Mobile hamburger */}
-      <button
-        className="md:hidden text-white"
-        onClick={() => setOpen(o => !o)}
-        aria-label="Menú"
-      >
-        {open ? <X size={22} /> : <Menu size={22} />}
-      </button>
-
-      {/* Mobile menu */}
+      {/* ── Mobile menu ── */}
       {open && (
         <div
-          className="absolute top-full left-0 right-0 py-4 px-6 flex flex-col gap-4 md:hidden"
-          style={{ background: NAVY2, borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+          className="md:hidden px-6 pb-5 pt-2 flex flex-col gap-1"
+          style={{
+            background: 'rgba(10,15,35,0.97)',
+            borderTop: '1px solid rgba(255,255,255,0.05)',
+          }}
         >
           {links.map(l => (
             <a
               key={l.href}
               href={l.href}
-              className="text-white/80 text-sm py-1"
+              className="px-3 py-2.5 text-sm text-white/60 hover:text-white rounded-lg hover:bg-white/[0.04] transition-all"
               onClick={() => setOpen(false)}
             >
               {l.label}
             </a>
           ))}
-          <a
-            href="#aliados"
-            className="text-center py-2 rounded-lg text-sm font-semibold text-white"
-            style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})` }}
-            onClick={() => setOpen(false)}
-          >
-            Portal Aliados
-          </a>
+          <div className="flex flex-col gap-2 mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <a
+              href="#aliados"
+              className="text-center py-2.5 rounded-xl text-sm font-medium transition-all"
+              style={{ color: CYAN, border: `1px solid ${CYAN}35`, background: `${CYAN}08` }}
+              onClick={() => setOpen(false)}
+            >
+              Portal Aliados
+            </a>
+            <a
+              href="/adminbarberia/login"
+              className="text-center py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+              style={{ background: `linear-gradient(135deg, ${CYAN}, ${BLUE})` }}
+              onClick={() => setOpen(false)}
+            >
+              Admin
+            </a>
+          </div>
         </div>
       )}
     </header>
@@ -748,11 +778,13 @@ function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
                 {/* Panel desplegable */}
                 {open && (
                   <div
-                    className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50"
+                    className="absolute top-full left-0 right-0 mt-2 rounded-xl z-50"
                     style={{
                       background: '#0a0f1e',
                       border: '1px solid rgba(255,255,255,0.10)',
                       boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px ${CYAN}15`,
+                      borderRadius: '0.75rem',
+                      overflow: 'visible',
                     }}
                   >
                     {/* Buscador */}
@@ -776,8 +808,12 @@ function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
                       </div>
                     </div>
 
-                    {/* Lista */}
-                    <div className="max-h-56 overflow-y-auto">
+                    {/* Lista — scrollable con fade inferior */}
+                    <div className="relative">
+                    <div
+                      className="max-h-48 overflow-y-auto"
+                      style={{ scrollbarWidth: 'thin', scrollbarColor: `${CYAN}40 transparent` }}
+                    >
                       {filtered.length === 0 ? (
                         <div className="px-4 py-6 text-center text-white/30 text-sm">
                           {businesses.length === 0
@@ -817,6 +853,10 @@ function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
                           </button>
                         ))
                       )}
+                    </div>
+                    {/* Fade inferior — indica que hay más items */}
+                    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none rounded-b-xl"
+                      style={{ background: 'linear-gradient(to top, #0a0f1e, transparent)' }} />
                     </div>
 
                     {/* Footer del panel */}
