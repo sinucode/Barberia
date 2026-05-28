@@ -65,7 +65,7 @@ function XinucoWordmark({
             style={{
               position: 'absolute',
               bottom: '0.78em',
-              left: '58%',
+              left: '53%',
               transform: 'translateX(-50%)',
               width: '0.22em',
               height: '0.22em',
