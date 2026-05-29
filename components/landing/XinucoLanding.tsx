@@ -265,11 +265,69 @@ function Navbar() {
   )
 }
 
-// ─── Phone Dashboard UI ───────────────────────────────────────────────────────
-// Pantalla simulada del dashboard de Xinuco Barbería para el mockup del Hero.
-// Diseñada para 285×616 px — 100% CSS/JSX, sin imágenes externas.
+// ─── Phone mockup — tipos y helpers ──────────────────────────────────────────
+type CitaItem  = { time: string; name: string; service: string; price: string; dot: string }
+type NotifItem = { emoji: string; title: string; desc: string; time: string; accent: string }
+
+function PhoneCitaRow({ cita, compact = false }: { cita: CitaItem; compact?: boolean }) {
+  return (
+    <div style={{
+      margin: `0 14px ${compact ? 5 : 7}px`,
+      background: 'rgba(255,255,255,0.025)',
+      borderRadius: 10, padding: compact ? '6px 9px' : '7px 10px',
+      border: '1px solid rgba(255,255,255,0.05)',
+      display: 'flex', alignItems: 'center', gap: 8,
+    }}>
+      <p style={{ minWidth: 30, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>{cita.time}</p>
+      <div style={{ width: 2, height: 24, borderRadius: 99, background: cita.dot, flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, marginBottom: 1 }}>{cita.name}</p>
+        <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.33)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{cita.service}</p>
+      </div>
+      <p style={{ fontSize: 10, fontWeight: 700, flexShrink: 0, color: cita.dot.startsWith('rgba') ? 'rgba(255,255,255,0.3)' : cita.dot }}>{cita.price}</p>
+    </div>
+  )
+}
+
+function PhoneTabIcon({ icon, active }: { icon: string; active: boolean }) {
+  const c = active ? CYAN : 'rgba(255,255,255,0.28)'
+  const p: React.SVGProps<SVGSVGElement> = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none' }
+  const l = { stroke: c, strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (icon === 'home') return (
+    <svg {...p}>
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" {...l}/>
+      <polyline points="9 22 9 12 15 12 15 22" {...l}/>
+    </svg>
+  )
+  if (icon === 'cal') return (
+    <svg {...p}>
+      <rect x="3" y="4" width="18" height="18" rx="2" {...l}/>
+      <line x1="16" y1="2" x2="16" y2="6" {...l}/>
+      <line x1="8" y1="2" x2="8" y2="6" {...l}/>
+      <line x1="3" y1="10" x2="21" y2="10" {...l}/>
+    </svg>
+  )
+  if (icon === 'cash') return (
+    <svg {...p}>
+      <rect x="2" y="5" width="20" height="14" rx="2" {...l}/>
+      <line x1="2" y1="10" x2="22" y2="10" {...l}/>
+    </svg>
+  )
+  return (
+    <svg {...p}>
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" {...l}/>
+      <path d="M13.73 21a2 2 0 01-3.46 0" {...l}/>
+    </svg>
+  )
+}
+
+// ─── Phone Dashboard UI — interactivo ─────────────────────────────────────────
+// 4 tabs funcionales: Inicio · Agenda · Caja · Alertas
+// Cada pestaña renderiza una pantalla distinta de la app de Xinuco Barbería.
 function PhoneDashboardUI() {
-  const citas = [
+  const [tab, setTab] = useState<'inicio' | 'agenda' | 'caja' | 'notif'>('inicio')
+
+  const CITAS: CitaItem[] = [
     { time: '9:00',  name: 'Sebastián R.', service: 'Corte + Barba',  price: '$40k', dot: '#22C55E' },
     { time: '10:30', name: 'Miguel A.',     service: 'Fade bajo',       price: '$25k', dot: '#22C55E' },
     { time: '12:00', name: 'Juan C.',       service: 'Barba completa',  price: '$20k', dot: '#F59E0B' },
@@ -277,177 +335,188 @@ function PhoneDashboardUI() {
     { time: '16:30', name: 'Andrés M.',     service: 'Corte + diseño',  price: '$35k', dot: '#7EB3FF' },
   ]
 
-  return (
-    <div
-      style={{
-        position: 'absolute', inset: 0,
-        background: '#07101E',
-        display: 'flex', flexDirection: 'column',
-        fontFamily: 'var(--font-sora), Sora, system-ui, sans-serif',
-        overflow: 'hidden',
-        color: 'white',
-      }}
-    >
-      {/* Espacio bajo Dynamic Island */}
-      <div style={{ height: 54 }} />
+  const NOTIFS: NotifItem[] = [
+    { emoji: '📅', title: 'Nueva cita',     desc: 'Sebastián · 9:00 am',  time: 'hace 2 min',  accent: CYAN      },
+    { emoji: '💳', title: 'Pago recibido',  desc: '$45.000 COP',           time: 'hace 15 min', accent: '#22C55E' },
+    { emoji: '⭐', title: 'Reseña nueva',   desc: 'Diego · 5.0 ★★★★★',   time: 'hace 1 h',    accent: '#F59E0B' },
+    { emoji: '📅', title: 'Cita cancelada', desc: 'Marco · 11:00 am',      time: 'hace 2 h',    accent: '#EF4444' },
+    { emoji: '💳', title: 'Pago recibido',  desc: '$25.000 COP',           time: 'ayer',         accent: '#22C55E' },
+  ]
 
-      {/* Header */}
-      <div style={{ padding: '4px 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+  const TABS = [
+    { key: 'inicio' as const, label: 'Inicio',  icon: 'home' },
+    { key: 'agenda' as const, label: 'Agenda',  icon: 'cal'  },
+    { key: 'caja'   as const, label: 'Caja',    icon: 'cash' },
+    { key: 'notif'  as const, label: 'Alertas', icon: 'bell' },
+  ]
+
+  const DAYS: [string, string, boolean][] = [
+    ['L','26',false],['M','27',false],['X','28',true],['J','29',false],['V','30',false],
+  ]
+
+  // ── Pantalla Inicio ──────────────────────────────────────────────────────
+  const screenInicio = (
+    <>
+      <div style={{ padding: '4px 16px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', lineHeight: 1.3 }}>Buenos días</p>
-          <p style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>Carlos Mendoza</p>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>Buenos días</p>
+          <p style={{ fontSize: 13, fontWeight: 700 }}>Carlos Mendoza</p>
         </div>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%',
-          background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 10, fontWeight: 800,
-        }}>CM</div>
+        <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800 }}>CM</div>
       </div>
-
-      {/* Badge de fecha con punto de estado */}
-      <div style={{ padding: '0 18px 12px' }}>
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
-          fontSize: 10, color: CYAN,
-          background: `${CYAN}14`, padding: '4px 10px',
-          borderRadius: 99, border: `1px solid ${CYAN}28`,
-        }}>
+      <div style={{ padding: '0 16px 10px' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: CYAN, background: `${CYAN}14`, padding: '4px 10px', borderRadius: 99, border: `1px solid ${CYAN}28` }}>
           <span style={{ width: 5, height: 5, borderRadius: '50%', background: CYAN, display: 'inline-block' }} />
           Mié 28 May · 5 citas hoy
         </span>
       </div>
-
-      {/* Stats — Hoy / Semana */}
-      <div style={{ display: 'flex', gap: 8, padding: '0 14px 14px' }}>
-        <div style={{
-          flex: 1, borderRadius: 11, padding: '9px 11px',
-          background: `linear-gradient(135deg, ${CYAN}18, ${BLUE}14)`,
-          border: `1px solid ${CYAN}28`,
-        }}>
-          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>Hoy</p>
-          <p style={{ fontSize: 16, fontWeight: 800, color: CYAN, lineHeight: 1 }}>$85k</p>
-          <p style={{ fontSize: 8, color: `${CYAN}99`, marginTop: 2 }}>3 de 5 pagados</p>
+      <div style={{ display: 'flex', gap: 8, padding: '0 14px 12px' }}>
+        <div style={{ flex: 1, borderRadius: 11, padding: '8px 11px', background: `linear-gradient(135deg, ${CYAN}18, ${BLUE}14)`, border: `1px solid ${CYAN}28` }}>
+          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>Hoy</p>
+          <p style={{ fontSize: 15, fontWeight: 800, color: CYAN, lineHeight: 1 }}>$150k</p>
+          <p style={{ fontSize: 8, color: `${CYAN}99`, marginTop: 2 }}>3 de 5 cobrados</p>
         </div>
-        <div style={{
-          flex: 1, borderRadius: 11, padding: '9px 11px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
-        }}>
-          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>Semana</p>
-          <p style={{ fontSize: 16, fontWeight: 800, color: '#7EB3FF', lineHeight: 1 }}>$420k</p>
+        <div style={{ flex: 1, borderRadius: 11, padding: '8px 11px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 2 }}>Semana</p>
+          <p style={{ fontSize: 15, fontWeight: 800, color: '#7EB3FF', lineHeight: 1 }}>$420k</p>
           <p style={{ fontSize: 8, color: 'rgba(126,179,255,0.55)', marginTop: 2 }}>↑ 12% vs ant.</p>
         </div>
       </div>
-
-      {/* Encabezado sección */}
-      <div style={{ padding: '0 14px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '0 14px 7px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Agenda de hoy</p>
-        <p style={{ fontSize: 9, color: CYAN }}>Ver todo →</p>
+        <button onClick={() => setTab('agenda')} style={{ fontSize: 9, color: CYAN, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Ver todo →</button>
       </div>
+      {CITAS.slice(0, 3).map((c, i) => <PhoneCitaRow key={i} cita={c} />)}
+      <button onClick={() => setTab('agenda')} style={{ display: 'block', margin: '3px auto 0', fontSize: 9, color: 'rgba(255,255,255,0.28)', background: 'none', border: 'none', cursor: 'pointer' }}>
+        +2 citas más →
+      </button>
+    </>
+  )
 
-      {/* Lista de citas */}
-      {citas.map((a, i) => (
-        <div
-          key={i}
-          style={{
-            margin: '0 14px 7px',
-            background: 'rgba(255,255,255,0.025)',
-            borderRadius: 10, padding: '7px 10px',
-            border: '1px solid rgba(255,255,255,0.05)',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}
-        >
-          <p style={{ minWidth: 32, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
-            {a.time}
-          </p>
-          <div style={{ width: 2, height: 26, borderRadius: 99, background: a.dot, flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, marginBottom: 1 }}>{a.name}</p>
-            <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.33)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {a.service}
-            </p>
-          </div>
-          <p style={{
-            fontSize: 10, fontWeight: 700, flexShrink: 0,
-            color: a.dot.startsWith('rgba') ? 'rgba(255,255,255,0.3)' : a.dot,
-          }}>{a.price}</p>
-        </div>
-      ))}
-
-      {/* Bottom nav */}
-      <div style={{
-        marginTop: 'auto',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
-        padding: '10px 0 20px',
-        background: 'rgba(7,16,30,0.97)',
-      }}>
-        {(['Inicio', 'Agenda', 'Caja', 'Perfil'] as const).map((tab, i) => (
-          <div key={tab} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-            <div style={{
-              width: 20, height: 20,
-              borderRadius: tab === 'Perfil' ? 99 : 5,
-              background: i === 0
-                ? `linear-gradient(135deg, ${CYAN}, ${BLUE})`
-                : 'rgba(255,255,255,0.1)',
-            }} />
-            <p style={{ fontSize: 8, color: i === 0 ? CYAN : 'rgba(255,255,255,0.25)', fontWeight: i === 0 ? 700 : 400 }}>
-              {tab}
-            </p>
+  // ── Pantalla Agenda ──────────────────────────────────────────────────────
+  const screenAgenda = (
+    <>
+      <div style={{ padding: '6px 14px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: 14, fontWeight: 800 }}>Agenda</p>
+        <span style={{ fontSize: 9, color: CYAN, background: `${CYAN}14`, padding: '3px 8px', borderRadius: 99 }}>Hoy</span>
+      </div>
+      <div style={{ display: 'flex', gap: 5, padding: '0 14px 12px' }}>
+        {DAYS.map(([d, n, active]) => (
+          <div key={n} style={{ flex: 1, textAlign: 'center', padding: '5px 2px', borderRadius: 9, background: active ? `linear-gradient(135deg, ${CYAN}, ${BLUE})` : 'rgba(255,255,255,0.04)', border: `1px solid ${active ? 'transparent' : 'rgba(255,255,255,0.06)'}` }}>
+            <p style={{ fontSize: 8, color: active ? 'white' : 'rgba(255,255,255,0.4)', marginBottom: 2 }}>{d}</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: active ? 'white' : 'rgba(255,255,255,0.6)' }}>{n}</p>
           </div>
         ))}
       </div>
-    </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 4 }}>
+        {CITAS.map((c, i) => <PhoneCitaRow key={i} cita={c} compact />)}
+      </div>
+    </>
   )
-}
 
-// ─── Floating Notification Card ──────────────────────────────────────────────
-type NotifType = 'appointment' | 'payment' | 'review'
+  // ── Pantalla Caja ────────────────────────────────────────────────────────
+  const screenCaja = (
+    <>
+      <div style={{ padding: '6px 14px 8px' }}>
+        <p style={{ fontSize: 14, fontWeight: 800 }}>Caja</p>
+        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Miércoles 28 de mayo</p>
+      </div>
+      <div style={{ margin: '0 14px 12px', borderRadius: 14, padding: '14px', background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}18)`, border: `1px solid ${CYAN}35`, textAlign: 'center' }}>
+        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Total del día</p>
+        <p style={{ fontSize: 28, fontWeight: 900, color: CYAN, lineHeight: 1, letterSpacing: '-0.02em' }}>$150k</p>
+        <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>5 servicios · 3 cobrados</p>
+      </div>
+      <div style={{ padding: '0 14px', marginBottom: 12 }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 9 }}>Desglose</p>
+        {([
+          { label: 'Cortes',  amount: '$90k', pct: 60, color: CYAN      },
+          { label: 'Barbas',  amount: '$40k', pct: 27, color: '#7EB3FF' },
+          { label: 'Diseños', amount: '$20k', pct: 13, color: BLUE      },
+        ] as const).map(item => (
+          <div key={item.label} style={{ marginBottom: 9 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.5)' }}>{item.label}</p>
+              <p style={{ fontSize: 9, fontWeight: 700, color: item.color }}>{item.amount}</p>
+            </div>
+            <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.07)' }}>
+              <div style={{ height: '100%', borderRadius: 99, width: `${item.pct}%`, background: item.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: '0 14px' }}>
+        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 7 }}>Pagos recientes</p>
+        {[
+          { name: 'Sebastián R.', amt: '+$40k' },
+          { name: 'Miguel A.',    amt: '+$25k' },
+        ].map((t, i) => (
+          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.65)' }}>{t.name}</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: '#22C55E' }}>{t.amt}</p>
+          </div>
+        ))}
+      </div>
+    </>
+  )
 
-function FloatingNotif({ type }: { type: NotifType }) {
-  const cfg: Record<NotifType, { emoji: string; label: string; detail: string; accent: string }> = {
-    appointment: { emoji: '📅', label: 'Nueva cita',    detail: 'Sebastián · 9:00 am', accent: CYAN      },
-    payment:     { emoji: '💳', label: 'Pago recibido', detail: '$45.000 COP',          accent: '#22C55E' },
-    review:      { emoji: '⭐', label: 'Reseña nueva',  detail: 'Diego · 5.0 ★★★★★',  accent: '#F59E0B' },
-  }
-  const { emoji, label, detail, accent } = cfg[type]
+  // ── Pantalla Alertas ─────────────────────────────────────────────────────
+  const screenNotif = (
+    <>
+      <div style={{ padding: '6px 14px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: 14, fontWeight: 800 }}>Notificaciones</p>
+        <span style={{ fontSize: 8, background: '#EF444428', color: '#EF4444', padding: '2px 8px', borderRadius: 99, fontWeight: 700 }}>3 nuevas</span>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        {NOTIFS.map((n, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 9, padding: '9px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', background: i < 3 ? `${n.accent}07` : 'transparent' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, background: `${n.accent}18`, border: `1px solid ${n.accent}28`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>{n.emoji}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <p style={{ fontSize: 10, fontWeight: 700, color: 'white' }}>{n.title}</p>
+                <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.28)', marginLeft: 4, flexShrink: 0 }}>{n.time}</p>
+              </div>
+              <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.45)', marginTop: 1 }}>{n.desc}</p>
+            </div>
+            {i < 3 && <div style={{ width: 6, height: 6, borderRadius: '50%', background: n.accent, flexShrink: 0, marginTop: 3 }} />}
+          </div>
+        ))}
+      </div>
+    </>
+  )
 
   return (
-    <div
-      style={{
-        display: 'inline-flex', alignItems: 'center', gap: 10,
-        padding: '9px 13px',
-        borderRadius: 14,
-        background: 'rgba(11,19,43,0.90)',
-        border: `1px solid ${accent}38`,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: `0 10px 36px rgba(0,0,0,0.50), 0 0 0 1px ${accent}18`,
-        maxWidth: 185,
-        fontFamily: 'var(--font-sora), Sora, system-ui, sans-serif',
-      }}
-    >
-      {/* Icono */}
-      <div style={{
-        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-        background: `${accent}18`, border: `1px solid ${accent}30`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 17,
-      }}>
-        {emoji}
+    <div style={{ position: 'absolute', inset: 0, background: '#07101E', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-sora), Sora, system-ui, sans-serif', overflow: 'hidden', color: 'white' }}>
+      {/* Espacio bajo Dynamic Island */}
+      <div style={{ height: 54, flexShrink: 0 }} />
+
+      {/* Área de contenido — cada pantalla ocupa flex:1 */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        {tab === 'inicio' && screenInicio}
+        {tab === 'agenda' && screenAgenda}
+        {tab === 'caja'   && screenCaja}
+        {tab === 'notif'  && screenNotif}
       </div>
-      {/* Texto */}
-      <div style={{ minWidth: 0 }}>
-        <p style={{
-          fontSize: 9, fontWeight: 700, color: accent,
-          textTransform: 'uppercase', letterSpacing: '0.06em',
-          lineHeight: 1.2, marginBottom: 3,
-        }}>{label}</p>
-        <p style={{
-          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
-          lineHeight: 1.2, whiteSpace: 'nowrap',
-        }}>{detail}</p>
+
+      {/* Bottom navigation */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', display: 'flex', justifyContent: 'space-around', alignItems: 'center', padding: '8px 0 18px', background: 'rgba(7,16,30,0.98)', flexShrink: 0 }}>
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, background: 'none', border: 'none', cursor: 'pointer', padding: '2px 10px', position: 'relative' }}
+          >
+            {/* Badge de notificaciones sin leer */}
+            {t.key === 'notif' && (
+              <span style={{ position: 'absolute', top: 0, right: 6, width: 7, height: 7, borderRadius: '50%', background: '#EF4444', border: '1.5px solid #07101E' }} />
+            )}
+            <PhoneTabIcon icon={t.icon} active={tab === t.key} />
+            <p style={{ fontSize: 8, color: tab === t.key ? CYAN : 'rgba(255,255,255,0.25)', fontWeight: tab === t.key ? 700 : 400 }}>{t.label}</p>
+            {/* Indicador activo */}
+            {tab === t.key && (
+              <div style={{ position: 'absolute', bottom: -1, width: 16, height: 2, borderRadius: 99, background: CYAN }} />
+            )}
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -638,34 +707,6 @@ function Hero() {
             <div className="absolute top-32 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
             <div className="absolute top-44 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
 
-            {/* ── Tarjetas flotantes — visibles a partir de md (≥768px) ── */}
-            {/* Las tarjetas se anclan al borde del teléfono y asoman hacia afuera.
-                Offset de -30px: caben en cualquier viewport md+ sin ser cortadas
-                por el overflow-hidden de la sección. */}
-
-            {/* Nueva cita — arriba a la derecha */}
-            <div
-              className="absolute hidden md:block pointer-events-none"
-              style={{ top: 68, right: -30, animation: 'cardEnter 0.7s ease-out 0.4s both' }}
-            >
-              <FloatingNotif type="appointment" />
-            </div>
-
-            {/* Pago recibido — centro a la derecha */}
-            <div
-              className="absolute hidden md:block pointer-events-none"
-              style={{ top: 280, right: -30, animation: 'cardEnter 0.7s ease-out 0.7s both' }}
-            >
-              <FloatingNotif type="payment" />
-            </div>
-
-            {/* Reseña nueva — abajo a la izquierda */}
-            <div
-              className="absolute hidden md:block pointer-events-none"
-              style={{ bottom: 90, left: -30, animation: 'cardEnter 0.7s ease-out 1.0s both' }}
-            >
-              <FloatingNotif type="review" />
-            </div>
           </div>
         </div>
       </div>
