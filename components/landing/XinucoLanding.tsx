@@ -522,6 +522,83 @@ function PhoneDashboardUI() {
   )
 }
 
+// ─── Sprint 2 helpers — scroll reveal + contadores + grano ───────────────────
+
+/** Detecta cuando el elemento entra al viewport. Dispara una sola vez. */
+function useInView(threshold = 0.14) {
+  const ref  = useRef<HTMLDivElement>(null)
+  const [inView, setInView] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect() } },
+      { threshold },
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [threshold])
+  return { ref, inView }
+}
+
+/** Wrapper que hace fade-up al entrar al viewport. */
+function FadeUp({
+  children, delay = 0, className = '',
+}: { children: React.ReactNode; delay?: number; className?: string }) {
+  const { ref, inView } = useInView()
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity:    inView ? 1 : 0,
+        transform:  inView ? 'translateY(0)' : 'translateY(22px)',
+        transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms`,
+        willChange: 'opacity, transform',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** Cuenta de 0 al valor `to` con ease-out cuando entra al viewport. */
+function AnimatedCounter({ to, suffix = '', duration = 1600 }: { to: number; suffix?: string; duration?: number }) {
+  const { ref, inView } = useInView(0.5)
+  const [count, setCount] = useState(0)
+  const started = useRef(false)
+  useEffect(() => {
+    if (!inView || started.current) return
+    started.current = true
+    const t0 = performance.now()
+    const tick = (now: number) => {
+      const p = Math.min((now - t0) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)   // ease-out cubic
+      setCount(Math.round(eased * to))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [inView, to, duration])
+  return <span ref={ref}>{count}{suffix}</span>
+}
+
+/** Overlay de ruido/grano sobre toda la página. SVG inline, sin carga extra. */
+function GrainOverlay() {
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/></filter><rect width='220' height='220' filter='url(%23n)' opacity='1'/></svg>`
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-[999]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,${svg}")`,
+        backgroundRepeat: 'repeat',
+        opacity: 0.032,
+        mixBlendMode: 'overlay',
+      }}
+    />
+  )
+}
+
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
@@ -621,17 +698,19 @@ function Hero() {
             </a>
           </div>
 
-          {/* Stats — fila horizontal con separadores */}
+          {/* Stats — contadores animados */}
           <div className="flex items-center gap-0 pt-4 border-t border-white/8 w-full justify-center">
             {[
-              { value: '1',    label: 'Vertical activa' },
-              { value: '∞',    label: 'Negocios posibles' },
-              { value: '100%', label: 'Cloud & seguro' },
+              { to: 850,  suffix: '+', label: 'Citas este mes'    },
+              { to: 12,   suffix: '',  label: 'Barberías activas' },
+              { to: 100,  suffix: '%', label: 'Cloud & seguro'    },
             ].map((s, i) => (
               <div key={s.label} className="flex items-center">
                 {i > 0 && <div className="w-px h-8 bg-white/10 mx-6" />}
                 <div className="text-center">
-                  <p className="text-xl font-bold leading-none" style={{ color: CYAN }}>{s.value}</p>
+                  <p className="text-xl font-bold leading-none" style={{ color: CYAN }}>
+                    <AnimatedCounter to={s.to} suffix={s.suffix} />
+                  </p>
                   <p className="text-[10px] text-white/35 mt-1 uppercase tracking-wide">{s.label}</p>
                 </div>
               </div>
@@ -760,7 +839,7 @@ function Verticales() {
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <FadeUp className="text-center mb-16">
           <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: CYAN }}>
             Nuestras Verticales
           </p>
@@ -770,14 +849,14 @@ function Verticales() {
           <p className="mt-4 text-white/50 text-lg max-w-2xl mx-auto">
             El mismo núcleo tecnológico adaptado a cada tipo de negocio. Escala con tu empresa.
           </p>
-        </div>
+        </FadeUp>
 
         {/* Cards */}
         <div className="grid md:grid-cols-3 gap-6">
-          {VERTICALES.map(v => (
+          {VERTICALES.map((v, i) => (
+            <FadeUp key={v.slug} delay={i * 120} className="flex flex-col">
             <div
-              key={v.slug}
-              className="relative rounded-2xl p-6 border transition-all duration-300 hover:-translate-y-1"
+              className="relative rounded-2xl p-6 border transition-all duration-300 hover:-translate-y-1 flex-1"
               style={{
                 background: v.status === 'active'
                   ? `linear-gradient(145deg, ${NAVY2}, #111827)`
@@ -838,6 +917,7 @@ function Verticales() {
                 </a>
               )}
             </div>
+            </FadeUp>
           ))}
         </div>
       </div>
@@ -859,30 +939,29 @@ function Features() {
   return (
     <section className="py-24 px-6" style={{ background: NAVY2 }}>
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-14">
+        <FadeUp className="text-center mb-14">
           <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: BLUE }}>
             Tecnología
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>
             Todo lo que necesita <GradientText>tu negocio</GradientText>
           </h2>
-        </div>
+        </FadeUp>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map(f => (
-            <div
-              key={f.title}
-              className="p-5 rounded-xl border border-white/5 hover:border-white/10 transition-all bg-white/[0.02] hover:bg-white/[0.04]"
-            >
-              <div
-                className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                style={{ background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}22)`, color: CYAN }}
-              >
-                {f.icon}
+          {FEATURES.map((f, i) => (
+            <FadeUp key={f.title} delay={i * 80}>
+              <div className="p-5 rounded-xl border border-white/5 hover:border-white/10 transition-all bg-white/[0.02] hover:bg-white/[0.04] h-full">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
+                  style={{ background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}22)`, color: CYAN }}
+                >
+                  {f.icon}
+                </div>
+                <h4 className="text-white font-semibold mb-1.5">{f.title}</h4>
+                <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
               </div>
-              <h4 className="text-white font-semibold mb-1.5">{f.title}</h4>
-              <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
-        </div>
+            </FadeUp>
           ))}
         </div>
       </div>
@@ -1251,6 +1330,7 @@ function Footer() {
 export default function XinucoLanding({ businesses = [] }: { businesses: BusinessItem[] }) {
   return (
     <div className="antialiased" style={{ background: NAVY, color: 'white' }}>
+      <GrainOverlay />
       <Navbar />
       <Hero />
       <Verticales />
