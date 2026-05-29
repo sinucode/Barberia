@@ -1018,7 +1018,7 @@ const PRICING_CARDS: {
     key: 'profesional', name: 'Profesional',
     desc: 'El CFO virtual de tu barbería. Liquida la nómina del equipo en segundos.',
     price: PLAN_PRICES_COP.profesional, color: CYAN,
-    highlight: true, badge: 'Más popular',
+    highlight: false, badge: null,
     cta: 'Quiero este plan', ctaHref: '#aliados',
     sectionLabel: 'Todo Esencial, más:',
     features: [
@@ -1034,8 +1034,8 @@ const PRICING_CARDS: {
     key: 'elite', name: 'Élite',
     desc: 'Paz mental y marketing automático para cadenas y alto tráfico.',
     price: PLAN_PRICES_COP.elite, color: '#C5A059',
-    highlight: false, badge: null,
-    cta: 'Hablar con ventas', ctaHref: 'mailto:hola@xinuco.com',
+    highlight: true, badge: 'Recomendado',
+    cta: 'Quiero ser Élite', ctaHref: '#aliados',
     sectionLabel: 'Todo Profesional, más:',
     features: [
       'Bot WhatsApp anti-ausencias',
@@ -1129,28 +1129,29 @@ function Pricing() {
                   className="relative rounded-2xl flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1"
                   style={{
                     background: card.highlight
-                      ? `linear-gradient(150deg, #0f1e38, #081020)`
-                      : card.key === 'elite'
-                        ? `linear-gradient(150deg, #16110a, #0e0b05)`
+                      ? `linear-gradient(150deg, #1c1408, #0e0b04)`
+                      : card.key === 'profesional'
+                        ? `linear-gradient(150deg, #0a111e, #070d18)`
                         : NAVY2,
                     border: `1px solid ${
-                      card.highlight   ? card.color + '55' :
-                      card.key === 'elite' ? card.color + '42' :
+                      card.highlight       ? card.color + '60' :
+                      card.key === 'profesional' ? CYAN + '28' :
                       'rgba(255,255,255,0.06)'
                     }`,
                     boxShadow: card.highlight
-                      ? `0 0 70px ${card.color}28, 0 32px 64px rgba(0,0,0,0.55)`
-                      : card.key === 'elite'
-                        ? `0 0 52px ${card.color}22, 0 8px 40px rgba(0,0,0,0.4)`
-                        : '0 8px 40px rgba(0,0,0,0.35)',
+                      ? `0 0 80px ${card.color}30, 0 32px 64px rgba(0,0,0,0.6)`
+                      : card.key === 'profesional'
+                        ? `0 0 40px ${CYAN}12, 0 8px 32px rgba(0,0,0,0.35)`
+                        : '0 4px 24px rgba(0,0,0,0.3)',
                   }}
                 >
                   {/* Acento superior de color */}
                   <div style={{
-                    height: 3,
+                    height: card.highlight ? 4 : 3,
                     background: card.highlight
-                      ? `linear-gradient(90deg, ${CYAN}, ${BLUE})`
-                      : `linear-gradient(90deg, transparent, ${card.color}70, transparent)`,
+                      ? `linear-gradient(90deg, ${card.color}BB, ${card.color}, ${card.color}BB)`
+                      : `linear-gradient(90deg, transparent, ${card.color}55, transparent)`,
+                    boxShadow: card.highlight ? `0 0 12px ${card.color}60` : 'none',
                   }} />
 
                   {/* Badge */}
@@ -1159,10 +1160,10 @@ function Pricing() {
                       <span
                         className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-full"
                         style={{
-                          background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}22)`,
-                          border: `1px solid ${CYAN}50`,
-                          color: CYAN,
-                          boxShadow: `0 0 18px ${CYAN}28`,
+                          background: `${card.color}18`,
+                          border: `1px solid ${card.color}55`,
+                          color: card.color,
+                          boxShadow: `0 0 20px ${card.color}35`,
                         }}
                       >
                         ✦ {card.badge}
@@ -1215,7 +1216,7 @@ function Pricing() {
                       href={card.ctaHref}
                       className="w-full py-3 rounded-xl text-sm font-bold text-center block transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                       style={card.highlight
-                        ? { background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, color: 'white', boxShadow: `0 0 28px ${CYAN}45` }
+                        ? { background: `linear-gradient(135deg, #D4B46A, ${card.color}, #A07830)`, color: '#0e0b04', fontWeight: 800, boxShadow: `0 0 32px ${card.color}50, 0 4px 16px rgba(0,0,0,0.4)` }
                         : { background: 'rgba(255,255,255,0.05)', color: card.color, border: `1px solid ${card.color}38` }
                       }
                     >
