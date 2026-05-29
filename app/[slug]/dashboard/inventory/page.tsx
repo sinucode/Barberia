@@ -56,7 +56,7 @@ export default async function InventoryPage({
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-24">
       <Suspense fallback={<InventorySkeleton />}>
-        <FeatureGate featureKey="inventory" planName="Premium">
+        <FeatureGate featureKey="inventory" planName="Élite">
           <InventoryManager
             items={items}
             lowStockItems={lowStockItems}

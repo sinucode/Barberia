@@ -1,3 +1,7 @@
+# Documentos locales de Claude (deuda técnica, notas internas — nunca al repo)
+.claude/*.local.md
+.claude/worktrees/
+
 # Dependencies
 node_modules/
 .pnp

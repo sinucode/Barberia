@@ -56,7 +56,7 @@ export default async function FixedAssetsPage({
   return (
     <div className="flex flex-col gap-6 max-w-5xl mx-auto pb-24">
       <Suspense fallback={<FixedAssetsSkeleton />}>
-        <FeatureGate featureKey="fixed_assets" planName="Premium">
+        <FeatureGate featureKey="fixed_assets" planName="Élite">
           <FixedAssetsManager
             assets={assets}
             summary={summary}

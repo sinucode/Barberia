@@ -266,8 +266,8 @@ export async function createMPSaaSSubscription(params: {
     return { error: 'Acceso denegado.' }
   }
 
-  if (planId === 'basico') {
-    return { error: 'El plan Básico es gratuito — no requiere suscripción.' }
+  if (planId === 'esencial') {
+    return { error: 'El plan Esencial es de entrada — no requiere suscripción MP.' }
   }
   if (!process.env.MP_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN === 'APP_USR-...') {
     return { error: 'MercadoPago no está configurado.' }
@@ -276,7 +276,10 @@ export async function createMPSaaSSubscription(params: {
   const amountCop      = PLAN_PRICES_COP[planId]
   const appUrl         = process.env.NEXT_PUBLIC_APP_URL ?? 'https://xinuco.app'
   const externalRef    = `saas_${businessId}_${planId}`
-  const planLabels     = { pro: 'Plan Pro', premium: 'Plan Premium' } as const
+  const planLabels: Record<'profesional' | 'elite', string> = {
+    profesional: 'Plan Profesional',
+    elite:       'Plan Élite',
+  }
 
   try {
     const preapprovalApi = new PreApproval(getMPClient())
@@ -289,7 +292,7 @@ export async function createMPSaaSSubscription(params: {
     // pero la API de MP sí lo acepta.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const preapprovalBody: any = {
-      reason:             `Xinuco ${planLabels[planId as 'pro' | 'premium']}`,
+      reason:             `Xinuco ${planLabels[planId as 'profesional' | 'elite'] ?? planId}`,
       payer_email:        payerEmail,
       back_url:           `${appUrl}/${slug}/dashboard/settings/billing?result=subscription`,
       external_reference: externalRef,
@@ -420,9 +423,9 @@ export async function cancelMPSaaSSubscription(
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('business_id', businessId)
 
-    // Revertir features al plan básico
+    // Revertir features al plan Esencial (entrada)
     const basicFeatures: BusinessFeatures = {
-      ...(PLAN_BUNDLES.basico.features as BusinessFeatures),
+      ...(PLAN_BUNDLES.esencial.features as BusinessFeatures),
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase as any)

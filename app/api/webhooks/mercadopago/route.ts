@@ -290,9 +290,9 @@ async function handlePreapproval(preapprovalId: string): Promise<NextResponse> {
       }
     }
 
-    // Si cancelado → revertir a plan básico
+    // Si cancelado → revertir a plan Esencial (entrada)
     if (subStatus === 'cancelled') {
-      const basicFeatures = PLAN_BUNDLES.basico.features ?? {}
+      const basicFeatures = PLAN_BUNDLES.esencial.features ?? {}
       await supabase
         .from('businesses')
         .update({

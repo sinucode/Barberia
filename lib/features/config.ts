@@ -38,15 +38,18 @@ export const FEATURE_CATALOG: Record<keyof BusinessFeatures, FeatureMeta> = {
 
 // ── Precios SaaS en COP (enteros, pagos mensuales vía MP PreApproval) ─────────
 
-export const PLAN_PRICES_COP: Record<'basico' | 'pro' | 'premium', number> = {
-  basico:  0,        // Gratis
-  pro:     99_000,   // ~$24 USD
-  premium: 199_000,  // ~$48 USD
+// Precios mensuales en COP (enteros — NUNCA float).
+// Anual = mensual × 10 (psicología "Paga 10, lleva 12").
+// Semestral = mensual × 6 sin descuento (efecto señuelo).
+export const PLAN_PRICES_COP: Record<'esencial' | 'profesional' | 'elite', number> = {
+  esencial:    57_900,   // ~$14 USD
+  profesional: 79_900,   // ~$19 USD
+  elite:       97_900,   // ~$24 USD
 }
 
 // ── Bundles de plan predefinidos ──────────────────────────────────────────────
 
-export type PlanName = 'basico' | 'pro' | 'premium'
+export type PlanName = 'esencial' | 'profesional' | 'elite'
 
 export interface PlanBundle {
   label:       string
@@ -56,11 +59,16 @@ export interface PlanBundle {
 }
 
 export const PLAN_BUNDLES: Record<PlanName, PlanBundle> = {
-  basico: {
-    label:       'Básico',
-    description: 'Agenda, servicios y staff. Sin módulos financieros avanzados.',
+  esencial: {
+    label:       'Esencial',
+    description: 'Agenda, base de clientes y punto de venta de servicios.',
     color:       'zinc',
     features: {
+      // ── Las 3 únicas funciones del plan Esencial ──────────────────────────
+      // Agenda + Citas Core: siempre incluida en la plataforma (no es feature flag)
+      crm:                    true,   // ✅ Base de Clientes
+      mercadopago_pos:        true,   // ✅ Punto de Venta Básico (Servicios)
+      // ── Todo lo demás bloqueado hasta Profesional o Élite ─────────────────
       notifications_email:    false,
       notifications_whatsapp: false,
       commissions:            false,
@@ -70,56 +78,57 @@ export const PLAN_BUNDLES: Record<PlanName, PlanBundle> = {
       loyalty:                false,
       workstations:           false,
       walk_ins:               false,
-      crm:                    false,
       audit_logs:             false,
       fixed_assets:           false,
       inventory:              false,
       advanced_reports:       false,
-      mercadopago_pos:        false,
       mercadopago_booking:    false,
       mercadopago_saas:       false,
     },
   },
-  pro: {
-    label:       'Pro',
-    description: 'Todo Básico + módulos financieros y operacionales.',
+  profesional: {
+    label:       'Profesional',
+    description: 'CFO Virtual: comisiones automáticas, retail y control de estaciones.',
     color:       'blue',
     features: {
-      notifications_email:    true,
+      // ── Hereda Esencial ───────────────────────────────────────────────────
+      crm:                    true,
+      mercadopago_pos:        true,
+      // ── Módulos CFO Virtual ───────────────────────────────────────────────
+      commissions:            true,   // ✅ Comisiones automáticas
+      staff_ledger:           true,   // ✅ Billetera del staff
+      expenses_pgl:           true,   // ✅ Gastos y P&G
+      retail_sales:           true,   // ✅ Ventas retail
+      workstations:           true,   // ✅ Control de estaciones
+      advanced_reports:       true,   // ✅ Reportes financieros
+      notifications_email:    true,   // ✅ Confirmaciones por email
+      mercadopago_booking:    true,   // ✅ Pago online al reservar
+      // ── Bloqueado hasta Élite ─────────────────────────────────────────────
       notifications_whatsapp: false,
-      commissions:            true,
-      staff_ledger:           true,
-      expenses_pgl:           true,
-      retail_sales:           true,
       loyalty:                false,
-      workstations:           true,
       walk_ins:               false,
-      crm:                    false,
       audit_logs:             false,
       fixed_assets:           false,
       inventory:              false,
-      advanced_reports:       true,
-      mercadopago_pos:        true,
-      mercadopago_booking:    true,
       mercadopago_saas:       false,
     },
   },
-  premium: {
-    label:       'Premium',
-    description: 'Todas las funciones habilitadas.',
+  elite: {
+    label:       'Élite',
+    description: 'Todas las funciones habilitadas. Auditoría, WhatsApp y fidelidad.',
     color:       'amber',
     features: {
       notifications_email:    true,
-      notifications_whatsapp: true,
+      notifications_whatsapp: true,   // ✅ Bot de WhatsApp
       commissions:            true,
       staff_ledger:           true,
       expenses_pgl:           true,
       retail_sales:           true,
-      loyalty:                true,
+      loyalty:                true,   // ✅ Programa de fidelidad
       workstations:           true,
       walk_ins:               true,
       crm:                    true,
-      audit_logs:             true,
+      audit_logs:             true,   // ✅ Auditoría avanzada
       fixed_assets:           true,
       inventory:              true,
       advanced_reports:       true,

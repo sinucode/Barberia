@@ -75,9 +75,9 @@ function Toggle({
 // ── Plan button ───────────────────────────────────────────────────────────────
 
 const PLAN_STYLES: Record<PlanName, { border: string; bg: string; text: string; activeBg: string }> = {
-  basico:  { border: 'rgba(161,161,170,0.25)',  bg: 'transparent',            text: '#a1a1aa', activeBg: 'rgba(161,161,170,0.12)' },
-  pro:     { border: 'rgba(59,130,246,0.30)',   bg: 'transparent',            text: '#93c5fd', activeBg: 'rgba(59,130,246,0.12)'  },
-  premium: { border: 'rgba(197,160,89,0.40)',   bg: 'transparent',            text: '#C5A059', activeBg: 'rgba(197,160,89,0.15)'  },
+  esencial:    { border: 'rgba(161,161,170,0.25)',  bg: 'transparent',            text: '#a1a1aa', activeBg: 'rgba(161,161,170,0.12)' },
+  profesional: { border: 'rgba(59,130,246,0.30)',   bg: 'transparent',            text: '#93c5fd', activeBg: 'rgba(59,130,246,0.12)'  },
+  elite:       { border: 'rgba(197,160,89,0.40)',   bg: 'transparent',            text: '#C5A059', activeBg: 'rgba(197,160,89,0.15)'  },
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────

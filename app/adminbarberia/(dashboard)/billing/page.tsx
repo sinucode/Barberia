@@ -24,9 +24,9 @@ const SUB_STATUS_MAP: Record<string, { label: string; color: string; icon: React
 }
 
 const PLAN_ICON_MAP: Record<string, React.ElementType> = {
-  basico:  Zap,
-  pro:     CheckCircle,
-  premium: Crown,
+  esencial:    Zap,
+  profesional: CheckCircle,
+  elite:       Crown,
 }
 
 const fmtCOP = (n: number) =>
@@ -76,8 +76,8 @@ export default async function BillingPage() {
   // ── KPIs ──────────────────────────────────────────────────────────────────
   const totalActive   = subs.filter(s => s.status === 'authorized').length
   const totalPending  = subs.filter(s => s.status === 'pending').length
-  const totalPro      = subs.filter(s => s.plan_id === 'pro'     && s.status === 'authorized').length
-  const totalPremium  = subs.filter(s => s.plan_id === 'premium' && s.status === 'authorized').length
+  const totalPro      = subs.filter(s => s.plan_id === 'profesional' && s.status === 'authorized').length
+  const totalPremium  = subs.filter(s => s.plan_id === 'elite'       && s.status === 'authorized').length
 
   // MRR estimado
   const mrr = subs
@@ -99,8 +99,8 @@ export default async function BillingPage() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
           { label: 'Activos',  value: totalActive,  icon: CheckCircle,  color: '#10B981' },
-          { label: 'Plan Pro', value: totalPro,      icon: CheckCircle,  color: '#60a5fa' },
-          { label: 'Premium',  value: totalPremium,  icon: Crown,        color: '#C5A059' },
+          { label: 'Profesional', value: totalPro,     icon: CheckCircle,  color: '#60a5fa' },
+          { label: 'Élite',       value: totalPremium, icon: Crown,        color: '#C5A059' },
           { label: 'Pendientes', value: totalPending, icon: Loader,      color: '#F59E0B' },
           { label: 'MRR',      value: fmtCOP(mrr),  icon: TrendingUp,   color: '#34d399' },
         ].map(({ label, value, icon: Icon, color }) => (
@@ -117,9 +117,9 @@ export default async function BillingPage() {
       {/* ── Precios de referencia ── */}
       <div className="flex items-center gap-6 px-4 py-3 rounded-xl border border-xinuco-border bg-xinuco-surface/50 text-xs text-xinuco-muted">
         <span className="font-semibold text-xinuco-text">Tarifas mensuales:</span>
-        <span>Básico — <strong className="text-zinc-300">Gratis</strong></span>
-        <span>Pro — <strong className="text-blue-400">{fmtCOP(PLAN_PRICES_COP.pro)}</strong></span>
-        <span>Premium — <strong className="text-amber-400">{fmtCOP(PLAN_PRICES_COP.premium)}</strong></span>
+        <span>Esencial — <strong className="text-zinc-300">{fmtCOP(PLAN_PRICES_COP.esencial)}</strong></span>
+        <span>Profesional — <strong className="text-blue-400">{fmtCOP(PLAN_PRICES_COP.profesional)}</strong></span>
+        <span>Élite — <strong className="text-amber-400">{fmtCOP(PLAN_PRICES_COP.elite)}</strong></span>
       </div>
 
       {/* ── Tabla de suscripciones ── */}
@@ -145,7 +145,7 @@ export default async function BillingPage() {
           <tbody>
             {biz.map((b) => {
               const sub       = subIndex[b.id]
-              const planId    = sub?.plan_id ?? 'basico'
+              const planId    = sub?.plan_id ?? 'esencial'
               const status    = sub?.status  ?? 'none'
               const statusDef = SUB_STATUS_MAP[status] ?? SUB_STATUS_MAP.none
               const StatusIcon = statusDef.icon

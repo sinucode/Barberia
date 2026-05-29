@@ -40,15 +40,15 @@ const fmtCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
 
 const PLAN_ICONS: Record<PlanName, React.ReactNode> = {
-  basico:  <Zap size={18} />,
-  pro:     <CheckCircle size={18} />,
-  premium: <Crown size={18} />,
+  esencial:    <Zap size={18} />,
+  profesional: <CheckCircle size={18} />,
+  elite:       <Crown size={18} />,
 }
 
 const PLAN_COLORS: Record<PlanName, { bg: string; border: string; text: string }> = {
-  basico:  { bg: 'rgba(161,161,170,0.08)', border: 'rgba(161,161,170,0.2)', text: '#a1a1aa' },
-  pro:     { bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.25)', text: '#60a5fa' },
-  premium: { bg: 'rgba(197,160,89,0.08)',  border: 'rgba(197,160,89,0.3)',  text: '#C5A059' },
+  esencial:    { bg: 'rgba(161,161,170,0.08)', border: 'rgba(161,161,170,0.2)', text: '#a1a1aa' },
+  profesional: { bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.25)', text: '#60a5fa' },
+  elite:       { bg: 'rgba(197,160,89,0.08)',  border: 'rgba(197,160,89,0.3)',  text: '#C5A059' },
 }
 
 // ── Componente ─────────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ export function SaaSBillingPanel({
 
   // ── Suscribirse a un plan ─────────────────────────────────────────────────
   async function handleSubscribe(planId: PlanName) {
-    if (planId === 'basico') return
+    if (planId === 'esencial') return
     setLoading(planId)
     setError(null)
 
@@ -85,7 +85,7 @@ export function SaaSBillingPanel({
 
   // ── Cancelar suscripción activa ───────────────────────────────────────────
   async function handleCancel() {
-    if (!confirm('¿Estás seguro de cancelar tu suscripción? Tu plan se revertirá a Básico.')) return
+    if (!confirm('¿Estás seguro de cancelar tu suscripción? Tu plan se revertirá a Esencial.')) return
     setCanceling(true)
     setError(null)
 
@@ -124,7 +124,7 @@ export function SaaSBillingPanel({
           <div>
             <p className="text-sm font-semibold text-red-300">Suscripción cancelada</p>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Tu plan fue revertido a Básico. Puedes volver a suscribirte cuando quieras.
+              Tu plan fue revertido a Esencial. Puedes volver a suscribirte cuando quieras.
             </p>
           </div>
         </div>
@@ -137,14 +137,14 @@ export function SaaSBillingPanel({
           <div className="flex items-center gap-2">
             {currentPlan !== 'custom' && (
               <span style={{ color: PLAN_COLORS[currentPlan]?.text ?? '#a1a1aa' }}>
-                {PLAN_ICONS[currentPlan] ?? PLAN_ICONS.basico}
+                {PLAN_ICONS[currentPlan] ?? PLAN_ICONS.esencial}
               </span>
             )}
             <div>
               <p className="text-base font-bold text-zinc-100 capitalize">
-                {currentPlan === 'custom' ? 'Personalizado' : `Plan ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}`}
+                {currentPlan === 'custom' ? 'Personalizado' : `Plan ${PLAN_BUNDLES[currentPlan].label}`}
               </p>
-              {currentPlan !== 'custom' && currentPlan !== 'basico' && (
+              {currentPlan !== 'custom' && currentPlan !== 'esencial' && (
                 <p className="text-xs text-zinc-500">
                   {fmtCOP(PLAN_PRICES_COP[currentPlan])} / mes
                 </p>
@@ -181,7 +181,7 @@ export function SaaSBillingPanel({
 
       {/* ── Tarjetas de planes ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {(['basico', 'pro', 'premium'] as PlanName[]).map((planId) => {
+        {(['esencial', 'profesional', 'elite'] as PlanName[]).map((planId) => {
           const bundle   = PLAN_BUNDLES[planId]
           const price    = PLAN_PRICES_COP[planId]
           const colors   = PLAN_COLORS[planId]
@@ -208,8 +208,8 @@ export function SaaSBillingPanel({
               {/* Header */}
               <div className="flex items-center gap-2 mb-2">
                 <span style={{ color: colors.text }}>{PLAN_ICONS[planId]}</span>
-                <h3 className="text-sm font-bold capitalize" style={{ color: isCurrent ? colors.text : 'var(--xinuco-text)' }}>
-                  {planId.charAt(0).toUpperCase() + planId.slice(1)}
+                <h3 className="text-sm font-bold" style={{ color: isCurrent ? colors.text : 'var(--xinuco-text)' }}>
+                  {PLAN_BUNDLES[planId].label}
                   {isCurrent && <span className="ml-1.5 text-[10px] font-semibold opacity-80">(actual)</span>}
                 </h3>
               </div>
@@ -237,8 +237,8 @@ export function SaaSBillingPanel({
                   style={{ borderColor: colors.border, color: colors.text, background: colors.bg }}>
                   Plan actual
                 </div>
-              ) : planId === 'basico' ? (
-                <div className="text-center text-xs text-zinc-600 py-2.5">Plan gratuito de entrada</div>
+              ) : planId === 'esencial' ? (
+                <div className="text-center text-xs text-zinc-600 py-2.5">Plan de entrada</div>
               ) : (
                 <button
                   type="button"
@@ -250,7 +250,7 @@ export function SaaSBillingPanel({
                   {isLoading ? (
                     <><Loader2 size={13} className="animate-spin" /> Redirigiendo…</>
                   ) : (
-                    `Activar ${planId.charAt(0).toUpperCase() + planId.slice(1)}`
+                    `Activar ${PLAN_BUNDLES[planId].label}`
                   )}
                 </button>
               )}
@@ -264,7 +264,7 @@ export function SaaSBillingPanel({
         <div className="flex items-center justify-between p-4 rounded-xl border border-zinc-800 bg-zinc-900/30">
           <div>
             <p className="text-sm font-semibold text-zinc-300">Cancelar suscripción</p>
-            <p className="text-xs text-zinc-500 mt-0.5">Tu plan pasará a Básico al cancelar.</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Tu plan pasará a Esencial al cancelar.</p>
           </div>
           <button
             type="button"
