@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   CalendarDays, Scissors, BarChart2, Settings, ChevronRight,
   Users, Store, Percent, Wallet, Receipt, Gift, LayoutGrid, Shield, UserPlus,
-  BookUser, Package, BookOpen, ShoppingBag, Archive,
+  BookUser, Package, BookOpen, ShoppingBag, Archive, Lock,
   type LucideIcon,
 } from 'lucide-react'
 import type { Business, BusinessFeatures } from '@/types/database'
@@ -25,6 +25,7 @@ interface NavLink {
   label:     string
   feature:   keyof BusinessFeatures | null  // null = always visible
   adminOnly: boolean
+  locked?:   boolean                        // true = feature restringida por plan
 }
 
 function buildLinks(slug: string, features: BusinessFeatures): NavLink[] {
@@ -48,10 +49,11 @@ function buildLinks(slug: string, features: BusinessFeatures): NavLink[] {
     { href: `/${slug}/dashboard/settings`,     icon: Settings,     label: 'Configuración',   feature: null,               adminOnly: true },
   ]
 
-  return all.filter(
-    (link) =>
-      (link.feature === null || features[link.feature] === true)
-  )
+  // Devolver TODOS los links — el UI muestra candado en los restringidos
+  return all.map(link => ({
+    ...link,
+    locked: link.feature !== null && features[link.feature] !== true,
+  }))
 }
 
 export function DashboardSidebar({
@@ -150,22 +152,31 @@ export function DashboardSidebar({
                 href={link.href}
                 className={`flex items-center gap-3 rounded-xl transition-all duration-200 group overflow-hidden
                   ${isCollapsed ? 'justify-center py-3' : 'px-3 py-2.5'}
-                  ${isActive ? 'bg-xinuco-surface' : 'hover:bg-white/[0.05] text-xinuco-muted hover:text-xinuco-text'}
+                  ${link.locked
+                    ? 'opacity-40 hover:opacity-60'
+                    : isActive
+                      ? 'bg-xinuco-surface'
+                      : 'hover:bg-white/[0.05] text-xinuco-muted hover:text-xinuco-text'
+                  }
                 `}
-                title={isCollapsed ? link.label : undefined}
+                title={isCollapsed ? `${link.label}${link.locked ? ' (Restringido)' : ''}` : undefined}
               >
                 <div
-                  className={`flex items-center justify-center relative ${isActive ? 'text-[var(--primary-color)]' : ''}`}
+                  className={`flex items-center justify-center relative ${isActive && !link.locked ? 'text-[var(--primary-color)]' : ''}`}
                 >
-                  {isActive && !isCollapsed && (
+                  {isActive && !isCollapsed && !link.locked && (
                     <div className="absolute -left-3 w-1 h-5 rounded-r-full" style={{ backgroundColor: 'var(--primary-color)' }} />
                   )}
-                  <link.icon size={20} strokeWidth={isActive ? 2.5 : 1.75} />
+                  <link.icon size={20} strokeWidth={isActive && !link.locked ? 2.5 : 1.75} />
                 </div>
                 {!isCollapsed && (
-                  <span className={`font-medium text-sm whitespace-nowrap transition-colors ${isActive ? 'text-xinuco-text' : ''}`}>
+                  <span className={`flex-1 font-medium text-sm whitespace-nowrap transition-colors ${isActive && !link.locked ? 'text-xinuco-text' : ''}`}>
                     {link.label}
                   </span>
+                )}
+                {/* Candado para features restringidas */}
+                {link.locked && !isCollapsed && (
+                  <Lock size={13} className="text-xinuco-muted opacity-60 shrink-0" />
                 )}
               </Link>
             )

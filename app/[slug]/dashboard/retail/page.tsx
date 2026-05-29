@@ -79,7 +79,7 @@ export default async function RetailPage({
   return (
     <div className="flex flex-col gap-6 max-w-6xl mx-auto pb-24">
       <Suspense fallback={<RetailPOSSkeleton />}>
-        <FeatureGate feature="retail_sales">
+        <FeatureGate featureKey="retail_sales" planName="Pro">
           <RetailPOS
             businessId={businessId}
             slug={slug}
