@@ -1006,7 +1006,7 @@ const PRICING_CARDS: {
     desc: 'Para el barbero que da el primer paso hacia la digitalización.',
     price: PLAN_PRICES_COP.esencial, color: '#A1A1AA',
     highlight: false, badge: null,
-    cta: 'Empezar gratis', ctaHref: '#aliados',
+    cta: 'Empezar ahora', ctaHref: '#aliados',
     sectionLabel: 'Incluye',
     features: [
       'Agenda + Citas Core (24 / 7)',
