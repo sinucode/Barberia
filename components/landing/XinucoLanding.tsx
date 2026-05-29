@@ -265,6 +265,193 @@ function Navbar() {
   )
 }
 
+// ─── Phone Dashboard UI ───────────────────────────────────────────────────────
+// Pantalla simulada del dashboard de Xinuco Barbería para el mockup del Hero.
+// Diseñada para 285×616 px — 100% CSS/JSX, sin imágenes externas.
+function PhoneDashboardUI() {
+  const citas = [
+    { time: '9:00',  name: 'Sebastián R.', service: 'Corte + Barba',  price: '$40k', dot: '#22C55E' },
+    { time: '10:30', name: 'Miguel A.',     service: 'Fade bajo',       price: '$25k', dot: '#22C55E' },
+    { time: '12:00', name: 'Juan C.',       service: 'Barba completa',  price: '$20k', dot: '#F59E0B' },
+    { time: '14:00', name: 'Pedro L.',      service: 'Corte clásico',   price: '$30k', dot: 'rgba(255,255,255,0.18)' },
+  ]
+
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0,
+        background: '#07101E',
+        display: 'flex', flexDirection: 'column',
+        fontFamily: 'var(--font-sora), Sora, system-ui, sans-serif',
+        overflow: 'hidden',
+        color: 'white',
+      }}
+    >
+      {/* Espacio bajo Dynamic Island */}
+      <div style={{ height: 54 }} />
+
+      {/* Header */}
+      <div style={{ padding: '4px 18px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', lineHeight: 1.3 }}>Buenos días</p>
+          <p style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3 }}>Carlos Mendoza</p>
+        </div>
+        <div style={{
+          width: 32, height: 32, borderRadius: '50%',
+          background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 10, fontWeight: 800,
+        }}>CM</div>
+      </div>
+
+      {/* Badge de fecha con punto de estado */}
+      <div style={{ padding: '0 18px 12px' }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5,
+          fontSize: 10, color: CYAN,
+          background: `${CYAN}14`, padding: '4px 10px',
+          borderRadius: 99, border: `1px solid ${CYAN}28`,
+        }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: CYAN, display: 'inline-block' }} />
+          Mié 28 May · 5 citas hoy
+        </span>
+      </div>
+
+      {/* Stats — Hoy / Semana */}
+      <div style={{ display: 'flex', gap: 8, padding: '0 14px 14px' }}>
+        <div style={{
+          flex: 1, borderRadius: 11, padding: '9px 11px',
+          background: `linear-gradient(135deg, ${CYAN}18, ${BLUE}14)`,
+          border: `1px solid ${CYAN}28`,
+        }}>
+          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>Hoy</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: CYAN, lineHeight: 1 }}>$85k</p>
+          <p style={{ fontSize: 8, color: `${CYAN}99`, marginTop: 2 }}>3 de 5 pagados</p>
+        </div>
+        <div style={{
+          flex: 1, borderRadius: 11, padding: '9px 11px',
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.07)',
+        }}>
+          <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginBottom: 3 }}>Semana</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: '#7EB3FF', lineHeight: 1 }}>$420k</p>
+          <p style={{ fontSize: 8, color: 'rgba(126,179,255,0.55)', marginTop: 2 }}>↑ 12% vs ant.</p>
+        </div>
+      </div>
+
+      {/* Encabezado sección */}
+      <div style={{ padding: '0 14px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>Agenda de hoy</p>
+        <p style={{ fontSize: 9, color: CYAN }}>Ver todo →</p>
+      </div>
+
+      {/* Lista de citas */}
+      {citas.map((a, i) => (
+        <div
+          key={i}
+          style={{
+            margin: '0 14px 7px',
+            background: 'rgba(255,255,255,0.025)',
+            borderRadius: 10, padding: '7px 10px',
+            border: '1px solid rgba(255,255,255,0.05)',
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          <p style={{ minWidth: 32, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>
+            {a.time}
+          </p>
+          <div style={{ width: 2, height: 26, borderRadius: 99, background: a.dot, flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1.2, marginBottom: 1 }}>{a.name}</p>
+            <p style={{ fontSize: 8, color: 'rgba(255,255,255,0.33)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {a.service}
+            </p>
+          </div>
+          <p style={{
+            fontSize: 10, fontWeight: 700, flexShrink: 0,
+            color: a.dot.startsWith('rgba') ? 'rgba(255,255,255,0.3)' : a.dot,
+          }}>{a.price}</p>
+        </div>
+      ))}
+
+      {/* Bottom nav */}
+      <div style={{
+        marginTop: 'auto',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex', justifyContent: 'space-around', alignItems: 'center',
+        padding: '10px 0 20px',
+        background: 'rgba(7,16,30,0.97)',
+      }}>
+        {(['Inicio', 'Agenda', 'Caja', 'Perfil'] as const).map((tab, i) => (
+          <div key={tab} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{
+              width: 20, height: 20,
+              borderRadius: tab === 'Perfil' ? 99 : 5,
+              background: i === 0
+                ? `linear-gradient(135deg, ${CYAN}, ${BLUE})`
+                : 'rgba(255,255,255,0.1)',
+            }} />
+            <p style={{ fontSize: 8, color: i === 0 ? CYAN : 'rgba(255,255,255,0.25)', fontWeight: i === 0 ? 700 : 400 }}>
+              {tab}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Floating Notification Card ──────────────────────────────────────────────
+type NotifType = 'appointment' | 'payment' | 'review'
+
+function FloatingNotif({ type }: { type: NotifType }) {
+  const cfg: Record<NotifType, { emoji: string; label: string; detail: string; accent: string }> = {
+    appointment: { emoji: '📅', label: 'Nueva cita',    detail: 'Sebastián · 9:00 am', accent: CYAN      },
+    payment:     { emoji: '💳', label: 'Pago recibido', detail: '$45.000 COP',          accent: '#22C55E' },
+    review:      { emoji: '⭐', label: 'Reseña nueva',  detail: 'Diego · 5.0 ★★★★★',  accent: '#F59E0B' },
+  }
+  const { emoji, label, detail, accent } = cfg[type]
+
+  return (
+    <div
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 10,
+        padding: '9px 13px',
+        borderRadius: 14,
+        background: 'rgba(11,19,43,0.90)',
+        border: `1px solid ${accent}38`,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: `0 10px 36px rgba(0,0,0,0.50), 0 0 0 1px ${accent}18`,
+        maxWidth: 185,
+        fontFamily: 'var(--font-sora), Sora, system-ui, sans-serif',
+      }}
+    >
+      {/* Icono */}
+      <div style={{
+        width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+        background: `${accent}18`, border: `1px solid ${accent}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 17,
+      }}>
+        {emoji}
+      </div>
+      {/* Texto */}
+      <div style={{ minWidth: 0 }}>
+        <p style={{
+          fontSize: 9, fontWeight: 700, color: accent,
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+          lineHeight: 1.2, marginBottom: 3,
+        }}>{label}</p>
+        <p style={{
+          fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.85)',
+          lineHeight: 1.2, whiteSpace: 'nowrap',
+        }}>{detail}</p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
@@ -384,8 +571,12 @@ function Hero() {
 
         {/* ══ Columna derecha: celular ══ */}
         <div className="flex justify-center items-center">
-          <div className="relative">
-            {/* Halo detrás del teléfono */}
+          {/* Todo el grupo (teléfono + tarjetas) flota como una unidad */}
+          <div
+            className="relative"
+            style={{ animation: 'phoneFloat 3.5s ease-in-out infinite' }}
+          >
+            {/* Halo pulsante detrás del teléfono */}
             <div
               className="absolute pointer-events-none"
               style={{
@@ -394,7 +585,7 @@ function Hero() {
                 transform: 'translate(-50%, -50%)',
                 background: `radial-gradient(ellipse at center, ${BLUE}55 0%, ${CYAN}30 40%, transparent 70%)`,
                 filter: 'blur(48px)',
-                opacity: 0.5,
+                animation: 'glowPulse 2.5s ease-in-out infinite',
               }}
             />
 
@@ -414,7 +605,7 @@ function Hero() {
               style={{
                 width: 285,
                 height: 616,
-                background: '#080d1a',
+                background: '#07101E',
                 border: '1.5px solid rgba(255,255,255,0.18)',
                 boxShadow: [
                   '0 48px 96px rgba(0,0,0,0.7)',
@@ -429,18 +620,11 @@ function Hero() {
                 className="absolute top-4 left-1/2 -translate-x-1/2 z-10 rounded-full"
                 style={{ width: 96, height: 28, background: '#000' }}
               />
-              {/* Pantalla — splash */}
-              <Image
-                src="https://rymlwtijbtokpqharrig.supabase.co/storage/v1/object/public/assets/landing/xinuco-splash.png"
-                alt="Xinuco App"
-                fill
-                sizes="285px"
-                className="object-cover"
-                priority
-              />
+              {/* Pantalla — UI real del dashboard */}
+              <PhoneDashboardUI />
               {/* Brillo de pantalla (reflejo superior) */}
               <div
-                className="absolute top-0 left-0 right-0 h-40 pointer-events-none z-10"
+                className="absolute top-0 left-0 right-0 h-40 pointer-events-none z-20"
                 style={{
                   background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)',
                   borderRadius: '2.8rem 2.8rem 0 0',
@@ -452,6 +636,31 @@ function Hero() {
             <div className="absolute top-24 -right-[3px] rounded-full" style={{ width: 3, height: 56, background: 'rgba(255,255,255,0.2)' }} />
             <div className="absolute top-32 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
             <div className="absolute top-44 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
+
+            {/* ── Tarjetas flotantes — visibles solo en desktop (lg+) ── */}
+            {/* Nueva cita — arriba a la derecha */}
+            <div
+              className="absolute hidden lg:block pointer-events-none"
+              style={{ top: 72, right: -108, animation: 'cardEnter 0.7s ease-out 0.4s both' }}
+            >
+              <FloatingNotif type="appointment" />
+            </div>
+
+            {/* Pago recibido — centro a la derecha */}
+            <div
+              className="absolute hidden lg:block pointer-events-none"
+              style={{ top: 276, right: -108, animation: 'cardEnter 0.7s ease-out 0.7s both' }}
+            >
+              <FloatingNotif type="payment" />
+            </div>
+
+            {/* Reseña nueva — abajo a la izquierda */}
+            <div
+              className="absolute hidden lg:block pointer-events-none"
+              style={{ bottom: 96, left: -108, animation: 'cardEnter 0.7s ease-out 1.0s both' }}
+            >
+              <FloatingNotif type="review" />
+            </div>
           </div>
         </div>
       </div>
