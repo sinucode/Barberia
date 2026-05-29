@@ -688,7 +688,7 @@ function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
   return (
     <section
       id="aliados"
-      className="py-24 px-6 relative overflow-hidden"
+      className="py-24 px-6 relative overflow-x-hidden"
       style={{ background: `linear-gradient(180deg, ${NAVY2} 0%, ${NAVY} 100%)` }}
     >
       {/* Glow de fondo */}
@@ -811,7 +811,7 @@ function Aliados({ businesses = [] }: { businesses: BusinessItem[] }) {
                     {/* Lista — scrollable con fade inferior */}
                     <div className="relative">
                     <div
-                      className="max-h-48 overflow-y-auto"
+                      className="max-h-72 overflow-y-auto"
                       style={{ scrollbarWidth: 'thin', scrollbarColor: `${CYAN}40 transparent` }}
                     >
                       {filtered.length === 0 ? (
