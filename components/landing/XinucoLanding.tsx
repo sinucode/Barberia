@@ -1260,12 +1260,6 @@ function Pricing() {
           })}
         </div>
 
-        {/* ── Nota legal ── */}
-        <FadeUp className="text-center mt-14">
-          <p className="text-white/20 text-sm">
-            14 días de prueba gratis en todos los planes · Sin tarjeta de crédito · Cancela cuando quieras
-          </p>
-        </FadeUp>
 
       </div>
     </section>
