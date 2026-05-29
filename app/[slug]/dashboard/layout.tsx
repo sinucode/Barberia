@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/layout/BottomNav'
 import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { FeaturesProvider } from '@/lib/features/context'
 import { RoleProvider } from '@/lib/features/role-context'
+import { TrialBanner } from '@/components/dashboard/TrialBanner'
 import type { Business, BusinessFeatures, UserRole, Profile } from '@/types/database'
 
 export default async function DashboardLayout({
@@ -22,7 +23,7 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/${slug}/login`)
 
-  // Fetch para el Header, Sidebar y FeaturesProvider
+  // Fetch para el Header, Sidebar, FeaturesProvider y Trial
   const [{ data: profile }, { data: business }] = await Promise.all([
     supabase
       .from('profiles')
@@ -31,39 +32,43 @@ export default async function DashboardLayout({
       .single<Pick<Profile, 'full_name' | 'role'>>(),
     supabase
       .from('businesses')
-      .select('id, name, branding, features_enabled')
+      .select('id, name, branding, features_enabled, trial_expires_at')
       .eq('slug', slug)
-      .single<Pick<Business, 'id' | 'name' | 'branding' | 'features_enabled'>>(),
+      .single<Pick<Business, 'id' | 'name' | 'branding' | 'features_enabled' | 'trial_expires_at'>>(),
   ])
 
-  // Leer features_enabled del JSONB — cast estricto sin "as any"
-  const features = (business?.features_enabled ?? {}) as unknown as BusinessFeatures
+  const features        = (business?.features_enabled ?? {}) as unknown as BusinessFeatures
+  const trialExpiresAt  = business?.trial_expires_at ?? null
 
   return (
     <RoleProvider role={(profile?.role ?? 'barber') as UserRole}>
-      <FeaturesProvider features={features}>
-      <DashboardSidebar slug={slug} business={business}>
-        <div className="flex flex-col min-h-screen">
-          {/* Header en desktop y mobile */}
-          {business && (
-            <Header
-              business={business}
-              userName={profile?.full_name ?? undefined}
-            />
-          )}
+      <FeaturesProvider features={features} trialExpiresAt={trialExpiresAt}>
+        <DashboardSidebar slug={slug} business={business}>
+          <div className="flex flex-col min-h-screen">
+            {/* Header en desktop y mobile */}
+            {business && (
+              <Header
+                business={business}
+                userName={profile?.full_name ?? undefined}
+              />
+            )}
 
-          {/* Área de contenido principal */}
-          <div className="flex-1 w-full pb-safe-bottom">
-            {children}
-          </div>
+            {/* Banner de trial activo — visible solo para admins */}
+            <TrialBanner slug={slug} />
 
-          {/* Bottom Nav solo para mobile */}
-          <div className="md:hidden">
-            <BottomNav slug={slug} />
+            {/* Área de contenido principal */}
+            <div className="flex-1 w-full pb-safe-bottom">
+              {children}
+            </div>
+
+            {/* Bottom Nav solo para mobile */}
+            <div className="md:hidden">
+              <BottomNav slug={slug} />
+            </div>
           </div>
-        </div>
-      </DashboardSidebar>
+        </DashboardSidebar>
       </FeaturesProvider>
     </RoleProvider>
   )
 }
+

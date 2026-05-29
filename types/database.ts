@@ -94,6 +94,8 @@ export interface Business {
   // ── SaaS Billing (RF23) — columnas pendientes de migración ───────────────
   stripe_customer_id?:      string | null
   subscription_status?:     'active' | 'past_due' | 'canceled' | 'trialing' | null
+  // ── Trial Mode — acceso temporal con fecha de vencimiento ────────────────
+  trial_expires_at?:        string | null   // ISO timestamp — null = sin trial activo
   created_at:       string
 }
 

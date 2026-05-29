@@ -270,3 +270,55 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
+
+// ── Trial Mode Actions ────────────────────────────────────────────────────────
+
+/**
+ * setBusinessTrial — Activa el modo trial para un negocio.
+ * Mientras el trial esté activo, el FeatureGate tratará TODAS las features
+ * como habilitadas, sin modificar features_enabled (los datos nunca se borran).
+ *
+ * @param businessId - UUID del negocio
+ * @param expiresAt  - ISO 8601 timestamp de vencimiento (ej: "2026-06-28T23:59:59Z")
+ */
+export async function setBusinessTrial(
+  businessId: string,
+  expiresAt: string,
+): Promise<ActionResult> {
+  const { error, supabase } = await requireSuperAdmin()
+  if (error || !supabase) return { success: false, error: error ?? 'Error desconocido.' }
+
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update({ trial_expires_at: expiresAt } as Record<string, unknown>)
+    .eq('id', businessId)
+
+  if (updateError) return { success: false, error: updateError.message }
+
+  revalidatePath('/super-admin/businesses')
+  revalidatePath(`/super-admin/businesses/${businessId}`)
+  return { success: true }
+}
+
+/**
+ * clearBusinessTrial — Desactiva el trial de un negocio de inmediato.
+ * Los datos del negocio NO son afectados — solo se quita el acceso temporal.
+ */
+export async function clearBusinessTrial(
+  businessId: string,
+): Promise<ActionResult> {
+  const { error, supabase } = await requireSuperAdmin()
+  if (error || !supabase) return { success: false, error: error ?? 'Error desconocido.' }
+
+  const { error: updateError } = await supabase
+    .from('businesses')
+    .update({ trial_expires_at: null } as Record<string, unknown>)
+    .eq('id', businessId)
+
+  if (updateError) return { success: false, error: updateError.message }
+
+  revalidatePath('/super-admin/businesses')
+  revalidatePath(`/super-admin/businesses/${businessId}`)
+  return { success: true }
+}
+

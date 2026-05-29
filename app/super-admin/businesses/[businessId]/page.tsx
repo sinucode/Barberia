@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { BusinessFeatureManager } from '@/components/super-admin/BusinessFeatureManager'
+import { TrialManager } from '@/components/super-admin/TrialManager'
 import type { BusinessFeatures } from '@/types/database'
 
 interface PageProps {
@@ -23,13 +24,14 @@ export default async function BusinessFeaturePage({ params }: PageProps) {
 
   const { data: biz, error } = await supabase
     .from('businesses')
-    .select('id, name, slug, features_enabled')
+    .select('id, name, slug, features_enabled, trial_expires_at')
     .eq('id', businessId)
     .single()
 
   if (error || !biz) redirect('/super-admin/businesses')
 
-  const features = (biz.features_enabled ?? {}) as unknown as BusinessFeatures
+  const features        = (biz.features_enabled ?? {}) as unknown as BusinessFeatures
+  const trialExpiresAt  = (biz as Record<string, unknown>).trial_expires_at as string | null ?? null
 
   return (
     <div className="flex flex-col gap-6">
@@ -66,6 +68,13 @@ export default async function BusinessFeaturePage({ params }: PageProps) {
           Usuarios
         </a>
       </div>
+
+      {/* Trial Manager */}
+      <TrialManager
+        businessId={biz.id}
+        businessName={biz.name}
+        trialExpiresAt={trialExpiresAt}
+      />
 
       {/* Feature manager (client component) */}
       <BusinessFeatureManager
