@@ -137,10 +137,11 @@ function Navbar() {
   const [open, setOpen] = useState(false)
 
   const links = [
-    { label: 'Inicio',     href: '#hero' },
-    { label: 'Verticales', href: '#verticales' },
-    { label: 'Aliados',    href: '#aliados' },
-    { label: 'Nosotros',   href: '#nosotros' },
+    { label: 'Inicio',     href: '#hero'       },
+    { label: 'Verticales', href: '#verticales'  },
+    { label: 'Precios',    href: '#precios'     },
+    { label: 'Aliados',    href: '#aliados'     },
+    { label: 'Nosotros',   href: '#nosotros'    },
   ]
 
   return (
@@ -971,6 +972,241 @@ function Features() {
   )
 }
 
+// ─── Precios ──────────────────────────────────────────────────────────────────
+type PlanItem = {
+  key: string; name: string; desc: string
+  priceMonthly: number; priceAnnual: number
+  color: string; highlight: boolean; badge: string | null
+  cta: string; ctaHref: string
+  features: { text: string; ok: boolean }[]
+}
+
+const PLANES: PlanItem[] = [
+  {
+    key: 'basico', name: 'Básico', desc: 'Para comenzar',
+    priceMonthly: 79000, priceAnnual: 63000,
+    color: 'rgba(255,255,255,0.55)', highlight: false, badge: null,
+    cta: 'Empezar gratis', ctaHref: '#aliados',
+    features: [
+      { text: '1 barbero / silla',       ok: true  },
+      { text: 'Agenda online 24/7',      ok: true  },
+      { text: 'Caja registradora',       ok: true  },
+      { text: 'App móvil',              ok: true  },
+      { text: 'Control de inventario',  ok: false },
+      { text: 'Comisiones de personal', ok: false },
+      { text: 'Reportes financieros',   ok: false },
+      { text: 'Multi-sucursal',         ok: false },
+    ],
+  },
+  {
+    key: 'pro', name: 'Pro', desc: 'El favorito de las barberías',
+    priceMonthly: 149000, priceAnnual: 119000,
+    color: CYAN, highlight: true, badge: 'Más popular',
+    cta: 'Quiero este plan', ctaHref: '#aliados',
+    features: [
+      { text: 'Hasta 5 barberos / sillas', ok: true  },
+      { text: 'Agenda online 24/7',        ok: true  },
+      { text: 'Caja registradora',         ok: true  },
+      { text: 'App móvil',                ok: true  },
+      { text: 'Control de inventario',    ok: true  },
+      { text: 'Comisiones de personal',   ok: true  },
+      { text: 'Reportes financieros',     ok: true  },
+      { text: 'Multi-sucursal',           ok: false },
+    ],
+  },
+  {
+    key: 'cadena', name: 'Cadena', desc: 'Para múltiples locales',
+    priceMonthly: 279000, priceAnnual: 224000,
+    color: BLUE, highlight: false, badge: null,
+    cta: 'Hablar con ventas', ctaHref: 'mailto:hola@xinuco.com',
+    features: [
+      { text: 'Barberos ilimitados',      ok: true },
+      { text: 'Agenda online 24/7',       ok: true },
+      { text: 'Caja registradora',        ok: true },
+      { text: 'App móvil',               ok: true },
+      { text: 'Control de inventario',   ok: true },
+      { text: 'Comisiones de personal',  ok: true },
+      { text: 'Reportes financieros',    ok: true },
+      { text: 'Multi-sucursal',          ok: true },
+    ],
+  },
+]
+
+function Pricing() {
+  const [annual, setAnnual] = useState(false)
+
+  // Solo display — no cálculo financiero, sin floats en BD
+  function fmt(amt: number) { return '$' + Math.round(amt / 1000) + 'k' }
+  function savedPerYear(p: PlanItem) { return Math.round((p.priceMonthly - p.priceAnnual) * 12 / 1000) }
+
+  return (
+    <section
+      id="precios"
+      className="py-24 px-6"
+      style={{ background: `linear-gradient(180deg, ${NAVY2} 0%, ${NAVY} 100%)` }}
+    >
+      <div className="max-w-6xl mx-auto">
+
+        {/* Header + toggle */}
+        <FadeUp className="text-center mb-14">
+          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: CYAN }}>
+            Planes
+          </p>
+          <h2 className="text-3xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: 'Sora, sans-serif' }}>
+            Precios <GradientText>transparentes</GradientText>
+          </h2>
+          <p className="text-white/50 text-lg max-w-xl mx-auto mb-8">
+            Sin sorpresas ni contratos. Cancela cuando quieras.
+          </p>
+
+          {/* Toggle mensual / anual */}
+          <div
+            className="inline-flex items-center gap-1 p-1 rounded-full"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            {([
+              { label: 'Mensual', val: false, badge: null as string | null },
+              { label: 'Anual',   val: true,  badge: '−20%'               },
+            ] as const).map(opt => (
+              <button
+                key={opt.label}
+                onClick={() => setAnnual(opt.val)}
+                className="flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                style={annual === opt.val
+                  ? { background: `linear-gradient(135deg, ${CYAN}35, ${BLUE}35)`, color: 'white', border: `1px solid ${CYAN}45` }
+                  : { color: 'rgba(255,255,255,0.38)', border: '1px solid transparent' }
+                }
+              >
+                {opt.label}
+                {opt.badge && (
+                  <span
+                    className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                    style={{ background: '#22C55E20', color: '#22C55E' }}
+                  >
+                    {opt.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </FadeUp>
+
+        {/* Cards */}
+        <div className="grid md:grid-cols-3 gap-6 items-center">
+          {PLANES.map((plan, i) => (
+            <FadeUp key={plan.key} delay={i * 110} className={plan.highlight ? 'md:-mt-6 md:mb-6' : ''}>
+              <div
+                className="relative rounded-2xl p-7 flex flex-col h-full transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: plan.highlight
+                    ? `linear-gradient(150deg, #0e1c38, #071028)`
+                    : NAVY2,
+                  border: `1px solid ${plan.highlight ? plan.color + '50' : 'rgba(255,255,255,0.06)'}`,
+                  boxShadow: plan.highlight
+                    ? `0 0 60px ${plan.color}22, 0 32px 64px rgba(0,0,0,0.45)`
+                    : '0 8px 32px rgba(0,0,0,0.3)',
+                }}
+              >
+                {/* Badge popular */}
+                {plan.badge && (
+                  <div className="absolute -top-4 left-0 right-0 flex justify-center">
+                    <span
+                      className="text-xs font-bold px-4 py-1 rounded-full text-white"
+                      style={{
+                        background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
+                        boxShadow: `0 0 20px ${CYAN}55`,
+                      }}
+                    >
+                      {plan.badge}
+                    </span>
+                  </div>
+                )}
+
+                {/* Nombre + desc */}
+                <p
+                  className="text-xs font-bold uppercase tracking-[0.2em] mb-1"
+                  style={{ color: plan.highlight ? plan.color : 'rgba(255,255,255,0.35)' }}
+                >
+                  {plan.name}
+                </p>
+                <p className="text-sm text-white/40 mb-5">{plan.desc}</p>
+
+                {/* Precio */}
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span
+                    className="text-5xl font-black leading-none"
+                    style={{ color: plan.highlight ? plan.color : 'white' }}
+                  >
+                    {fmt(annual ? plan.priceAnnual : plan.priceMonthly)}
+                  </span>
+                  <span className="text-sm text-white/30">/mes</span>
+                </div>
+
+                {/* Ahorro — espacio fijo para que las cards no salten */}
+                <div className="h-5 mb-5">
+                  {annual && (
+                    <p className="text-xs" style={{ color: '#22C55E' }}>
+                      Ahorras ${savedPerYear(plan)}k al año ✓
+                    </p>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div
+                  className="w-full h-px mb-6"
+                  style={{ background: plan.highlight ? `${plan.color}20` : 'rgba(255,255,255,0.05)' }}
+                />
+
+                {/* Features */}
+                <ul className="flex flex-col gap-3 flex-1 mb-8">
+                  {plan.features.map(f => (
+                    <li key={f.text} className="flex items-center gap-2.5 text-sm">
+                      {f.ok ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                          <circle cx="12" cy="12" r="10" fill={plan.color + '18'} stroke={plan.color + '50'} strokeWidth="1.5"/>
+                          <path d="M8 12l3 3 5-5" stroke={plan.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                          <circle cx="12" cy="12" r="10" fill="rgba(255,255,255,0.02)" stroke="rgba(255,255,255,0.07)" strokeWidth="1.5"/>
+                          <path d="M15 9l-6 6M9 9l6 6" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      )}
+                      <span style={{ color: f.ok ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.22)' }}>
+                        {f.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                <a
+                  href={plan.ctaHref}
+                  className="w-full py-3.5 rounded-xl text-sm font-bold text-center block transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  style={plan.highlight
+                    ? { background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`, color: 'white', boxShadow: `0 0 28px ${CYAN}45` }
+                    : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.07)' }
+                  }
+                >
+                  {plan.cta}
+                </a>
+              </div>
+            </FadeUp>
+          ))}
+        </div>
+
+        {/* Nota legal */}
+        <FadeUp className="text-center mt-12">
+          <p className="text-white/22 text-sm">
+            14 días de prueba gratis en todos los planes · Sin tarjeta de crédito · Cancela cuando quieras
+          </p>
+        </FadeUp>
+
+      </div>
+    </section>
+  )
+}
+
 // ─── Portal de Aliados ────────────────────────────────────────────────────────
 type BusinessItem = { id: string; name: string; slug: string; branding: { primary_color?: string } | null }
 
@@ -1345,6 +1581,7 @@ export default function XinucoLanding({
       <Hero stats={stats} />
       <Verticales />
       <Features />
+      <Pricing />
       <Aliados businesses={businesses} />
       <Nosotros />
       <Footer />
