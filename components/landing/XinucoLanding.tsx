@@ -274,6 +274,7 @@ function PhoneDashboardUI() {
     { time: '10:30', name: 'Miguel A.',     service: 'Fade bajo',       price: '$25k', dot: '#22C55E' },
     { time: '12:00', name: 'Juan C.',       service: 'Barba completa',  price: '$20k', dot: '#F59E0B' },
     { time: '14:00', name: 'Pedro L.',      service: 'Corte clásico',   price: '$30k', dot: 'rgba(255,255,255,0.18)' },
+    { time: '16:30', name: 'Andrés M.',     service: 'Corte + diseño',  price: '$35k', dot: '#7EB3FF' },
   ]
 
   return (
@@ -637,27 +638,31 @@ function Hero() {
             <div className="absolute top-32 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
             <div className="absolute top-44 -left-[3px] rounded-full" style={{ width: 3, height: 36, background: 'rgba(255,255,255,0.15)' }} />
 
-            {/* ── Tarjetas flotantes — visibles solo en desktop (lg+) ── */}
+            {/* ── Tarjetas flotantes — visibles a partir de md (≥768px) ── */}
+            {/* Las tarjetas se anclan al borde del teléfono y asoman hacia afuera.
+                Offset de -30px: caben en cualquier viewport md+ sin ser cortadas
+                por el overflow-hidden de la sección. */}
+
             {/* Nueva cita — arriba a la derecha */}
             <div
-              className="absolute hidden lg:block pointer-events-none"
-              style={{ top: 72, right: -108, animation: 'cardEnter 0.7s ease-out 0.4s both' }}
+              className="absolute hidden md:block pointer-events-none"
+              style={{ top: 68, right: -30, animation: 'cardEnter 0.7s ease-out 0.4s both' }}
             >
               <FloatingNotif type="appointment" />
             </div>
 
             {/* Pago recibido — centro a la derecha */}
             <div
-              className="absolute hidden lg:block pointer-events-none"
-              style={{ top: 276, right: -108, animation: 'cardEnter 0.7s ease-out 0.7s both' }}
+              className="absolute hidden md:block pointer-events-none"
+              style={{ top: 280, right: -30, animation: 'cardEnter 0.7s ease-out 0.7s both' }}
             >
               <FloatingNotif type="payment" />
             </div>
 
             {/* Reseña nueva — abajo a la izquierda */}
             <div
-              className="absolute hidden lg:block pointer-events-none"
-              style={{ bottom: 96, left: -108, animation: 'cardEnter 0.7s ease-out 1.0s both' }}
+              className="absolute hidden md:block pointer-events-none"
+              style={{ bottom: 90, left: -30, animation: 'cardEnter 0.7s ease-out 1.0s both' }}
             >
               <FloatingNotif type="review" />
             </div>
