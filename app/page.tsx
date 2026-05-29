@@ -23,25 +23,45 @@ export type PublicBusiness = {
   branding: { logo_url?: string; primary_color?: string } | null
 }
 
+export type LandingStats = {
+  citasTotal: number
+  barberias:  number
+  clientes:   number
+}
+
 export default async function RootPage() {
-  // Fetch server-side con service role (bypasses RLS — solo lectura pública)
   const admin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 
-  const { data } = await admin
-    .from('businesses')
-    .select('id, name, slug, branding')
-    .eq('is_active', true)
-    .order('name', { ascending: true })
+  // Todas las consultas en paralelo — cero latencia extra
+  const [businessesRes, citasRes, clientesRes] = await Promise.all([
+    admin
+      .from('businesses')
+      .select('id, name, slug, branding')
+      .eq('is_active', true)
+      .order('name', { ascending: true }),
+    admin
+      .from('appointments')
+      .select('*', { count: 'exact', head: true }),
+    admin
+      .from('profiles')
+      .select('*', { count: 'exact', head: true }),
+  ])
 
-  const businesses: PublicBusiness[] = (data ?? []).map((b) => ({
+  const businesses: PublicBusiness[] = (businessesRes.data ?? []).map((b) => ({
     id:       b.id,
     name:     b.name,
     slug:     b.slug,
     branding: (b.branding as PublicBusiness['branding']) ?? null,
   }))
 
-  return <XinucoLanding businesses={businesses} />
+  const stats: LandingStats = {
+    citasTotal: citasRes.count    ?? 0,
+    barberias:  businesses.length,          // ya tenemos la lista completa
+    clientes:   clientesRes.count ?? 0,
+  }
+
+  return <XinucoLanding businesses={businesses} stats={stats} />
 }

@@ -600,7 +600,9 @@ function GrainOverlay() {
 }
 
 // ─── Hero ─────────────────────────────────────────────────────────────────────
-function Hero() {
+type LandingStats = { citasTotal: number; barberias: number; clientes: number }
+
+function Hero({ stats }: { stats: LandingStats }) {
   return (
     <section
       id="hero"
@@ -701,9 +703,9 @@ function Hero() {
           {/* Stats — contadores animados */}
           <div className="flex items-center gap-0 pt-4 border-t border-white/8 w-full justify-center">
             {[
-              { to: 850,  suffix: '+', label: 'Citas este mes'    },
-              { to: 12,   suffix: '',  label: 'Barberías activas' },
-              { to: 100,  suffix: '%', label: 'Cloud & seguro'    },
+              { to: stats.citasTotal, suffix: '+', label: 'Citas registradas' },
+              { to: stats.barberias,  suffix: '',  label: 'Barberías activas' },
+              { to: stats.clientes,   suffix: '+', label: 'Clientes únicos'   },
             ].map((s, i) => (
               <div key={s.label} className="flex items-center">
                 {i > 0 && <div className="w-px h-8 bg-white/10 mx-6" />}
@@ -1327,12 +1329,20 @@ function Footer() {
 }
 
 // ─── Main export ─────────────────────────────────────────────────────────────
-export default function XinucoLanding({ businesses = [] }: { businesses: BusinessItem[] }) {
+const DEFAULT_STATS: LandingStats = { citasTotal: 0, barberias: 0, clientes: 0 }
+
+export default function XinucoLanding({
+  businesses = [],
+  stats = DEFAULT_STATS,
+}: {
+  businesses: BusinessItem[]
+  stats?: LandingStats
+}) {
   return (
     <div className="antialiased" style={{ background: NAVY, color: 'white' }}>
       <GrainOverlay />
       <Navbar />
-      <Hero />
+      <Hero stats={stats} />
       <Verticales />
       <Features />
       <Aliados businesses={businesses} />
