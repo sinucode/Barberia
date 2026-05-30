@@ -986,40 +986,54 @@ function fmtCOP(n: number) {
 
 type BillingPeriod = 'mensual' | 'semestral' | 'anual'
 
-// Iconos de plan — separados del data para evitar JSX en arrays de constantes
 const PLAN_ICONS: Record<string, React.ReactNode> = {
   esencial:    <Zap    size={16} />,
   profesional: <Star   size={16} />,
   elite:       <Crown  size={16} />,
 }
 
-// Config visual de los 3 planes — alineada con PLAN_PRICES_COP del backend
+// Tabla de comparación detallada (accordion)
+const FEATURE_ROWS: { label: string; cat: string; esencial: boolean; profesional: boolean; elite: boolean }[] = [
+  { label: 'Agenda + Citas Core (24/7)',      cat: 'Base',          esencial: true,  profesional: true,  elite: true  },
+  { label: 'CRM — Expediente de clientes',    cat: 'Base',          esencial: true,  profesional: true,  elite: true  },
+  { label: 'MP — Caja POS presencial',        cat: 'Pagos',         esencial: true,  profesional: true,  elite: true  },
+  { label: 'Comisiones automáticas',          cat: 'Finanzas',      esencial: false, profesional: true,  elite: true  },
+  { label: 'Billetera Staff',                 cat: 'Finanzas',      esencial: false, profesional: true,  elite: true  },
+  { label: 'Gastos & P&G',                    cat: 'Finanzas',      esencial: false, profesional: true,  elite: true  },
+  { label: 'Ventas Retail',                   cat: 'Finanzas',      esencial: false, profesional: true,  elite: true  },
+  { label: 'Reportes financieros avanzados',  cat: 'Finanzas',      esencial: false, profesional: true,  elite: true  },
+  { label: 'Control de estaciones',           cat: 'Operaciones',   esencial: false, profesional: true,  elite: true  },
+  { label: 'Confirmaciones por Email',        cat: 'Comunicación',  esencial: false, profesional: true,  elite: true  },
+  { label: 'MP — Pago online al reservar',    cat: 'Pagos',         esencial: false, profesional: true,  elite: true  },
+  { label: 'Bot WhatsApp anti-ausencias',     cat: 'Comunicación',  esencial: false, profesional: false, elite: true  },
+  { label: 'Programa de Lealtad',             cat: 'Marketing',     esencial: false, profesional: false, elite: true  },
+  { label: 'Walk-ins (cola sin cita)',         cat: 'Operaciones',   esencial: false, profesional: false, elite: true  },
+  { label: 'Auditoría inmutable',              cat: 'Compliance',    esencial: false, profesional: false, elite: true  },
+  { label: 'Activos Fijos & depreciación',    cat: 'Compliance',    esencial: false, profesional: false, elite: true  },
+  { label: 'Inventario de productos',         cat: 'Operaciones',   esencial: false, profesional: false, elite: true  },
+]
+
 const PRICING_CARDS: {
   key: string; name: string; desc: string
   price: number; color: string; highlight: boolean; badge: string | null
   cta: string; ctaHref: string
-  sectionLabel: string
-  features: string[]
+  sectionLabel: string; features: string[]
 }[] = [
   {
     key: 'esencial', name: 'Esencial',
     desc: 'Para el barbero que da el primer paso hacia la digitalización.',
     price: PLAN_PRICES_COP.esencial, color: '#A1A1AA',
     highlight: false, badge: null,
-    cta: 'Empezar ahora', ctaHref: '#aliados',
+    cta: 'Organiza tu negocio', ctaHref: '#aliados',
     sectionLabel: 'Incluye',
-    features: [
-      'Agenda + Citas Core (24 / 7)',
-      'CRM — Base de clientes',
-      'Caja registradora / MP POS',
-    ],
+    features: ['Agenda + Citas Core (24 / 7)', 'CRM — Base de clientes', 'Caja registradora / MP POS'],
   },
   {
     key: 'profesional', name: 'Profesional',
     desc: 'El CFO virtual de tu barbería. Liquida la nómina del equipo en segundos.',
     price: PLAN_PRICES_COP.profesional, color: CYAN,
-    highlight: false, badge: null,
-    cta: 'Quiero este plan', ctaHref: '#aliados',
+    highlight: true, badge: 'EL MÁS ELEGIDO',
+    cta: 'Asume el control hoy', ctaHref: '#aliados',
     sectionLabel: 'Todo Esencial, más:',
     features: [
       'Comisiones automáticas del equipo',
@@ -1034,8 +1048,8 @@ const PRICING_CARDS: {
     key: 'elite', name: 'Élite',
     desc: 'Paz mental y marketing automático para cadenas y alto tráfico.',
     price: PLAN_PRICES_COP.elite, color: '#C5A059',
-    highlight: true, badge: 'Recomendado',
-    cta: 'Quiero ser Élite', ctaHref: '#aliados',
+    highlight: false, badge: null,
+    cta: 'Domina el mercado', ctaHref: '#aliados',
     sectionLabel: 'Todo Profesional, más:',
     features: [
       'Bot WhatsApp anti-ausencias',
@@ -1048,23 +1062,35 @@ const PRICING_CARDS: {
   },
 ]
 
+const SORA: React.CSSProperties = {
+  fontFamily: 'var(--font-sora), Sora, sans-serif',
+  fontWeight: 600,
+  letterSpacing: '0.12em',
+}
+
 function Pricing() {
-  const [billing, setBilling] = useState<BillingPeriod>('mensual')
+  const [billing, setBilling]     = useState<BillingPeriod>('mensual')
+  const [matrixOpen, setMatrix]   = useState(false)
 
   const TOGGLE: { val: BillingPeriod; label: string; badge: string | null }[] = [
-    { val: 'mensual',   label: 'Mensual',   badge: null             },
-    { val: 'semestral', label: 'Semestral', badge: null             },
-    { val: 'anual',     label: 'Anual',     badge: '2 meses gratis' },
+    { val: 'mensual',   label: 'Mensual',   badge: null },
+    { val: 'semestral', label: 'Semestral', badge: null },
+    { val: 'anual',     label: 'Anual',     badge: 'Ahorra 2 meses + Onboarding VIP' },
   ]
 
-  function noteText(price: number): { main: string; sub: string | null; green: boolean } {
+  function displayPrice(base: number) {
+    if (billing === 'anual') return Math.round((base * 10) / 12)
+    return base
+  }
+
+  function noteText(base: number): { main: string; sub: string | null; green: boolean } {
     if (billing === 'mensual')
-      return { main: 'Cobro mensual automático', sub: null, green: false }
+      return { main: 'Cobro mensual · sin permanencia', sub: null, green: false }
     if (billing === 'semestral')
-      return { main: `Total: ${fmtCOP(price * 6)} · sin descuento adicional`, sub: null, green: false }
+      return { main: `Total semestral: ${fmtCOP(base * 6)} · 1 sola factura`, sub: null, green: false }
     return {
-      main: `Pago único: ${fmtCOP(price * 10)}`,
-      sub:  '"Paga 10, llévate 12" — 2 meses de regalo',
+      main:  `Pago único: ${fmtCOP(base * 10)}`,
+      sub:   'Paga 10 meses, llévate 12 · Onboarding VIP incluido',
       green: true,
     }
   }
@@ -1088,11 +1114,11 @@ function Pricing() {
           >
             Precios <GradientText>transparentes</GradientText>
           </h2>
-          <p className="text-white/50 text-lg max-w-xl mx-auto mb-8">
+          <p className="text-white/50 text-lg max-w-xl mx-auto mb-10">
             Sin sorpresas ni contratos. Cancela cuando quieras.
           </p>
 
-          {/* Toggle Mensual / Semestral / Anual */}
+          {/* Toggle */}
           <div
             className="inline-flex items-center gap-1 p-1 rounded-full"
             style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
@@ -1101,16 +1127,26 @@ function Pricing() {
               <button
                 key={opt.val}
                 onClick={() => setBilling(opt.val)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
-                style={billing === opt.val
-                  ? { background: `linear-gradient(135deg, ${CYAN}35, ${BLUE}35)`, color: 'white', border: `1px solid ${CYAN}45` }
-                  : { color: 'rgba(255,255,255,0.38)', border: '1px solid transparent' }
-                }
+                className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all duration-200"
+                style={{
+                  ...SORA,
+                  ...(billing === opt.val
+                    ? { background: `linear-gradient(135deg, ${CYAN}35, ${BLUE}35)`, color: 'white', border: `1px solid ${CYAN}45` }
+                    : { color: 'rgba(255,255,255,0.38)', border: '1px solid transparent' }),
+                }}
               >
                 {opt.label}
                 {opt.badge && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                    style={{ background: '#22C55E20', color: '#22C55E' }}>
+                  <span
+                    className="text-[8px] px-2 py-0.5 rounded-full whitespace-nowrap"
+                    style={{
+                      fontFamily: 'var(--font-sora), Sora, sans-serif',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      background: 'linear-gradient(135deg, #D4B46A, #C5A059)',
+                      color: '#1a0e00',
+                    }}
+                  >
                     {opt.badge}
                   </span>
                 )}
@@ -1119,51 +1155,61 @@ function Pricing() {
           </div>
         </FadeUp>
 
-        {/* ── Cards ── */}
-        <div className="grid md:grid-cols-3 gap-6 items-start">
+        {/* ── Cards — Efecto Ricitos de Oro ── */}
+        <div className="grid md:grid-cols-3 gap-6 items-center">
           {PRICING_CARDS.map((card, i) => {
-            const note = noteText(card.price)
+            const note  = noteText(card.price)
+            const price = displayPrice(card.price)
             return (
-              <FadeUp key={card.key} delay={i * 100} className={card.highlight ? 'md:-mt-6' : ''}>
+              <FadeUp
+                key={card.key}
+                delay={i * 80}
+                className={card.highlight ? 'md:scale-[1.05] md:z-10' : ''}
+              >
                 <div
                   className="relative rounded-2xl flex flex-col overflow-hidden transition-all duration-300 hover:-translate-y-1"
                   style={{
                     background: card.highlight
-                      ? `linear-gradient(150deg, #1c1408, #0e0b04)`
-                      : card.key === 'profesional'
-                        ? `linear-gradient(150deg, #0a111e, #070d18)`
+                      ? `linear-gradient(150deg, #0d1e3a, #071020)`
+                      : card.key === 'elite'
+                        ? `linear-gradient(150deg, #1a120a, #0e0b05)`
                         : NAVY2,
-                    border: `1px solid ${
-                      card.highlight       ? card.color + '60' :
-                      card.key === 'profesional' ? CYAN + '28' :
-                      'rgba(255,255,255,0.06)'
-                    }`,
+                    border: card.highlight
+                      ? `1.5px solid ${CYAN}65`
+                      : card.key === 'elite'
+                        ? `1px solid ${card.color}45`
+                        : '1px solid rgba(255,255,255,0.07)',
                     boxShadow: card.highlight
-                      ? `0 0 80px ${card.color}30, 0 32px 64px rgba(0,0,0,0.6)`
-                      : card.key === 'profesional'
-                        ? `0 0 40px ${CYAN}12, 0 8px 32px rgba(0,0,0,0.35)`
-                        : '0 4px 24px rgba(0,0,0,0.3)',
+                      ? `0 0 0 1px ${CYAN}15, 0 0 55px ${CYAN}22, 0 24px 48px rgba(0,0,0,0.55)`
+                      : card.key === 'elite'
+                        ? `0 0 38px ${card.color}18, 0 8px 32px rgba(0,0,0,0.4)`
+                        : '0 4px 24px rgba(0,0,0,0.28)',
                   }}
                 >
-                  {/* Acento superior de color */}
+                  {/* Acento superior */}
                   <div style={{
                     height: card.highlight ? 4 : 3,
                     background: card.highlight
-                      ? `linear-gradient(90deg, ${card.color}BB, ${card.color}, ${card.color}BB)`
+                      ? `linear-gradient(90deg, ${CYAN}80, ${BLUE}, ${CYAN}80)`
                       : `linear-gradient(90deg, transparent, ${card.color}55, transparent)`,
-                    boxShadow: card.highlight ? `0 0 12px ${card.color}60` : 'none',
+                    boxShadow: card.highlight ? `0 0 14px ${CYAN}55` : 'none',
                   }} />
 
-                  {/* Badge */}
+                  {/* Badge — ribbon superior */}
                   {card.badge && (
-                    <div className="flex justify-center pt-5">
+                    <div className="flex justify-center pt-4">
                       <span
-                        className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-full"
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full"
                         style={{
-                          background: `${card.color}18`,
-                          border: `1px solid ${card.color}55`,
-                          color: card.color,
-                          boxShadow: `0 0 20px ${card.color}35`,
+                          fontFamily: 'var(--font-michroma), Michroma, sans-serif',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          letterSpacing: '0.15em',
+                          textTransform: 'uppercase',
+                          background: `linear-gradient(135deg, ${CYAN}28, ${BLUE}28)`,
+                          border: `1px solid ${CYAN}55`,
+                          color: CYAN,
+                          boxShadow: `0 0 18px ${CYAN}30`,
                         }}
                       >
                         ✦ {card.badge}
@@ -1171,10 +1217,10 @@ function Pricing() {
                     </div>
                   )}
 
-                  {/* ── Plan header ── */}
-                  <div className={`px-7 ${card.badge ? 'pt-5' : 'pt-7'} pb-6`}>
+                  {/* Header del plan */}
+                  <div className={`px-7 ${card.badge ? 'pt-4' : 'pt-7'} pb-5`}>
 
-                    {/* Nombre plan — Michroma */}
+                    {/* Nombre — Michroma */}
                     <div className="flex items-center gap-2.5 mb-1" style={{ color: card.color }}>
                       {PLAN_ICONS[card.key]}
                       <span
@@ -1184,26 +1230,25 @@ function Pricing() {
                         {card.name}
                       </span>
                     </div>
-                    <p className="text-white/38 text-xs leading-relaxed mb-5">{card.desc}</p>
+                    <p className="text-white/35 text-xs leading-relaxed mb-4">{card.desc}</p>
 
                     {/* Precio — Sora SemiBold 0.12em */}
-                    <div className="flex items-baseline gap-1 mb-1">
+                    <div className="flex items-baseline gap-1">
                       <span
                         className="text-[2.5rem] font-semibold leading-none"
-                        style={{
-                          fontFamily: 'var(--font-sora), Sora, sans-serif',
-                          letterSpacing: '0.12em',
-                          color: card.highlight ? card.color : 'white',
-                        }}
+                        style={{ ...SORA, color: card.highlight ? card.color : 'white' }}
                       >
-                        {fmtCOP(card.price)}
+                        {fmtCOP(price)}
                       </span>
                       <span className="text-sm text-white/28 ml-1">/mes</span>
                     </div>
+                    {billing === 'anual' && (
+                      <p className="text-[10px] text-white/28 mt-0.5 line-through">{fmtCOP(card.price)}/mes</p>
+                    )}
 
-                    {/* Nota de facturación — espacio fijo para no saltar */}
-                    <div className="h-10 flex flex-col justify-center mb-6">
-                      <p className="text-xs" style={{ color: note.green ? '#22C55E' : 'rgba(255,255,255,0.28)' }}>
+                    {/* Nota facturación */}
+                    <div className="h-10 flex flex-col justify-center mt-1 mb-5">
+                      <p className="text-xs" style={{ color: note.green ? '#22C55E' : 'rgba(255,255,255,0.26)' }}>
                         {note.main}
                       </p>
                       {note.sub && (
@@ -1211,30 +1256,52 @@ function Pricing() {
                       )}
                     </div>
 
-                    {/* CTA */}
+                    {/* CTA — Sora SemiBold 0.12em */}
                     <a
                       href={card.ctaHref}
-                      className="w-full py-3 rounded-xl text-sm font-bold text-center block transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                      style={card.highlight
-                        ? { background: `linear-gradient(135deg, #D4B46A, ${card.color}, #A07830)`, color: '#0e0b04', fontWeight: 800, boxShadow: `0 0 32px ${card.color}50, 0 4px 16px rgba(0,0,0,0.4)` }
-                        : { background: 'rgba(255,255,255,0.05)', color: card.color, border: `1px solid ${card.color}38` }
-                      }
+                      className="w-full py-3 rounded-xl text-sm text-center block transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                      style={{
+                        ...SORA,
+                        ...(card.highlight
+                          ? {
+                              background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
+                              color: 'white',
+                              boxShadow: `0 0 28px ${CYAN}45`,
+                            }
+                          : card.key === 'elite'
+                            ? {
+                                background: `${card.color}15`,
+                                color: card.color,
+                                border: `1px solid ${card.color}50`,
+                              }
+                            : {
+                                background: 'rgba(255,255,255,0.05)',
+                                color: card.color,
+                                border: `1px solid ${card.color}38`,
+                              }
+                        ),
+                      }}
                     >
                       {card.cta}
                     </a>
+
+                    {/* Micro-copy */}
+                    <p className="text-center text-[10px] text-white/22 mt-2">
+                      Cancela cuando quieras · Sin comisiones ocultas
+                    </p>
                   </div>
 
-                  {/* Divider decorativo */}
+                  {/* Divider */}
                   <div style={{
                     height: 1, margin: '0 28px',
                     background: `linear-gradient(90deg, transparent, ${card.color}35, transparent)`,
                   }} />
 
-                  {/* ── Lista de features ── */}
+                  {/* Features */}
                   <div className="px-7 py-6 flex-1">
                     <p
-                      className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4"
-                      style={{ color: `${card.color}aa` }}
+                      className="text-[10px] font-bold uppercase tracking-[0.22em] mb-4"
+                      style={{ color: `${card.color}99` }}
                     >
                       {card.sectionLabel}
                     </p>
@@ -1247,7 +1314,7 @@ function Pricing() {
                             <path d="M8 12l3 3 5-5" stroke={card.color} strokeWidth="2"
                               strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
-                          <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                          <span className="text-sm leading-snug" style={{ color: 'rgba(255,255,255,0.70)' }}>
                             {f}
                           </span>
                         </li>
@@ -1261,6 +1328,86 @@ function Pricing() {
           })}
         </div>
 
+        {/* ── Tabla Rayos X — accordion ── */}
+        <FadeUp className="mt-12 text-center">
+          <button
+            onClick={() => setMatrix(o => !o)}
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border transition-all duration-200 hover:bg-white/[0.04]"
+            style={{
+              ...SORA,
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.45)',
+              borderColor: 'rgba(255,255,255,0.10)',
+            }}
+          >
+            {matrixOpen ? 'Ocultar comparación' : 'Ver comparación detallada de funciones'}
+            <span style={{ display: 'inline-block', transition: 'transform 0.3s', transform: matrixOpen ? 'rotate(180deg)' : 'none' }}>
+              ⬇️
+            </span>
+          </button>
+
+          {matrixOpen && (
+            <div
+              className="mt-8 rounded-2xl overflow-x-auto text-left"
+              style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)' }}
+            >
+              {/* Cabecera */}
+              <div
+                className="grid grid-cols-4 min-w-[520px]"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.03)' }}
+              >
+                <div className="px-5 py-4 text-xs text-white/30 uppercase tracking-[0.2em]">Función</div>
+                {PRICING_CARDS.map(c => (
+                  <div key={c.key} className="px-3 py-4 text-center">
+                    <span
+                      className="text-[11px] font-bold uppercase tracking-[0.15em]"
+                      style={{ fontFamily: 'var(--font-michroma), Michroma, sans-serif', color: c.color }}
+                    >
+                      {c.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filas agrupadas por categoría */}
+              {Array.from(new Set(FEATURE_ROWS.map(r => r.cat))).map(cat => (
+                <div key={cat}>
+                  <div
+                    className="px-5 py-1.5 text-[9px] font-bold uppercase tracking-[0.28em] min-w-[520px]"
+                    style={{ color: `${CYAN}65`, background: `${CYAN}07`, borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                  >
+                    {cat}
+                  </div>
+                  {FEATURE_ROWS.filter(r => r.cat === cat).map((row, idx) => (
+                    <div
+                      key={row.label}
+                      className="grid grid-cols-4 min-w-[520px]"
+                      style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.012)',
+                      }}
+                    >
+                      <div className="px-5 py-3 text-xs text-white/50">{row.label}</div>
+                      {(['esencial', 'profesional', 'elite'] as const).map(plan => (
+                        <div key={plan} className="px-3 py-3 flex justify-center items-center">
+                          {row[plan]
+                            ? (
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" fill="#22C55E18" stroke="#22C55E55" strokeWidth="1.5"/>
+                                <path d="M8 12l3 3 5-5" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            )
+                            : <span className="text-white/18 text-base leading-none">—</span>
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </FadeUp>
 
       </div>
     </section>
