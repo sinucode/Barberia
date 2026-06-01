@@ -26,6 +26,7 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
     .from('profiles')
     .select('id, full_name, role, business_id')
     .eq('id', user.id)
+    .returns<{ id: string, full_name: string | null, role: string, business_id: string | null }[]>()
     .single()
 
   const businessId = profile?.business_id ?? ''
@@ -58,6 +59,7 @@ export async function DashboardContent({ slug }: DashboardContentProps) {
       .select('id')
       .eq('business_id', businessId)
       .eq('user_id', user.id)
+      .returns<{ id: string }[]>()
       .maybeSingle()
 
     // Si no tiene staff vinculado, retornar 0 citas (seguridad: nunca mostrar todo)

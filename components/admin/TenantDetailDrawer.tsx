@@ -330,7 +330,7 @@ export function TenantDetailDrawer({ business, onClose }: TenantDetailDrawerProp
                         desc={f.desc}
                         icon={f.icon}
                         accentColor={group.color}
-                        initialValue={!!(features as Record<string, boolean>)[f.key]}
+                        initialValue={!!(features as unknown as Record<string, boolean>)[f.key]}
                       />
                     ))}
                   </div>
@@ -434,7 +434,7 @@ export function TenantDetailDrawer({ business, onClose }: TenantDetailDrawerProp
                 <div className="bg-xinuco-surface border border-xinuco-border rounded-xl p-4">
                   <p className="text-[10px] text-xinuco-muted uppercase tracking-wider">Módulos activos</p>
                   <p className="text-2xl font-bold mt-1" style={{ color: 'var(--primary-color)' }}>
-                    {Object.values(features as Record<string, boolean>).filter(Boolean).length}
+                    {Object.values(features as unknown as Record<string, boolean>).filter(Boolean).length}
                   </p>
                 </div>
                 <div className="bg-xinuco-surface border border-xinuco-border rounded-xl p-4">

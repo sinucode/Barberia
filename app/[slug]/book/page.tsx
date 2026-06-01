@@ -25,7 +25,7 @@ export default async function BookPage({ params }: BookPageProps) {
 
   // Leer feature flag de MP para booking online
   const mpBookingEnabled =
-    (business.features_enabled as Record<string, boolean> | null)?.mercadopago_booking === true
+    ((business.features_enabled ?? {}) as unknown as Record<string, boolean>)['mercadopago_booking'] === true
 
   // Fetch de los servicios y el staff para el BookingWizard
   const [servicesRes, staffRes] = await Promise.all([

@@ -31,6 +31,7 @@ async function isEmailEnabled(
     .from('businesses')
     .select('features_enabled')
     .eq('id', businessId)
+    .returns<{ features_enabled: any }[]>()
     .single()
 
   if (!data?.features_enabled) return false
@@ -56,6 +57,7 @@ async function loadAppointmentData(supabase: XinucoSupabase, appointmentId: stri
       staff            ( full_name )
     `)
     .eq('id', appointmentId)
+    .returns<any[]>()
     .single()
 
   return data
@@ -76,7 +78,7 @@ async function logNotification(
   },
 ): Promise<void> {
   try {
-    await supabase.from('notification_log').insert({
+    await (supabase as any).from('notification_log').insert({
       business_id:       params.businessId,
       appointment_id:    params.appointmentId,
       notification_type: params.notificationType,
@@ -119,6 +121,7 @@ export async function sendBookingConfirmation(params: {
     .from('businesses')
     .select('name')
     .eq('id', businessId)
+    .returns<{ name: string }[]>()
     .single()
 
   // 4. Construir y enviar el correo
@@ -176,6 +179,7 @@ export async function sendBookingReminder(params: {
     .from('businesses')
     .select('name')
     .eq('id', businessId)
+    .returns<{ name: string }[]>()
     .single()
 
   // 4. Construir y enviar el correo
@@ -231,6 +235,7 @@ export async function sendCancellationNotice(params: {
     .from('businesses')
     .select('name')
     .eq('id', businessId)
+    .returns<{ name: string }[]>()
     .single()
 
   // 4. Construir y enviar el correo

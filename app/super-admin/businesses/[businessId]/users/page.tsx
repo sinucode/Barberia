@@ -24,6 +24,7 @@ export default async function BusinessUsersPage({ params }: PageProps) {
     .from('businesses')
     .select('id, name, slug')
     .eq('id', businessId)
+    .returns<{ id: string, name: string, slug: string }[]>()
     .single()
 
   if (error || !biz) redirect('/super-admin/businesses')

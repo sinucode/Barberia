@@ -273,8 +273,8 @@ function ServiceRow({
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${isPendingToggle ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
             style={{
               backgroundColor: service.is_active ? 'var(--primary-color)' : 'var(--surface-color, #333)',
-              focusRingColor: 'var(--primary-color)',
-            }}
+              '--tw-ring-color': 'var(--primary-color)',
+            } as React.CSSProperties}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${

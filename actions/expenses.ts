@@ -186,7 +186,7 @@ export async function getProfitLoss(
   const result = data as unknown as ProfitLossResult & { error?: string }
 
   if (result.error) {
-    throw new Error(result.message ?? result.error)
+    throw new Error(result.error)
   }
 
   return result as ProfitLossResult

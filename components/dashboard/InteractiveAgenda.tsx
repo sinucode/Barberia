@@ -22,6 +22,12 @@ interface StatusConfig {
 }
 
 const STATUS_CONFIG: Record<AppointmentStatus, StatusConfig> = {
+  payment_pending: {
+    label: 'Pago Pendiente',
+    textClass: 'text-amber-500',
+    bgClass: 'bg-zinc-950',
+    Icon: AlertCircle,
+  },
   scheduled: {
     label: 'Programada',
     textClass: 'text-xinuco-primary',

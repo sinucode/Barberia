@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Configuración incompleta' }, { status: 500 })
   }
 
-  const supabase: XinucoAdmin = createClient<Database>(supabaseUrl, serviceRoleKey)
+  const supabase: any = createClient<any>(supabaseUrl, serviceRoleKey)
 
   // ── 3. Ventana de 24 h ± 2 h de tolerancia ────────────────────────────────
   const now  = new Date()

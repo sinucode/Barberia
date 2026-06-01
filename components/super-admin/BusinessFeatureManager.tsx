@@ -269,7 +269,7 @@ export function BusinessFeatureManager({
                   >
                     <Icon
                       size={16}
-                      style={{ color: enabled ? '#C5A059' : 'rgba(244,244,244,0.30)' }}
+                      style={{ color: !!(features as unknown as Record<string, boolean>)?.[featureKey] ? '#C5A059' : 'rgba(244,244,244,0.30)' }}
                     />
                   </div>
 
@@ -288,7 +288,7 @@ export function BusinessFeatureManager({
 
                   {/* Toggle */}
                   <Toggle
-                    checked={enabled}
+                    checked={!!enabled}
                     onChange={(v) => toggleFeature(featureKey, v)}
                     disabled={isPending}
                   />

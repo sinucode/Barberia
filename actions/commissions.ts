@@ -218,7 +218,7 @@ export async function getStaffCommissionSummary(
   const summaryMap = new Map<string, CommissionSummaryEntry>()
 
   for (const sale of sales) {
-    const appt = sale.appointments as {
+    const appt = (sale.appointments as any)[0] as {
       id: string
       staff_id: string | null
       service_id: string | null

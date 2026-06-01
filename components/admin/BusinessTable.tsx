@@ -7,7 +7,10 @@ import type { Business }       from '@/types/database'
 
 // ── Toggle de estado (inline Server Action) ───────────────────────────────────
 function ToggleStatusButton({ id, isActive }: { id: string; isActive: boolean }) {
-  const toggle = toggleTenantStatus.bind(null, id, isActive)
+  const toggle = async () => {
+    'use server'
+    await toggleTenantStatus(id, isActive)
+  }
   return (
     <form action={toggle}>
       <button

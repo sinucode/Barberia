@@ -26,7 +26,7 @@ function formatEntryDate(iso: string): string {
   })
 }
 
-const SUBTYPE_ICONS: Record<JournalEntrySubtype, React.FC<{ size?: number; className?: string }>> = {
+const SUBTYPE_ICONS: Record<JournalEntrySubtype, React.FC<{ size?: number; className?: string; style?: React.CSSProperties }>> = {
   sale:              ShoppingBag,
   operating_expense: Receipt,
   staff_payout:      Wallet,

@@ -221,7 +221,7 @@ export async function updateFixedAsset(
       action:     'fixed_asset.updated',
       entityType: 'fixed_asset',
       entityId:   assetId,
-      newValue:   payload as Record<string, unknown>,
+      newValue:   payload as any,
     })
   } catch {
     // intentionally silent

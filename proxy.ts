@@ -7,7 +7,7 @@ const BOT_AGENTS_REGEX = /googlebot|twitterbot|facebookexternalhit|baiduspider|b
 // 🛡️ LISTA DE PALABRAS RESERVADAS (Foso de Seguridad Anti-Phishing)
 const RESERVED_SLUGS = ['admin', 'api', 'support', 'billing', 'xinuco', 'dashboard', 'settings']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const pathParts = pathname.split('/').filter(Boolean)
 
@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
 
-export { middleware as proxy }
+
 
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],

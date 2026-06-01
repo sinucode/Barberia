@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { detectCurrentPlan, PLAN_BUNDLES, FEATURE_CATALOG } from '@/lib/features/config'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures, Business } from '@/types/database'
 
 /**
  * super-admin/businesses/page.tsx — Server Component
@@ -20,6 +20,7 @@ export default async function SuperAdminBusinessesPage() {
     .from('businesses')
     .select('id, name, slug, is_active, features_enabled, created_at')
     .order('name')
+    .returns<Business[]>()
 
   if (error) {
     return (

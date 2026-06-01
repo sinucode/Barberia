@@ -241,7 +241,7 @@ export async function updateInventoryItem(
       action:     'inventory_item.updated',
       entityType: 'inventory_item',
       entityId:   itemId,
-      newValue:   payload as Record<string, unknown>,
+      newValue:   payload as any,
     })
   } catch {
     // intentionally silent
