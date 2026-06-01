@@ -31,6 +31,19 @@ const I_DOT    = CYAN        // Color oficial del puntico de la 'i' del wordmark
 const NAVY     = '#0B132B'
 const NAVY2    = '#0D1635'
 
+// ─── Tipografía global ───────────────────────────────────────────────────────
+// Sora SemiBold 0.12em — aplica a CTAs, precios, badges, stats
+const SORA: React.CSSProperties = {
+  fontFamily: 'var(--font-sora), Sora, sans-serif',
+  fontWeight: 600,
+  letterSpacing: '0.12em',
+}
+// Michroma — nombres de plan, headings de sección, ribbons
+const MICHROMA: React.CSSProperties = {
+  fontFamily: 'var(--font-michroma), Michroma, sans-serif',
+  letterSpacing: '0.08em',
+}
+
 // ─── Xinuco Wordmark — Michroma + puntico custom ────────────────────────
 // Renderiza "x[ı]nuco" con dotless i, y un cuadradito de color CYAN
 // posicionado encima como el puntico oficial del logo.
@@ -642,11 +655,11 @@ function Hero({ stats }: { stats: LandingStats }) {
 
           {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border"
-            style={{ borderColor: `${CYAN}50`, background: `${CYAN}10`, color: CYAN }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border"
+            style={{ borderColor: `${CYAN}50`, background: `${CYAN}10`, color: CYAN, ...SORA, fontSize: 11 }}
           >
             <Sparkles size={11} />
-            Software de gestión para negocios LATAM
+            Software IA para barberías LATAM
           </div>
 
           {/* Logo — componentes nítidos (vector/font) en lugar de PNG raster */}
@@ -679,28 +692,31 @@ function Hero({ stats }: { stats: LandingStats }) {
 
           {/* Descripción */}
           <p className="text-base md:text-lg text-white/55 leading-relaxed max-w-sm">
-            Negocios inteligentes corren con <GradientText>IA.</GradientText>{' '}
-            Desde la primera cita hasta el cierre de caja — todo en un sistema que{' '}
-            <GradientText>piensa contigo y crece contigo.</GradientText>
+            De la primera cita al cierre de caja — un solo sistema que{' '}
+            <GradientText>gestiona tu agenda, paga a tu equipo</GradientText>{' '}
+            y protege cada peso de tu negocio.
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
             <a
               href="#aliados"
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white w-full sm:w-auto transition-all hover:scale-105 active:scale-95"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white w-full sm:w-auto transition-all hover:scale-105 active:scale-95"
               style={{
+                ...SORA,
+                fontSize: 13,
                 background: `linear-gradient(135deg, ${CYAN}, ${BLUE})`,
                 boxShadow: `0 0 32px ${CYAN}45, 0 4px 16px rgba(0,0,0,0.4)`,
               }}
             >
-              Portal de Aliados <ArrowRight size={15} />
+              Empieza hoy <ArrowRight size={15} />
             </a>
             <a
-              href="#verticales"
-              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white/65 hover:text-white w-full sm:w-auto border border-white/10 hover:border-white/25 transition-all"
+              href="#precios"
+              className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-white/65 hover:text-white w-full sm:w-auto border border-white/10 hover:border-white/25 transition-all"
+              style={{ ...SORA, fontSize: 12 }}
             >
-              Ver verticales <ChevronRight size={15} />
+              Ver planes <ChevronRight size={15} />
             </a>
           </div>
 
@@ -714,12 +730,26 @@ function Hero({ stats }: { stats: LandingStats }) {
               <div key={s.label} className="flex items-center">
                 {i > 0 && <div className="w-px h-8 bg-white/10 mx-6" />}
                 <div className="text-center">
-                  <p className="text-xl font-bold leading-none" style={{ color: CYAN }}>
+                  <p className="text-xl leading-none" style={{ color: CYAN, ...SORA }}>
                     <AnimatedCounter to={s.to} suffix={s.suffix} />
                   </p>
-                  <p className="text-[10px] text-white/35 mt-1 uppercase tracking-wide">{s.label}</p>
+                  <p className="text-[10px] text-white/35 mt-1 uppercase tracking-widest">{s.label}</p>
                 </div>
               </div>
+            ))}
+          </div>
+
+          {/* Trust strip */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+            {['Sin contratos', 'Soporte en español', 'Datos en Colombia'].map((t, i) => (
+              <span key={t} className="flex items-center gap-1.5 text-[11px] text-white/30">
+                {i > 0 && <span className="text-white/15 hidden sm:inline">·</span>}
+                <span
+                  className="w-1 h-1 rounded-full flex-shrink-0"
+                  style={{ background: CYAN }}
+                />
+                {t}
+              </span>
             ))}
           </div>
         </div>
@@ -808,28 +838,31 @@ function Hero({ stats }: { stats: LandingStats }) {
 // ─── Verticales ───────────────────────────────────────────────────────────────
 const VERTICALES = [
   {
-    icon: <Scissors size={28} />,
+    icon: <Scissors size={26} />,
     name: 'Barbería',
     slug: 'barberia',
-    description: 'Agenda, caja, inventario, comisiones y lealtad para barberías modernas.',
+    tagline: 'Ya disponible',
+    description: 'Agenda online, caja registradora, comisiones automáticas y programa de lealtad. Todo lo que necesita tu barbería, desde el día 1.',
     status: 'active' as const,
-    features: ['Agenda online', 'Caja registradora', 'Control de inventario', 'Comisiones', 'Programa de lealtad'],
+    features: ['Reservas online 24/7', 'Liquidación de comisiones', 'Bot WhatsApp anti-ausencias', 'Punto de venta integrado', 'Programa de lealtad'],
     color: '#C5A059',
   },
   {
-    icon: <Building2 size={28} />,
+    icon: <Building2 size={26} />,
     name: 'Lavandería',
     slug: 'lavanderia',
-    description: 'Control de órdenes, seguimiento y facturación para lavanderías.',
+    tagline: 'Próximamente',
+    description: 'Control de órdenes, seguimiento en tiempo real y facturación automática para lavanderías que quieren dejar el cuaderno atrás.',
     status: 'soon' as const,
-    features: ['Órdenes digitales', 'Seguimiento en tiempo real', 'Facturación automática'],
+    features: ['Órdenes digitales', 'Seguimiento por estado', 'Facturación automática'],
     color: CYAN,
   },
   {
-    icon: <Zap size={28} />,
+    icon: <Zap size={26} />,
     name: 'Fumigación',
     slug: 'fumigacion',
-    description: 'Gestión de visitas, rutas y reportes para empresas de control de plagas.',
+    tagline: 'Próximamente',
+    description: 'Programación de visitas, rutas optimizadas y reportes PDF para empresas de control de plagas que manejan múltiples clientes.',
     status: 'soon' as const,
     features: ['Programación de visitas', 'Rutas optimizadas', 'Reportes PDF'],
     color: BLUE,
@@ -844,88 +877,139 @@ function Verticales() {
       style={{ background: `linear-gradient(180deg, ${NAVY} 0%, ${NAVY2} 100%)` }}
     >
       <div className="max-w-6xl mx-auto">
+
         {/* Header */}
         <FadeUp className="text-center mb-16">
-          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: CYAN }}>
-            Nuestras Verticales
+          <p
+            className="text-[11px] uppercase mb-3"
+            style={{ color: CYAN, ...SORA, letterSpacing: '0.3em' }}
+          >
+            Verticales de negocio
           </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>
-            Un sistema, <GradientText>múltiples industrias</GradientText>
+          <h2
+            className="text-3xl md:text-5xl font-bold text-white"
+            style={{ fontFamily: 'var(--font-sora), Sora, sans-serif' }}
+          >
+            Empieza en barberías.{' '}
+            <GradientText>Escala a un ecosistema.</GradientText>
           </h2>
           <p className="mt-4 text-white/50 text-lg max-w-2xl mx-auto">
-            El mismo núcleo tecnológico adaptado a cada tipo de negocio. Escala con tu empresa.
+            El mismo núcleo tecnológico adaptado a cada industria.
+            Un sistema que crece contigo.
           </p>
         </FadeUp>
 
         {/* Cards */}
         <div className="grid md:grid-cols-3 gap-6">
-          {VERTICALES.map((v, i) => (
-            <FadeUp key={v.slug} delay={i * 120} className="flex flex-col">
-            <div
-              className="relative rounded-2xl p-6 border transition-all duration-300 hover:-translate-y-1 flex-1"
-              style={{
-                background: v.status === 'active'
-                  ? `linear-gradient(145deg, ${NAVY2}, #111827)`
-                  : `${NAVY2}`,
-                borderColor: v.status === 'active' ? `${v.color}40` : 'rgba(255,255,255,0.06)',
-                boxShadow: v.status === 'active' ? `0 0 40px ${v.color}18` : 'none',
-              }}
-            >
-              {/* Badge */}
-              {v.status === 'active' ? (
-                <span
-                  className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: `${v.color}22`, color: v.color }}
+          {VERTICALES.map((v, i) => {
+            const isActive = v.status === 'active'
+            return (
+              <FadeUp key={v.slug} delay={i * 120} className="flex flex-col">
+                <div
+                  className="relative rounded-2xl overflow-hidden border flex-1 flex flex-col transition-all duration-300 hover:-translate-y-1"
+                  style={{
+                    background: isActive
+                      ? `linear-gradient(160deg, #0f1c30 0%, #07101e 100%)`
+                      : NAVY2,
+                    borderColor: isActive ? `${v.color}35` : 'rgba(255,255,255,0.06)',
+                    boxShadow: isActive ? `0 0 48px ${v.color}14, 0 2px 0 ${v.color}40 inset` : 'none',
+                  }}
                 >
-                  Activo
-                </span>
-              ) : (
-                <span className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full font-semibold bg-white/5 text-white/30">
-                  Pronto
-                </span>
-              )}
+                  {/* Stripe superior de color */}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px]"
+                    style={{
+                      background: isActive
+                        ? `linear-gradient(90deg, transparent, ${v.color}, transparent)`
+                        : 'transparent',
+                    }}
+                  />
 
-              {/* Icon */}
-              <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-5"
-                style={{
-                  background: `${v.color}18`,
-                  color: v.color,
-                  border: `1px solid ${v.color}30`,
-                }}
-              >
-                {v.icon}
-              </div>
+                  <div className="p-6 flex flex-col flex-1">
+                    {/* Badge de estado */}
+                    <div className="flex items-center justify-between mb-5">
+                      {/* Icon */}
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        style={{
+                          background: `${v.color}16`,
+                          color: v.color,
+                          border: `1px solid ${v.color}28`,
+                        }}
+                      >
+                        {v.icon}
+                      </div>
 
-              <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                {v.name}
-              </h3>
-              <p className="text-white/50 text-sm leading-relaxed mb-5">{v.description}</p>
+                      <span
+                        className="text-[10px] px-2.5 py-1 rounded-full"
+                        style={
+                          isActive
+                            ? { background: `${v.color}20`, color: v.color, ...SORA, fontSize: 9 }
+                            : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', ...SORA, fontSize: 9 }
+                        }
+                      >
+                        {v.tagline.toUpperCase()}
+                      </span>
+                    </div>
 
-              {/* Features */}
-              <ul className="flex flex-col gap-2">
-                {v.features.map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-white/60">
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: v.color }} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+                    <h3
+                      className="text-xl text-white mb-2"
+                      style={{ ...MICHROMA, fontSize: 18 }}
+                    >
+                      {v.name}
+                    </h3>
+                    <p className="text-white/48 text-sm leading-relaxed mb-5 flex-1">{v.description}</p>
 
-              {/* CTA */}
-              {v.status === 'active' && (
-                <a
-                  href="#aliados"
-                  className="mt-6 flex items-center gap-2 text-sm font-semibold transition-colors"
-                  style={{ color: v.color }}
-                >
-                  Acceder como aliado <ArrowRight size={14} />
-                </a>
-              )}
-            </div>
-            </FadeUp>
-          ))}
+                    {/* Features */}
+                    <ul className="flex flex-col gap-2 mb-5">
+                      {v.features.map(f => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm" style={{ color: isActive ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.35)' }}>
+                          <span
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ background: isActive ? v.color : 'rgba(255,255,255,0.2)' }}
+                          />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* CTA */}
+                    {isActive ? (
+                      <a
+                        href="#aliados"
+                        className="mt-auto flex items-center gap-2 text-sm transition-colors hover:opacity-80"
+                        style={{ color: v.color, ...SORA, fontSize: 11 }}
+                      >
+                        Acceder como aliado <ArrowRight size={13} />
+                      </a>
+                    ) : (
+                      <p className="mt-auto text-[11px] text-white/25 italic">
+                        Sé el primero en enterarte cuando esté disponible →{' '}
+                        <a href="mailto:hola@xinuco.com" className="underline underline-offset-2 hover:text-white/50 transition-colors">
+                          hola@xinuco.com
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </FadeUp>
+            )
+          })}
         </div>
+
+        {/* Bottom strip */}
+        <FadeUp delay={360} className="mt-10 text-center">
+          <p className="text-sm text-white/30">
+            ¿Tu industria no está aquí?{' '}
+            <a
+              href="mailto:hola@xinuco.com"
+              className="text-white/50 hover:text-white underline underline-offset-2 transition-colors"
+            >
+              Cuéntanos tu caso
+            </a>{' '}
+            — evaluamos nuevas verticales cada trimestre.
+          </p>
+        </FadeUp>
       </div>
     </section>
   )
@@ -933,43 +1017,135 @@ function Verticales() {
 
 // ─── Features ─────────────────────────────────────────────────────────────────
 const FEATURES = [
-  { icon: <Calendar size={22} />,  title: 'Agenda Inteligente',   desc: 'Reservas online 24/7 con detección de conflictos en tiempo real.' },
-  { icon: <BarChart3 size={22} />, title: 'Reportes Financieros',  desc: 'P&G, flujo de caja y depreciación de activos en un clic.' },
-  { icon: <Package size={22} />,   title: 'Inventario',            desc: 'Control de stock, movimientos y alertas de mínimos.' },
-  { icon: <Users size={22} />,     title: 'Multi-Sucursal',        desc: 'Cada negocio aislado. Un panel para gobernarlos todos.' },
-  { icon: <Shield size={22} />,    title: 'Seguridad RLS',         desc: 'Row-Level Security en cada tabla. Sin fugas de datos entre tenants.' },
-  { icon: <Globe size={22} />,     title: 'SaaS LATAM',            desc: 'Pagos en COP, MercadoPago integrado y soporte en español.' },
+  {
+    icon: <Calendar size={22} />,
+    num: '01',
+    title: 'Agenda que trabaja por ti',
+    desc: 'Citas online 24/7, confirmaciones automáticas y cero doble-reservas. Tu cliente agenda mientras duermes.',
+    color: CYAN,
+  },
+  {
+    icon: <BarChart3 size={22} />,
+    num: '02',
+    title: 'Cierre de mes sin sorpresas',
+    desc: 'P&G, comisiones del equipo y flujo de caja en tiempo real. Un clic — no una tarde de hojas de cálculo.',
+    color: '#6366F1',
+  },
+  {
+    icon: <Users size={22} />,
+    num: '03',
+    title: 'Tu equipo, en orden',
+    desc: 'Liquidación automática de comisiones. Sin peleas de fin de mes, sin errores, sin excusas.',
+    color: '#10B981',
+  },
+  {
+    icon: <Package size={22} />,
+    num: '04',
+    title: 'Punto de venta integrado',
+    desc: 'Vende servicios y productos desde la misma pantalla. Stock, caja y reportes siempre sincronizados.',
+    color: '#F59E0B',
+  },
+  {
+    icon: <Globe size={22} />,
+    num: '05',
+    title: 'WhatsApp que recupera dinero',
+    desc: 'Bot anti-ausencias que confirma citas y avisa cuando alguien cancela. Menos "no shows", más ingresos.',
+    color: '#22C55E',
+  },
+  {
+    icon: <Shield size={22} />,
+    num: '06',
+    title: 'Anti-robo hormiga',
+    desc: 'Auditoría inmutable y seguridad por local (RLS). Cada peso que entra o sale queda registrado para siempre.',
+    color: '#EF4444',
+  },
 ]
 
 function Features() {
   return (
     <section className="py-24 px-6" style={{ background: NAVY2 }}>
       <div className="max-w-6xl mx-auto">
+
         <FadeUp className="text-center mb-14">
-          <p className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: BLUE }}>
-            Tecnología
+          <p
+            className="text-[11px] uppercase mb-3"
+            style={{ color: BLUE, ...SORA, letterSpacing: '0.3em' }}
+          >
+            Por qué Xinuco
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Sora, sans-serif' }}>
-            Todo lo que necesita <GradientText>tu negocio</GradientText>
+          <h2
+            className="text-3xl md:text-4xl font-bold text-white"
+            style={{ fontFamily: 'var(--font-sora), Sora, sans-serif' }}
+          >
+            Todo lo que tu negocio necesita,{' '}
+            <GradientText>en un solo lugar</GradientText>
           </h2>
+          <p className="mt-4 text-white/45 text-base max-w-xl mx-auto">
+            Sin integraciones de terceros, sin hojas de cálculo paralelas.
+            Un sistema que lo hace todo.
+          </p>
         </FadeUp>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {FEATURES.map((f, i) => (
             <FadeUp key={f.title} delay={i * 80}>
-              <div className="p-5 rounded-xl border border-white/5 hover:border-white/10 transition-all bg-white/[0.02] hover:bg-white/[0.04] h-full">
+              <div
+                className="group relative p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-0.5 h-full flex flex-col"
+                style={{
+                  background: 'rgba(255,255,255,0.018)',
+                  borderColor: 'rgba(255,255,255,0.06)',
+                }}
+              >
+                {/* Glow on hover via pseudo-element simulation */}
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mb-4"
-                  style={{ background: `linear-gradient(135deg, ${CYAN}22, ${BLUE}22)`, color: CYAN }}
-                >
-                  {f.icon}
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ boxShadow: `0 0 32px ${f.color}18`, border: `1px solid ${f.color}25` }}
+                />
+
+                {/* Número + icono */}
+                <div className="flex items-start justify-between mb-4">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: `${f.color}16`,
+                      color: f.color,
+                      border: `1px solid ${f.color}28`,
+                    }}
+                  >
+                    {f.icon}
+                  </div>
+                  <span
+                    className="text-[10px] tabular-nums"
+                    style={{ color: 'rgba(255,255,255,0.18)', ...SORA, fontSize: 10 }}
+                  >
+                    {f.num}
+                  </span>
                 </div>
-                <h4 className="text-white font-semibold mb-1.5">{f.title}</h4>
-                <p className="text-white/45 text-sm leading-relaxed">{f.desc}</p>
+
+                <h4
+                  className="text-white mb-2"
+                  style={{ fontFamily: 'var(--font-sora), Sora, sans-serif', fontWeight: 600, fontSize: 15 }}
+                >
+                  {f.title}
+                </h4>
+                <p className="text-white/42 text-sm leading-relaxed flex-1">{f.desc}</p>
               </div>
             </FadeUp>
           ))}
         </div>
+
+        {/* Bridge to pricing */}
+        <FadeUp delay={500} className="mt-10 text-center">
+          <a
+            href="#precios"
+            className="inline-flex items-center gap-2 text-sm transition-colors"
+            style={{ color: 'rgba(255,255,255,0.35)', ...SORA, fontSize: 11 }}
+          >
+            <span className="hover:text-white/60 transition-colors">
+              Ver qué incluye cada plan <ChevronRight size={13} className="inline -mt-px" />
+            </span>
+          </a>
+        </FadeUp>
       </div>
     </section>
   )
@@ -1061,12 +1237,6 @@ const PRICING_CARDS: {
     ],
   },
 ]
-
-const SORA: React.CSSProperties = {
-  fontFamily: 'var(--font-sora), Sora, sans-serif',
-  fontWeight: 600,
-  letterSpacing: '0.12em',
-}
 
 function Pricing() {
   const [billing, setBilling]     = useState<BillingPeriod>('mensual')
