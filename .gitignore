@@ -2,14 +2,21 @@
 .claude/*.local.md
 .claude/worktrees/
 
-# Dependencies
+# Dependencies (hoisted por npm workspaces)
 node_modules/
 .pnp
 .pnp.js
 
-# Next.js build output
+# Next.js build output (por app)
 .next/
+apps/*/.next/
 out/
+
+# Turbo cache
+.turbo/
+
+# Packages dist (cuando se compilen en Fase 2)
+packages/*/dist/
 
 # Production build
 build/
@@ -48,3 +55,4 @@ yarn-error.log*
 .npm
 node_modules
 supabase/.temp/
+apps/*/supabase/.temp/
