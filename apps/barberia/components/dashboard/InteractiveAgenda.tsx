@@ -2,10 +2,10 @@
 
 import { useState, useTransition } from 'react'
 import { Play, Clock, CheckCircle2, XCircle, AlertCircle, CalendarX, Loader2, ArrowRight } from 'lucide-react'
-import { parseTimeRange, formatTime, getDurationMinutes } from '@/lib/utils/time'
+import { parseTimeRange, formatTime, getDurationMinutes } from '@xinuco/utils'
 import { updateAppointmentStatus } from '@/actions/appointments'
 import { CheckoutModal } from '../finance/CheckoutModal'
-import type { Appointment, AppointmentStatus } from '@/types/database'
+import type { Appointment, AppointmentStatus } from '@xinuco/types'
 
 interface InteractiveAgendaProps {
   appointments: any[]

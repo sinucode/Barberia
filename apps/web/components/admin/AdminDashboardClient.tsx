@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import type { Business } from '@/types/database'
+import type { Business } from '@xinuco/types'
 import { NewBusinessModal }    from '@/components/admin/NewBusinessModal'
 import { TenantDetailDrawer }  from '@/components/admin/TenantDetailDrawer'
 

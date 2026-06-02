@@ -25,7 +25,7 @@ import {
   removeFromQueue,
 } from '@/actions/walk-ins'
 import type { WalkInWithRelations } from '@/actions/walk-ins'
-import type { Staff, Service } from '@/types/database'
+import type { Staff, Service } from '@xinuco/types'
 
 // ── Tipos de props ────────────────────────────────────────────────────────────
 

@@ -1,7 +1,7 @@
 'use server'
 // actions/notifications.ts — RF18 Cron manual trigger + historial
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 
 export interface CronTriggerResult {
   success:   boolean

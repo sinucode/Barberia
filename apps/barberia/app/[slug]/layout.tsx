@@ -1,8 +1,8 @@
 import React from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import type { Business, BrandConfig } from '@/types/database'
+import type { Business, BrandConfig } from '@xinuco/types'
 import { Inter, Playfair_Display, Oswald } from 'next/font/google'
 
 // ── Fuentes SSR (pre-cargadas en build-time, Zero-Flicker) ──────────────────

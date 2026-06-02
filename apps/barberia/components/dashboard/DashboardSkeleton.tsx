@@ -2,7 +2,7 @@ import {
   NextAppointmentSkeleton,
   AgendaItemSkeleton,
   Skeleton,
-} from '@/components/ui/Skeleton'
+} from '@xinuco/ui'
 
 /**
  * DashboardSkeleton — Fallback de Suspense para el Dashboard.

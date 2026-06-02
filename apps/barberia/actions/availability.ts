@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { OperatingHours, Json } from '@/types/database'
+import type { OperatingHours, Json } from '@xinuco/types'
 
 export async function getAvailability(businessId: string) {
   const supabase = await createClient()

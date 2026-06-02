@@ -6,10 +6,10 @@ import {
   Sparkles, Calendar, CalendarDays 
 } from 'lucide-react'
 import { createStaffMember, toggleStaffStatus } from '@/actions/staff'
-import type { Staff, StaffRole } from '@/types/database'
+import type { Staff, StaffRole } from '@xinuco/types'
 import { StaffScheduleSheet } from './StaffScheduleSheet'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
+import { AdminPageHeader } from '@xinuco/ui'
+import { AdminEmptyState } from '@xinuco/ui'
 
 // Eliminado ROLES_CONFIG para permitir roles personalizados según la base de datos
 

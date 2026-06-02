@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { Clock, Bell, Palette, Users, CreditCard, ChevronRight, type LucideIcon } from 'lucide-react'
-import { detectCurrentPlan, PLAN_BUNDLES } from '@/lib/features/config'
-import type { Business, BusinessFeatures, Profile } from '@/types/database'
+import { detectCurrentPlan, PLAN_BUNDLES } from '@xinuco/billing-catalog'
+import type { Business, BusinessFeatures, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Ajustes — Xinuco',

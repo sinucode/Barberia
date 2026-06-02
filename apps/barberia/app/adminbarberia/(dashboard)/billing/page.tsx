@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect }     from 'next/navigation'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import {
   CreditCard, AlertCircle, TrendingUp, CheckCircle,
   Clock, XCircle, Zap, Crown, Loader,
 } from 'lucide-react'
-import { PLAN_PRICES_COP } from '@/lib/features/config'
+import { PLAN_PRICES_COP } from '@xinuco/billing-catalog'
 
 export const metadata: Metadata = {
   title: 'Facturación SaaS — Xinuco Admin',

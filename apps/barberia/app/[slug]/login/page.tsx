@@ -20,8 +20,8 @@ function LoginErrorAlert() {
     </div>
   )
 }
-import { createClient } from '@/lib/supabase/client'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { createClient } from '@xinuco/supabase/client'
+import { Skeleton } from '@xinuco/ui'
 
 interface LoginPageProps {
   params: Promise<{ slug: string }>

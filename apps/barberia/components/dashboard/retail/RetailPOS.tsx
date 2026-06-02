@@ -16,8 +16,8 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { createRetailSale } from '@/actions/retail'
-import type { PaymentMethod } from '@/types/database'
-import { createClient } from '@/lib/supabase/client'
+import type { PaymentMethod } from '@xinuco/types'
+import { createClient } from '@xinuco/supabase/client'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

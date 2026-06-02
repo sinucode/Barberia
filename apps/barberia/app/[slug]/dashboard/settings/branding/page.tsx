@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { BrandingForm } from '@/components/dashboard/settings/BrandingForm'
-import type { Business, Profile } from '@/types/database'
+import type { Business, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Apariencia y Marca — Xinuco',

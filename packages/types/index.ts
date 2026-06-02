@@ -1,7 +1,23 @@
 /**
- * @xinuco/types — Fase 2
- * Aquí se moverán los tipos compartidos: Database, Business, UserRole…
- *
- * Por ahora cada app lleva su propia copia en apps/<app>/types/.
+ * @xinuco/types — Tipos compartidos de la plataforma Xinuco.
+ * Incluye: Database, Business, UserRole, BusinessFeatures, etc.
  */
-export {}
+export type {
+  Json,
+  Database,
+  Business,
+  BusinessInsert,
+  BusinessFeatures,
+  BrandConfig,
+  Profile,
+  UserRole,
+  Service,
+  Staff,
+  StaffRole,
+  Appointment,
+  AppointmentStatus,
+  Customer,
+  SaleItem,
+} from './database'
+
+export type { Database as DatabaseGenerated } from './database.types'

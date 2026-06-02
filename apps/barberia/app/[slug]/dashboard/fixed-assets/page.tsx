@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getFixedAssets, getAssetPortfolioSummary } from '@/actions/fixed-assets'
 import { FixedAssetsManager } from '@/components/dashboard/fixed-assets/FixedAssetsManager'
 import { FeatureGate } from '@/components/dashboard/FeatureGate'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Activos Fijos — Xinuco',

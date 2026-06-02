@@ -15,8 +15,8 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { createRetailSale, type RetailItemInput } from '@/actions/retail'
-import { formatCOP } from '@/lib/utils/format'
-import type { PaymentMethod } from '@/types/database'
+import { formatCOP } from '@xinuco/utils'
+import type { PaymentMethod } from '@xinuco/types'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

@@ -4,5 +4,16 @@
   "private": true,
   "main": "./index.ts",
   "types": "./index.ts",
-  "description": "Supabase client factory for Xinuco apps — vertical-aware (Fase 2)"
+  "exports": {
+    ".": "./index.ts",
+    "./client": "./client.ts",
+    "./server": "./server.ts",
+    "./middleware": "./middleware.ts"
+  },
+  "description": "Supabase client factory for Xinuco apps",
+  "peerDependencies": {
+    "next": ">=16.0.0",
+    "@supabase/ssr": ">=0.5.0",
+    "@supabase/supabase-js": ">=2.0.0"
+  }
 }

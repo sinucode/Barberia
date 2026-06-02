@@ -6,9 +6,9 @@ import {
   MoreVertical, Pencil, Power, Trash2, Save,
 } from 'lucide-react'
 import { createService, updateService, toggleServiceStatus } from '@/actions/services'
-import type { Service } from '@/types/database'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
+import type { Service } from '@xinuco/types'
+import { AdminPageHeader } from '@xinuco/ui'
+import { AdminEmptyState } from '@xinuco/ui'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // UTILIDADES

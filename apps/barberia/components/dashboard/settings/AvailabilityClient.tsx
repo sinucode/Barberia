@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { updateAvailability } from '@/actions/availability'
-import type { OperatingHours, DayHours } from '@/types/database'
+import type { OperatingHours, DayHours } from '@xinuco/types'
 import { Loader2, Plus, Minus, Save, Clock, Armchair } from 'lucide-react'
 
 const DAYS_OF_WEEK = [

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getWalkInQueue, getWalkInHistory } from '@/actions/walk-ins'
 import { WalkInQueue } from '@/components/dashboard/walk-ins/WalkInQueue'
-import type { BusinessFeatures, Staff, Service } from '@/types/database'
+import type { BusinessFeatures, Staff, Service } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Walk-ins — Xinuco',

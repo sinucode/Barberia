@@ -12,6 +12,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@xinuco/types": "*",
+    "@xinuco/utils": "*",
+    "@xinuco/supabase": "*",
+    "@xinuco/ui": "*",
+    "@xinuco/billing-catalog": "*",
     "@hcaptcha/react-hcaptcha": "^2.0.2",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.49.4",

@@ -1,7 +1,15 @@
 /**
- * @xinuco/ui — Fase 2
- * Aquí se moverán los componentes UI compartidos: Button, Input, Skeleton…
- *
- * Por ahora cada app lleva su propia copia en apps/<app>/components/ui/.
+ * @xinuco/ui — Componentes UI primitivos compartidos para la plataforma Xinuco.
  */
-export {}
+export { Button }                    from './Button'
+export { Input }                     from './Input'
+export {
+  Skeleton,
+  AvatarSkeleton,
+  StatCardSkeleton,
+  NextAppointmentSkeleton,
+  AgendaItemSkeleton,
+  AppointmentItemSkeleton,
+}                                    from './Skeleton'
+export { AdminPageHeader }           from './AdminPageHeader'
+export { AdminEmptyState }           from './AdminEmptyState'

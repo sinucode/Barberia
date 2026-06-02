@@ -4,11 +4,11 @@
 // All actions require profile.role === 'super_admin'.
 // ============================================================
 
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { PLAN_BUNDLES } from '@/lib/features/config'
-import type { BusinessFeatures } from '@/types/database'
-import type { PlanName } from '@/lib/features/config'
+import { PLAN_BUNDLES } from '@xinuco/billing-catalog'
+import type { BusinessFeatures } from '@xinuco/types'
+import type { PlanName } from '@xinuco/billing-catalog'
 
 export interface ActionResult {
   success: boolean

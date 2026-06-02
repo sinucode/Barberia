@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { updateSession } from '@xinuco/supabase/middleware'
 
 const BOT_AGENTS_REGEX = /googlebot|twitterbot|facebookexternalhit|baiduspider|bingbot|embedly|linkedinbot|quora link preview|whatsapp/i
 

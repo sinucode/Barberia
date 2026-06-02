@@ -15,12 +15,15 @@
     "incremental": true,
     "target": "ES2017",
     "paths": {
-      "@xinuco/supabase": ["../../packages/supabase/index.ts"],
-      "@xinuco/types": ["../../packages/types/index.ts"],
-      "@xinuco/ui": ["../../packages/ui/index.ts"],
-      "@xinuco/utils": ["../../packages/utils/index.ts"],
+      "@xinuco/types":           ["../../packages/types/index.ts"],
+      "@xinuco/utils":           ["../../packages/utils/index.ts"],
+      "@xinuco/supabase":        ["../../packages/supabase/index.ts"],
+      "@xinuco/supabase/client": ["../../packages/supabase/client.ts"],
+      "@xinuco/supabase/server": ["../../packages/supabase/server.ts"],
+      "@xinuco/supabase/middleware": ["../../packages/supabase/middleware.ts"],
+      "@xinuco/ui":              ["../../packages/ui/index.ts"],
       "@xinuco/billing-catalog": ["../../packages/billing-catalog/index.ts"],
-      "@xinuco/config": ["../../packages/config/index.ts"]
+      "@xinuco/config":          ["../../packages/config/index.ts"]
     }
   }
 }

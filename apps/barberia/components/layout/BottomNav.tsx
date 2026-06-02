@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Users, CalendarDays, Scissors, Wallet, Settings, UserPlus, type LucideIcon } from 'lucide-react'
 import { useFeatures } from '@/lib/features/context'
 import { useIsAdmin } from '@/lib/features/role-context'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 interface NavItem {
   id:        string

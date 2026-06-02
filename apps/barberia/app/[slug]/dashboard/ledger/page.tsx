@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getStaffBalances } from '@/actions/ledger'
 import { LedgerManager } from '@/components/dashboard/ledger/LedgerManager'
-import type { BusinessFeatures, Profile } from '@/types/database'
+import type { BusinessFeatures, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Billetera del Staff — Xinuco',

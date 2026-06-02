@@ -1,9 +1,9 @@
 'use server'
 
-import { createClient, createAdminClient }      from '@/lib/supabase/server'
+import { createClient, createAdminClient }      from '@xinuco/supabase/server'
 import { revalidatePath }    from 'next/cache'
-import { Database }          from '@/types/database.types'
-import type { BusinessInsert, BusinessFeatures, BrandConfig, BusinessBranding, Json } from '@/types/database'
+import { Database }          from '@xinuco/types'
+import type { BusinessInsert, BusinessFeatures, BrandConfig, BusinessBranding, Json } from '@xinuco/types'
 
 // ── Tipos de resultado compartidos ────────────────────────────────────────────
 

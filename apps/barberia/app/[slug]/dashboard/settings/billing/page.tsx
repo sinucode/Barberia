@@ -14,12 +14,12 @@
 
 import type { Metadata } from 'next'
 import { redirect }  from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { detectCurrentPlan, PLAN_BUNDLES } from '@/lib/features/config'
+import { createClient } from '@xinuco/supabase/server'
+import { detectCurrentPlan, PLAN_BUNDLES } from '@xinuco/billing-catalog'
 import { SaaSBillingPanel }  from '@/components/dashboard/settings/SaaSBillingPanel'
 import { CreditCard, ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
-import type { Business, BusinessFeatures, Profile } from '@/types/database'
+import type { Business, BusinessFeatures, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Facturación — Xinuco',

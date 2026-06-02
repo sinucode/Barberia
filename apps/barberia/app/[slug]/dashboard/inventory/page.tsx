@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getInventoryItems, getLowStockItems } from '@/actions/inventory'
 import { InventoryManager } from '@/components/dashboard/inventory/InventoryManager'
 import { FeatureGate } from '@/components/dashboard/FeatureGate'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Inventario — Xinuco',

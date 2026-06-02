@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { ChevronDown, ChevronRight, Loader2, Shield } from 'lucide-react'
 import { getAuditLogs } from '@/actions/audit'
-import type { AuditLog, Json } from '@/types/database'
+import type { AuditLog, Json } from '@xinuco/types'
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 

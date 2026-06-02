@@ -1,5 +1,5 @@
 import { createMPPreference, calculateFeePreview } from '../mercadopago'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { Preference } from 'mercadopago'
 
 jest.mock('@/lib/supabase/server', () => ({

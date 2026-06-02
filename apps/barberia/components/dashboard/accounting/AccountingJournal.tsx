@@ -13,8 +13,8 @@ import {
   TrendingDown,
   Minus,
 } from 'lucide-react'
-import type { JournalEntry, JournalEntryType, JournalEntrySubtype, AccountingSummary } from '@/types/database'
-import { formatCOP } from '@/lib/utils/format'
+import type { JournalEntry, JournalEntryType, JournalEntrySubtype, AccountingSummary } from '@xinuco/types'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

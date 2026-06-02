@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { listBusinessUsers } from '@/actions/super-admin'
 import { UserManager } from '@/components/super-admin/UserManager'

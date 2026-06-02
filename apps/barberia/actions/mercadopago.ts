@@ -20,9 +20,9 @@ import { Preference, PreApproval } from 'mercadopago'
 import { getMPClient } from '@/lib/mercadopago/client'
 import { calculateMPFee } from '@/lib/mercadopago/fees'
 import type { MPFeeBreakdown, MPPaymentMethod } from '@/lib/mercadopago/types'
-import { createClient } from '@/lib/supabase/server'
-import { PLAN_PRICES_COP, PLAN_BUNDLES, type PlanName } from '@/lib/features/config'
-import type { BusinessFeatures } from '@/types/database'
+import { createClient } from '@xinuco/supabase/server'
+import { PLAN_PRICES_COP, PLAN_BUNDLES, type PlanName } from '@xinuco/billing-catalog'
+import type { BusinessFeatures } from '@xinuco/types'
 
 // ── Tipos de entrada ──────────────────────────────────────────────────────────
 

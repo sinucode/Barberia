@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect }      from 'next/navigation'
 import { AdminSidebar }  from '@/components/admin/AdminSidebar'
 

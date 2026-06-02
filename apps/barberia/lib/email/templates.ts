@@ -2,7 +2,7 @@
 // Mobile-first, inline CSS only, brand colors: #080808 bg, #C5A059 gold, #F4F4F4 text
 // Idioma: Español (Colombia)
 
-import { formatCOP } from '@/lib/utils/format'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Utilidades de formato de fecha en español ─────────────────────────────────
 

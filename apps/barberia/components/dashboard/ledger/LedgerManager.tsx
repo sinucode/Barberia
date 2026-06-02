@@ -15,10 +15,10 @@ import {
 } from 'lucide-react'
 import { recordAdvance, recordPayment, getStaffLedger } from '@/actions/ledger'
 import type { StaffBalanceWithDetails, LedgerEntryWithStaff } from '@/actions/ledger'
-import type { LedgerEntryType } from '@/types/database'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
-import { formatCOP } from '@/lib/utils/format'
+import type { LedgerEntryType } from '@xinuco/types'
+import { AdminPageHeader } from '@xinuco/ui'
+import { AdminEmptyState } from '@xinuco/ui'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Badge de tipo de entrada ──────────────────────────────────────────────────
 

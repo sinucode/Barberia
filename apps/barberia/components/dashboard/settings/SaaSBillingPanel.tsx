@@ -20,8 +20,8 @@ import {
   createMPSaaSSubscription,
   cancelMPSaaSSubscription,
 } from '@/actions/mercadopago'
-import { PLAN_BUNDLES, PLAN_PRICES_COP, FEATURE_CATALOG, type PlanName } from '@/lib/features/config'
-import type { BusinessFeatures } from '@/types/database'
+import { PLAN_BUNDLES, PLAN_PRICES_COP, FEATURE_CATALOG, type PlanName } from '@xinuco/billing-catalog'
+import type { BusinessFeatures } from '@xinuco/types'
 
 // ── Tipos ──────────────────────────────────────────────────────────────────────
 

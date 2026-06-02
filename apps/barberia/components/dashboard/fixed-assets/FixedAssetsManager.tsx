@@ -27,7 +27,7 @@ import type {
   AssetPortfolioSummary,
   FixedAssetCategory,
   DepreciationMethod,
-} from '@/types/database'
+} from '@xinuco/types'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

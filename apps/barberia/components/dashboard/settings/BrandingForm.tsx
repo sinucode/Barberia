@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Loader2, Check, AlertCircle, ImageOff } from 'lucide-react'
 import { updateBusinessBranding, updateBusinessInfo } from '@/actions/businesses'
-import type { Business, BusinessBranding } from '@/types/database'
+import type { Business, BusinessBranding } from '@xinuco/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@
 // y muestra la pantalla correcta.
 // ══════════════════════════════════════════════════════════════════════════════
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import Link from 'next/link'
 import { CheckCircle, XCircle, Clock, ArrowLeft } from 'lucide-react'
 

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Lock, Sparkles, ArrowRight, ChevronRight } from 'lucide-react'
 import { useFeature } from '@/lib/features/context'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // FeatureGate — Paywall Premium para módulos restringidos por plan

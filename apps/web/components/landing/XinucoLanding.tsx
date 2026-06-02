@@ -22,7 +22,7 @@ import {
   Crown,
   Star,
 } from 'lucide-react'
-import { PLAN_PRICES_COP } from '@/lib/features/config'
+import { PLAN_PRICES_COP } from '@xinuco/billing-catalog'
 
 // ─── Brand colors ────────────────────────────────────────────────────────────
 const CYAN     = '#00CFCF'

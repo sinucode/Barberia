@@ -1,6 +1,6 @@
 import { signUp, loginWithPassword, logout, signInWithGoogle } from '../auth'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { headers } from 'next/headers'
 
 // Mocking dependencies

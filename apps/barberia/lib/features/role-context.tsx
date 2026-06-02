@@ -6,7 +6,7 @@
 // ============================================================
 
 import { createContext, useContext } from 'react'
-import type { UserRole } from '@/types/database'
+import type { UserRole } from '@xinuco/types'
 
 const RoleContext = createContext<UserRole>('barber')
 

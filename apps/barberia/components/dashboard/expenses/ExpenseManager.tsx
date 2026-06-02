@@ -20,10 +20,10 @@ import {
   getProfitLoss,
 } from '@/actions/expenses'
 import type { ExpenseCreateData } from '@/actions/expenses'
-import type { Expense, ProfitLossResult } from '@/types/database'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
-import { formatCOP } from '@/lib/utils/format'
+import type { Expense, ProfitLossResult } from '@xinuco/types'
+import { AdminPageHeader } from '@xinuco/ui'
+import { AdminEmptyState } from '@xinuco/ui'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Categorías de gasto ───────────────────────────────────────────────────────
 

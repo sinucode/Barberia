@@ -3,12 +3,12 @@
 
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getBusinessBySlug }  from '@/actions/businesses'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@xinuco/types'
 import { getNotificationLog } from '@/actions/notifications'
 import { CronPanel }          from '@/components/dashboard/settings/CronPanel'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 import {
   appointmentConfirmationEmail,
   appointmentReminderEmail,

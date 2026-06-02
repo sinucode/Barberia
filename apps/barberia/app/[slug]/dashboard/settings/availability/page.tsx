@@ -1,13 +1,13 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getAvailability } from '@/actions/availability'
 import { AvailabilityClient } from '@/components/dashboard/settings/AvailabilityClient'
 import { getBusinessBySlug } from '@/actions/businesses'
 import { notFound } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Disponibilidad — Xinuco',

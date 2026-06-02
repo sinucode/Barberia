@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { InteractiveAgenda } from '@/components/dashboard/InteractiveAgenda'
 import { getActiveShiftDetails } from '@/actions/finance'

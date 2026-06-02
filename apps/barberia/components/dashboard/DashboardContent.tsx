@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { getActiveShiftDetails } from '@/actions/finance'
 import { CashShiftManager } from '@/components/finance/CashShiftManager'

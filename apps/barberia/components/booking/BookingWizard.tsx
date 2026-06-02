@@ -5,7 +5,7 @@ import {
   Check, ChevronLeft, AlertCircle, Loader2,
   Calendar, Clock, Scissors, User, Sparkles, Phone, QrCode,
 } from 'lucide-react'
-import type { Service, Staff } from '@/types/database'
+import type { Service, Staff } from '@xinuco/types'
 import { createBooking } from '@/actions/bookings'
 import { getAvailableSlotsAction } from '@/actions/staff'
 import { BookingPaymentStep } from '@/components/booking/BookingPaymentStep'

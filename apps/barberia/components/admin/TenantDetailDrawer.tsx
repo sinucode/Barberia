@@ -7,7 +7,7 @@ import {
   Award, Armchair, Users, ClipboardList, Shield, Package, WrenchIcon,
   Power, Palette,
 } from 'lucide-react'
-import type { Business, BusinessFeatures, BrandConfig } from '@/types/database'
+import type { Business, BusinessFeatures, BrandConfig } from '@xinuco/types'
 import { toggleBusinessFeature, updateBusinessTheme } from '@/actions/businesses'
 import { toggleTenantStatus } from '@/actions/admin'
 

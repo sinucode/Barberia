@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { Shield } from 'lucide-react'
 import { getAuditLogs } from '@/actions/audit'
 import { AuditLogViewer } from '@/components/dashboard/audit/AuditLogViewer'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 interface AuditPageProps {
   params: Promise<{ slug: string }>

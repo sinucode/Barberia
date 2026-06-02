@@ -1,14 +1,14 @@
 'use server'
 // actions/fixed-assets.ts — RF21 Activos Fijos
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAction } from '@/actions/audit'
 import type {
   FixedAsset,
   DepreciationSchedule,
   AssetPortfolioSummary,
-} from '@/types/database'
+} from '@xinuco/types'
 
 // ── Tipos de resultado ────────────────────────────────────────────────────────
 

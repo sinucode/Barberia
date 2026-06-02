@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { detectCurrentPlan, PLAN_BUNDLES, FEATURE_CATALOG } from '@/lib/features/config'
-import type { BusinessFeatures, Business } from '@/types/database'
+import { detectCurrentPlan, PLAN_BUNDLES, FEATURE_CATALOG } from '@xinuco/billing-catalog'
+import type { BusinessFeatures, Business } from '@xinuco/types'
 
 /**
  * super-admin/businesses/page.tsx — Server Component

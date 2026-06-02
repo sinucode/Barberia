@@ -7,7 +7,7 @@
 // ============================================================
 
 import { createContext, useContext, useMemo } from 'react'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 // ── Valor por defecto del contexto (todo activo para SSR) ─────────────────────
 

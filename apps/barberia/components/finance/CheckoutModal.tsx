@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Plus, Trash, CreditCard, Banknote, Landmark, X, Loader2, DollarSign, Percent, QrCode } from 'lucide-react'
 import { checkoutAppointment, type CheckoutItemInput } from '@/actions/finance'
-import type { PaymentMethod } from '@/types/database'
+import type { PaymentMethod } from '@xinuco/types'
 import { MPPaymentPanel } from '@/components/pos/MPPaymentPanel'
 
 interface CheckoutModalProps {

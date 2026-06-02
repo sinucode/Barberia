@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { isValid, parseISO } from 'date-fns'
 import { sendBookingConfirmation } from '@/lib/email/notifications'
 import { Preference } from 'mercadopago'

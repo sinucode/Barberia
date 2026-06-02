@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toggleStaffStatus } from '@/actions/staff'
-import type { Staff } from '@/types/database'
+import type { Staff } from '@xinuco/types'
 import { User, ShieldAlert, Scissors, Sparkles } from 'lucide-react'
 
 export function StaffGrid({ initialStaff }: { initialStaff: Staff[] }) {

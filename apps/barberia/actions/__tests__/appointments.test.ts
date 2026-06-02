@@ -1,5 +1,5 @@
 import { updateAppointmentStatus } from '../appointments'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAction } from '../audit'
 import { sendCancellationNotice } from '@/lib/email/notifications'

@@ -1,12 +1,12 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getStaff } from '@/actions/staff'
 import { StaffManager } from '@/components/dashboard/staff/StaffManager'
 import { getBusinessBySlug } from '@/actions/businesses'
 import { notFound } from 'next/navigation'
-import type { Profile } from '@/types/database'
+import type { Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'El Ejército — Xinuco',

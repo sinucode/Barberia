@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { BarChart2, TrendingUp, Calendar, DollarSign, type LucideIcon } from 'lucide-react'
 import type { ReportsKPIs, TopService, TopStaff } from '@/app/[slug]/dashboard/reports/page'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { formatCOP } from '@/lib/utils/format'
+import { AdminPageHeader } from '@xinuco/ui'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

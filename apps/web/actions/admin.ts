@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { BusinessInsert } from '@/types/database'
+import type { BusinessInsert } from '@xinuco/types'
 
 // ── Tipo del estado devuelto por las Server Actions ──────────────────────────
 export interface ActionResult {

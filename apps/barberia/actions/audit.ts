@@ -1,7 +1,7 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import type { AuditLog, Json } from '@/types/database'
+import { createClient } from '@xinuco/supabase/server'
+import type { AuditLog, Json } from '@xinuco/types'
 
 // ── Tipos de parámetros ───────────────────────────────────────────────────────
 

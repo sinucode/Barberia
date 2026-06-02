@@ -4,5 +4,12 @@
   "private": true,
   "main": "./index.ts",
   "types": "./index.ts",
-  "description": "Shared UI primitives for Xinuco apps (Fase 2)"
+  "exports": {
+    ".": "./index.ts"
+  },
+  "description": "Shared UI primitives for Xinuco apps",
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "lucide-react": ">=0.511.0"
+  }
 }

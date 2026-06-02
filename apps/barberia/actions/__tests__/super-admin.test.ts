@@ -1,5 +1,5 @@
 import { getAllBusinesses, applyPlan } from '../super-admin'
-import { createClient, createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 jest.mock('@/lib/supabase/server', () => ({

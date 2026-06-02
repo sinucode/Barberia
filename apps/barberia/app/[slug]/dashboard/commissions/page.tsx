@@ -1,11 +1,11 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getCommissionRules } from '@/actions/commissions'
 import { getServices } from '@/actions/services'
 import { CommissionManager } from '@/components/dashboard/commissions/CommissionManager'
-import type { Staff, BusinessFeatures, Profile } from '@/types/database'
+import type { Staff, BusinessFeatures, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Comisiones — Xinuco',

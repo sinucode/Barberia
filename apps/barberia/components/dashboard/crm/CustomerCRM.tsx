@@ -32,8 +32,8 @@ import type {
   CustomerExpediente,
   CustomerNoteWithAuthor,
 } from '@/actions/crm'
-import { formatCOP } from '@/lib/utils/format'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
+import { formatCOP } from '@xinuco/utils'
+import { AdminPageHeader } from '@xinuco/ui'
 
 // ── Etiquetas predefinidas ────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect }     from 'next/navigation'
 import {
   Settings2, Server, Globe, Shield, Zap, Info,

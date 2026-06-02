@@ -1,8 +1,8 @@
 'use server'
 // actions/accounting.ts — RF22 Trazabilidad Contable
 
-import { createClient } from '@/lib/supabase/server'
-import type { JournalEntry, JournalEntryType, AccountingSummary } from '@/types/database'
+import { createClient } from '@xinuco/supabase/server'
+import type { JournalEntry, JournalEntryType, AccountingSummary } from '@xinuco/types'
 
 // ════════════════════════════════════════════════════════════════════════════
 // getJournalEntries

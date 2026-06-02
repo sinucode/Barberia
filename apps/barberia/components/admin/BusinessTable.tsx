@@ -1,9 +1,9 @@
-import { createClient }   from '@/lib/supabase/server'
+import { createClient }   from '@xinuco/supabase/server'
 import { redirect }        from 'next/navigation'
 import { ExternalLink, Pencil, ToggleLeft, ToggleRight } from 'lucide-react'
 import { toggleTenantStatus }  from '@/actions/admin'
 import { FeatureToggles }      from './FeatureToggles'
-import type { Business }       from '@/types/database'
+import type { Business }       from '@xinuco/types'
 
 // ── Toggle de estado (inline Server Action) ───────────────────────────────────
 function ToggleStatusButton({ id, isActive }: { id: string; isActive: boolean }) {

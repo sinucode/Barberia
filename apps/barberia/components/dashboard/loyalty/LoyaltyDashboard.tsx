@@ -19,9 +19,9 @@ import {
   redeemPoints,
 } from '@/actions/loyalty'
 import type { LoyaltySettings, LoyaltyHistoryEntry, LoyaltyBalanceResult } from '@/actions/loyalty'
-import type { Customer } from '@/types/database'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { formatCOP } from '@/lib/utils/format'
+import type { Customer } from '@xinuco/types'
+import { AdminPageHeader } from '@xinuco/ui'
+import { formatCOP } from '@xinuco/utils'
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 

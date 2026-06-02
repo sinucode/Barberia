@@ -18,7 +18,7 @@ import { Payment, PreApproval, WebhookSignatureValidator } from 'mercadopago'
 import { getMPClient } from '@/lib/mercadopago/client'
 import { calculateMPFee } from '@/lib/mercadopago/fees'
 import type { MPPaymentMethod } from '@/lib/mercadopago/types'
-import { PLAN_BUNDLES, PLAN_PRICES_COP, type PlanName } from '@/lib/features/config'
+import { PLAN_BUNDLES, PLAN_PRICES_COP, type PlanName } from '@xinuco/billing-catalog'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'

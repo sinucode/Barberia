@@ -2,7 +2,7 @@
 // Todas las funciones son best-effort: nunca lanzan, nunca bloquean la operación principal.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database, BusinessFeatures } from '@/types/database'
+import type { Database, BusinessFeatures } from '@xinuco/types'
 import { sendEmail }                       from './resend'
 import {
   appointmentConfirmationEmail,

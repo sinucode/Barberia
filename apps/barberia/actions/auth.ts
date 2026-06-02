@@ -1,9 +1,9 @@
 'use server'
 
-import { createClient }            from '@/lib/supabase/server'
+import { createClient }            from '@xinuco/supabase/server'
 import { redirect }                from 'next/navigation'
 import { headers }                 from 'next/headers'
-import type { Profile, Business }  from '@/types/database'
+import type { Profile, Business }  from '@xinuco/types'
 
 /**
  * signUp — Server Action para registro de nuevos usuarios.

@@ -3,7 +3,7 @@
 import { useState, useTransition, useRef, useEffect } from 'react'
 import { Settings2, Loader2, AlertCircle } from 'lucide-react'
 import { toggleBusinessFeature } from '@/actions/businesses'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 export function FeatureToggles({ 
   businessId, 

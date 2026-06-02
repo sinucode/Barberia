@@ -1,8 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { PaymentMethod, CashRegisterShift, Sale, SaleItem, Payment, Json } from '@/types/database'
+import type { PaymentMethod, CashRegisterShift, Sale, SaleItem, Payment, Json } from '@xinuco/types'
 import { logAction } from './audit'
 import { earnPoints } from '@/actions/loyalty'
 

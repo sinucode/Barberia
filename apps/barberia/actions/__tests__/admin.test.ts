@@ -1,5 +1,5 @@
 import { createTenant, toggleTenantStatus } from '../admin'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 jest.mock('@/lib/supabase/server', () => ({

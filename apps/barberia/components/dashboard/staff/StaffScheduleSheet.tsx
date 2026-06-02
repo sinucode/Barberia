@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useTransition } from 'react'
 import { X, Loader2, Save, CalendarDays } from 'lucide-react'
 import { getStaffSchedules, saveStaffSchedulesBatch } from '@/actions/staff'
-import type { StaffSchedule } from '@/types/database'
+import type { StaffSchedule } from '@xinuco/types'
 
 // 0 = Domingo, 1 = Lunes ... 6 = Sábado
 const DAYS_ORDER = [

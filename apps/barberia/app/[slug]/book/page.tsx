@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { BookingWizard } from '@/components/booking/BookingWizard'
-import type { Service, Staff, Business } from '@/types/database'
+import type { Service, Staff, Business } from '@xinuco/types'
 
 interface BookPageProps {
   params: Promise<{ slug: string }>

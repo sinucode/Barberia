@@ -3,7 +3,7 @@
 // Fuente única de verdad para nombres, descripciones y planes
 // ============================================================
 
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 // ── Catálogo de features ──────────────────────────────────────────────────────
 

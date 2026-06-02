@@ -12,7 +12,7 @@
 import { NextResponse }          from 'next/server'
 import { createClient }          from '@supabase/supabase-js'
 import { sendBookingReminder }   from '@/lib/email/notifications'
-import type { Database }         from '@/types/database'
+import type { Database }         from '@xinuco/types'
 
 // Forzar renderizado dinámico — esta ruta nunca debe ser cacheada por Next.js
 export const dynamic = 'force-dynamic'

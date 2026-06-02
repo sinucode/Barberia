@@ -9,7 +9,7 @@ import {
   BookUser, Package, BookOpen, ShoppingBag, Archive, Lock,
   type LucideIcon,
 } from 'lucide-react'
-import type { Business, BusinessFeatures } from '@/types/database'
+import type { Business, BusinessFeatures } from '@xinuco/types'
 import { useDateTime } from '@/lib/hooks/useDateTime'
 import { useFeatures } from '@/lib/features/context'
 import { useIsAdmin } from '@/lib/features/role-context'

@@ -10,9 +10,9 @@ import {
   updateWorkstation,
   toggleWorkstationStatus,
 } from '@/actions/workstations'
-import type { Workstation } from '@/types/database'
-import { AdminPageHeader } from '@/components/ui/AdminPageHeader'
-import { AdminEmptyState } from '@/components/ui/AdminEmptyState'
+import type { Workstation } from '@xinuco/types'
+import { AdminPageHeader } from '@xinuco/ui'
+import { AdminEmptyState } from '@xinuco/ui'
 
 // ════════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL — WorkstationManager (Client Island)

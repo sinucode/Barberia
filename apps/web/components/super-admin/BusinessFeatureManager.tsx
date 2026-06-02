@@ -10,10 +10,10 @@ import {
   Gift, LayoutGrid, Users, BookUser, Shield, Package, Archive,
   BarChart2, Check, type LucideIcon,
 } from 'lucide-react'
-import { FEATURE_CATALOG, PLAN_BUNDLES, detectCurrentPlan } from '@/lib/features/config'
+import { FEATURE_CATALOG, PLAN_BUNDLES, detectCurrentPlan } from '@xinuco/billing-catalog'
 import { updateBusinessFeatures, applyPlan } from '@/actions/super-admin'
-import type { BusinessFeatures } from '@/types/database'
-import type { PlanName, FeatureCategory } from '@/lib/features/config'
+import type { BusinessFeatures } from '@xinuco/types'
+import type { PlanName, FeatureCategory } from '@xinuco/billing-catalog'
 
 // ── Icon map ──────────────────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { getShiftSummary, openShift, closeShift, checkoutAppointment } from '../finance'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAction } from '../audit'
 import { earnPoints } from '../loyalty'

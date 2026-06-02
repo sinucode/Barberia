@@ -1,9 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { addMinutes, format, parseISO, isBefore, isAfter, getDay } from 'date-fns'
 import { revalidatePath } from 'next/cache'
-import type { AppointmentStatus, Json } from '@/types/database'
+import type { AppointmentStatus, Json } from '@xinuco/types'
 import { logAction } from './audit'
 import { sendCancellationNotice } from '@/lib/email/notifications'
 

@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/Skeleton'
+import { Skeleton } from '@xinuco/ui'
 
 /**
  * BusinessTableSkeleton — Fallback de Suspense para la tabla de negocios.

@@ -1,8 +1,8 @@
 import { Suspense }           from 'react'
-import { createClient }        from '@/lib/supabase/server'
+import { createClient }        from '@xinuco/supabase/server'
 import { redirect }            from 'next/navigation'
 import type { Metadata }       from 'next'
-import type { Business }       from '@/types/database'
+import type { Business }       from '@xinuco/types'
 
 import { Header }              from '@/components/layout/Header'
 import { BottomNav }           from '@/components/layout/BottomNav'

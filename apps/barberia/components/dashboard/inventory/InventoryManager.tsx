@@ -25,7 +25,7 @@ import type {
   InventoryItem,
   InventoryCategory,
   MovementType,
-} from '@/types/database'
+} from '@xinuco/types'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 

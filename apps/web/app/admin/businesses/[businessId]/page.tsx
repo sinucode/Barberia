@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { BusinessFeatureManager } from '@/components/super-admin/BusinessFeatureManager'
 import { TrialManager } from '@/components/super-admin/TrialManager'
-import type { BusinessFeatures } from '@/types/database'
+import type { BusinessFeatures } from '@xinuco/types'
 
 interface PageProps {
   params: Promise<{ businessId: string }>

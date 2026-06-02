@@ -1,5 +1,5 @@
 import { createBooking } from '../bookings'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { sendBookingConfirmation } from '@/lib/email/notifications'
 
 jest.mock('@/lib/supabase/server', () => ({

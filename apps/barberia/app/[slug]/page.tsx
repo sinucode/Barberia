@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import type { Business, Service, Staff } from '@/types/database'
+import type { Business, Service, Staff } from '@xinuco/types'
 import { BookingWizard } from '@/components/booking/BookingWizard'
 
 interface PublicBookingPageProps {

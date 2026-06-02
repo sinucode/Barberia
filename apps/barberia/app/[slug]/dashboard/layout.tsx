@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { redirect } from 'next/navigation'
 import { Header } from '@/components/layout/Header'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -7,7 +7,7 @@ import { DashboardSidebar } from '@/components/layout/DashboardSidebar'
 import { FeaturesProvider } from '@/lib/features/context'
 import { RoleProvider } from '@/lib/features/role-context'
 import { TrialBanner } from '@/components/dashboard/TrialBanner'
-import type { Business, BusinessFeatures, UserRole, Profile } from '@/types/database'
+import type { Business, BusinessFeatures, UserRole, Profile } from '@xinuco/types'
 
 export default async function DashboardLayout({
   children,

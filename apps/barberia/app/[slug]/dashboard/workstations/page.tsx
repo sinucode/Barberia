@@ -1,10 +1,10 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@xinuco/supabase/server'
 import { getWorkstations } from '@/actions/workstations'
 import { WorkstationManager } from '@/components/dashboard/workstations/WorkstationManager'
-import type { BusinessFeatures, Profile } from '@/types/database'
+import type { BusinessFeatures, Profile } from '@xinuco/types'
 
 export const metadata: Metadata = {
   title: 'Estaciones — Xinuco',
