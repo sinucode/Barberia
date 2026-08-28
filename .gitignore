@@ -1,6 +1,5 @@
-# Documentos locales de Claude (deuda técnica, notas internas — nunca al repo)
-.claude/*.local.md
-.claude/worktrees/
+# Arnés de Claude Code (agentes, skills, hooks, settings, notas internas — nunca al repo)
+.claude/
 
 # Dependencies (hoisted por npm workspaces)
 node_modules/
